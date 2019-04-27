@@ -4,6 +4,7 @@ library(tgR); library(tidyverse);
 library(RColorBrewer) 
 
 focusID <- 1
+daysOfHistory <- 3
 server <- function(input, output, session) { 
 
 ###### Cromwell/AWS Batch
@@ -65,7 +66,7 @@ server <- function(input, output, session) {
         "status", "submission", "workflowDuration", "submissionType", "user")) %>% arrange(desc(submission)),
     class = "compact",
     filter = "top",
-    options = list(scrollX = TRUE), selection = "single")
+    options = list(scrollX = TRUE), rownames= FALSE, selection = "single")
   
   callsUpdate <- eventReactive(
     input$joblistCromwell_rows_selected,{
@@ -127,7 +128,7 @@ output$tasklistBatch <- renderDT(
             "attempt", "log", "start", "jobDuration", "dockerImageUsed", "cpuMin", "retryableFailure")) %>% unique() %>% arrange(desc(start)),
   class = "compact",
   filter = "top",
-  options = list(scrollX = TRUE))
+  options = list(scrollX = TRUE), rownames= FALSE)
 
 
 
@@ -138,6 +139,6 @@ output$failurelistBatch <- renderDT(
     unique(), 
   class = "compact",
   filter = "top",
-  options = list(scrollX = TRUE))
+  options = list(scrollX = TRUE), rownames= FALSE)
 }
 
