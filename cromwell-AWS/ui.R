@@ -9,8 +9,6 @@ library(RColorBrewer)
 # source("setEnviron.R") # for local use
 # Requires Env vars to be set:  CROMWELLURL
 
-daysOfHistory <- 3
-
 ui <- dashboardPage( skin = "black",
   dashboardHeader(title = "Cromwell-AWS Batch Dashboard",
                   titleWidth = 450),
@@ -33,7 +31,7 @@ ui <- dashboardPage( skin = "black",
               hr()
                ),
       tabItem(tabName = "tracking", 
-              fluidRow(h2("Cromwell and AWS Batch Dashboard"), align = "center"),
+              fluidRow(h2("Workflow Engine Tracking"), align = "center"),
               fluidRow(
                 column(width = 6, align = "center",
                        infoBoxOutput("submittedBox", width = NULL)),

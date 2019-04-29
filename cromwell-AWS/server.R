@@ -1,10 +1,12 @@
+#require(devtools)
+#devtools::install_github('FredHutch/tgR@v0.1.1') # Minimum version v0.1.1
 library(shiny); library(shinydashboard);
 library(data.table); library(DT);
 library(tgR); library(tidyverse); 
 library(RColorBrewer) 
 
 focusID <- 1
-daysOfHistory <- 3
+daysOfHistory <- 1
 server <- function(input, output, session) { 
 
 ###### Cromwell/AWS Batch
