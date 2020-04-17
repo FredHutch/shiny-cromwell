@@ -1,12 +1,8 @@
-#require(devtools)
-#devtools::install_github('FredHutch/tgR@v0.1.1') # Minimum version v0.1.1
+#remotes::install_github('FredHutch/fh.wdlR') # Minimum version v0.0.3
 library(shiny); library(shinydashboard);
 library(data.table); library(DT); library(tidyverse); 
 library(RColorBrewer) 
 library(fh.wdlR)
-
-##### Creds
-# source("setEnviron.R") # for local use
 
 ui <- dashboardPage( skin = "black",
   dashboardHeader(title = "Fred Hutch Cromwell Dashboard",
