@@ -61,7 +61,7 @@ server <- function(input, output, session) {
         theme_minimal() +
         theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
         scale_fill_brewer(type = "qualitative", palette = "Set1") +
-        ylab("Workflow Duration (mins)") +
+        ylab("Workflow Duration (hrs)") +
         xlab("Workflow Name")
     } else {ggplot() + geom_blank()}
   })
