@@ -1,0 +1,28 @@
+
+before_script:
+  - curl -LO https://releases.rancher.com/cli/v0.6.2/rancher-linux-amd64-v0.6.2.tar.gz
+  - tar zxf rancher-linux-amd64-v0.6.2.tar.gz
+  
+build_test:
+  script:
+    - docker build -t dockerimages.fhcrc.org/shiny-cromwell:latest .
+    - |
+        if docker ps -a|tr -s ' '|rev|cut -d ' ' -f 1|rev|grep -q shiny-cromwell
+        then
+        docker stop shiny-cromwell && docker rm --force shiny-cromwell
+        fi
+    - docker run -d --name shiny-cromwell -p 3838:3838 dockerimages.fhcrc.org/shiny-cromwell:latest
+    - sleep 15 && curl -sI  http://localhost:3838  |head -1|grep -q "200 OK"
+    - docker stop shiny-cromwell && docker rm --force shiny-cromwell
+  
+  
+deploy:
+  only:
+    refs:
+       - master
+  script:
+    - docker login --username $DOCKERIMAGES_USER --password $DOCKERIMAGES_PASS https://dockerimages.fhcrc.org
+    - docker push dockerimages.fhcrc.org/shiny-cromwell:latest
+    - sleep 15
+    - rancher-v0.6.2/rancher --url https://ponderosa.fhcrc.org --access-key $RANCHERAPI_KEY --secret-key $RANCHERAPI_SECRET up -d --pull --force-upgrade --confirm-upgrade --stack shiny-cromwell --file docker-compose.yml --rancher-file rancher-compose.yml
+  

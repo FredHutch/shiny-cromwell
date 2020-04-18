@@ -1,0 +1,9 @@
+version: '2'
+services:
+  shiny-cromwell:
+    image: dockerimages.fhcrc.org/shiny-cromwell:latest
+
+    labels:
+      io.rancher.container.pull_image: always
+
+    restart: always
