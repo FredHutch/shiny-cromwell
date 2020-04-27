@@ -76,7 +76,7 @@ server <- function(input, output, session) {
   output$successBox <- renderInfoBox({
     infoBox(
       "Successful", if(is.na(workflowUpdate()$workflow_id[1]) == T) {0} else {
-        workflowUpdate() %>% filter(status == "Suceeded") %>% summarise(n_distinct(workflow_id))},
+        workflowUpdate() %>% filter(status == "Succeeded") %>% summarise(n_distinct(workflow_id))},
       icon = icon("grin"),
       color = "yellow", width = 3
     )
