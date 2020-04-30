@@ -8,7 +8,40 @@ library(fh.wdlR)
 focusID <- 1
 
 server <- function(input, output, session) {
-
+  ###### Cromwell Submit tab ######
+  ## Validate a possible workflow
+  validateWorkflow <- eventReactive(input$validateWorkflow, {
+    Sys.setenv("CROMWELLURL" = paste0("http://", input$submitCromwellURL))
+    womtoolValidate(WDL = input$validatewdlFile$datapath, 
+                    allInputs = input$validateinputFile$datapath)
+    
+  }, ignoreNULL = TRUE)
+  ## Show the validation result in a box
+  output$validationResult <- renderPrint(validateWorkflow())
+  
+  ## Submit a workflow
+  submitWorkflowJob <- eventReactive(input$submitWorkflow, {
+    Sys.setenv("CROMWELLURL" = paste0("http://", input$submitCromwellURL))
+    cromwellSubmitBatch(WDL = input$wdlFile$datapath,
+                        Params = input$inputJSON$datapath,
+                        Batch = input$input2JSON$datapath,
+                        Options = input$workOptions$datapath,
+                        Labels = data.frame("workflowType" = "AppSubmission"))
+  }, ignoreNULL = TRUE)
+  ## Show the workflow submission result in a box
+  output$submissionResult <- renderPrint(submitWorkflowJob())
+  
+  ## Abort a workflow
+  abortWorkflowJob <- eventReactive(input$abortWorkflow, {
+    Sys.setenv("CROMWELLURL" = paste0("http://", input$submitCromwellURL))
+    cromwellAbort(workflow_id = input$abortWorkflowID)
+  }, ignoreNULL = TRUE)
+  ## Show the abort workflow result in a box
+  output$abortResult <- renderPrint(abortWorkflowJob())
+  
+  
+  
+  
   ############ CROMWELL Tracking Tab  ############
   updateServer <- eventReactive(input$trackingUpdate, {
     Sys.setenv("CROMWELLURL" = paste0("http://", input$submitCromwellURL))

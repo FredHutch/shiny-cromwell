@@ -2,18 +2,94 @@ library(shiny); library(shinydashboard);
 library(data.table); library(DT); library(tidyverse); 
 library(RColorBrewer) 
 library(fh.wdlR)
+# for rendering the About page:
+library(markdown)
 
 ui <- dashboardPage( skin = "black",
   dashboardHeader(title = "Fred Hutch Cromwell Dashboard",
                   titleWidth = 450),
   dashboardSidebar(
     sidebarMenu(
-      menuItem("Job Tracking", tabName = "tracking", icon = icon("binoculars"),
-               badgeLabel = "workflows", badgeColor = "purple")
+      menuItem("Welcome", tabName = "welcome", icon = icon("book-open"), 
+               badgeLabel = "info", badgeColor = "green"),
+      menuItem("Submit Jobs", tabName = "submission", icon = icon("paper-plane"),
+               badgeLabel = "compute", badgeColor = "light-blue"),
+      menuItem("Track Jobs", tabName = "tracking", icon = icon("binoculars"),
+               badgeLabel = "monitor", badgeColor = "purple")
     )
   ),
   dashboardBody(
     tabItems(
+      tabItem(tabName = "welcome",
+              fluidRow(align = "center",
+                       box(title = "Find Cromwell and WDL Resources at Fred Hutch's GitHub", 
+                           actionButton(inputId='githubLInk', label="What resources are available?",
+                                        icon = icon("retweet"),
+                                        onclick ="window.open('https://github.com/FredHutch?utf8=%E2%9C%93&q=wdl+OR+cromwell&type=&language=', '_blank')")
+                       ),
+                       box(title = "Learn about Cromwell and WDL at SciWIki",
+                           actionButton(inputId='sciwikiLink', label="I want to go read!",
+                                        icon = icon("book-open"),
+                                        onclick ="window.open('https://sciwiki.fredhutch.org/compdemos/Cromwell/', '_blank')")
+                       )
+              ),
+              fluidRow(align = "center",
+                       column(width = 11, align = "left",
+                              includeMarkdown("about.md"))
+              )
+      ),
+      tabItem(tabName = "submission",
+              fluidRow(h2("Workflow Submission"), align = "center"),
+              fluidRow( align = "center",
+                        ## Provide a valid cromwell server node and port
+                        box(title = "Running Cromwell Server Information",
+                            width = 12, solidHeader = FALSE, status = "primary",
+                            textInput("submitCromwellURL", "Current Cromwell host:port",
+                                      value = "")
+                        )),
+              fluidRow(align = "center", 
+                       ## Validate a Workflow
+                       box(width = 12,  solidHeader = FALSE, status = "info",
+                           collapsible = TRUE, collapsed = TRUE,
+                           title = "Workflow Validation",
+                           fileInput(inputId = "validatewdlFile", "Upload WDL File:",
+                                     accept = ".wdl"),
+                           fileInput(inputId = "validateinputFile", "Upload Consolidated Input JSON:",
+                                     accept = ".json"),
+                           actionButton(inputId = "validateWorkflow",
+                                        label = "Validate Workflow",
+                                        icon = icon("question-circle")),
+                           verbatimTextOutput(outputId = "validationResult")
+                       )),
+              fluidRow( align = "center", 
+                        box(width = 12, solidHeader = FALSE, status = "success",
+                            collapsible = TRUE, collapsed = TRUE,
+                            title = "Workflow Submission",
+                            fileInput(inputId = "wdlFile", "Upload WDL File:",
+                                      accept = ".wdl"),
+                            fileInput(inputId = "inputJSON", "Upload First Input JSON:",
+                                      accept = ".json"),
+                            fileInput(inputId = "input2JSON","Upload Second Input JSON:",
+                                      accept = ".json"),
+                            fileInput(inputId = "workOptions","Upload Workflow Options JSON:",
+                                      accept = ".json"),
+                            actionButton(inputId = "submitWorkflow",
+                                         label = "SubmitWorkflow",
+                                         icon = icon("paper-plane")),
+                            verbatimTextOutput(outputId = "submissionResult")
+                        )),
+              fluidRow(align = "center", 
+                       box(title = "Workflow To Abort",
+                           collapsible = TRUE, collapsed = TRUE,
+                           width = 12,  solidHeader = FALSE, status = "danger",
+                           textInput("abortWorkflowID", "Cromwell workflow id to abort:",
+                                     value = ""),
+                           actionButton(inputId = "abortWorkflow",
+                                        label = "Abort Workflow",
+                                        icon = icon("thumbs-down")),
+                           verbatimTextOutput(outputId = "abortResult")
+                       ))
+      ),
       tabItem(tabName = "tracking", 
               fluidRow(h2("Cromwell Workflow Tracking"), align = "center"),
               fluidRow(
