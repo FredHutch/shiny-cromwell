@@ -1,4 +1,3 @@
-#remotes::install_github('FredHutch/fh.wdlR') # Minimum version v0.0.3
 library(shiny); library(shinydashboard);
 library(data.table); library(DT); library(tidyverse); 
 library(RColorBrewer) 
@@ -32,29 +31,27 @@ ui <- dashboardPage( skin = "black",
                     infoBoxOutput("inprogressBox", width = 6),
                     infoBoxOutput("successBox", width = 6),
                     infoBoxOutput("failBox", width = 6)
-                )
-              ),
-              fluidRow(
-                box(width = 6, 
-                    title = "Workflow Status",
-                    collapsible = TRUE, solidHeader = TRUE,
-                    plotOutput("workflowStatus")
                 ),
-                box(width = 6, 
-                    title = "Workflow Duration",
-                    collapsible = TRUE, solidHeader = TRUE,
-                    plotOutput("workflowDuration")
-                )
-              ),
-              fluidRow(
-                box(width = 12,
-                    title = "Cromwell Overview",
-                    collapsible = TRUE,solidHeader = TRUE,
-                    DTOutput("joblistCromwell")
-                )
-              ),
-              fluidRow(h3("Workflow Specific Job Information")),
-              fluidRow(
+                fluidRow(
+                  box(width = 6, 
+                      title = "Workflow Status",
+                      collapsible = TRUE, solidHeader = TRUE,
+                      plotOutput("workflowStatus")
+                  ),
+                  box(width = 6, 
+                      title = "Workflow Duration",
+                      collapsible = TRUE, solidHeader = TRUE,
+                      plotOutput("workflowDuration")
+                  )
+                ),
+                fluidRow(
+                  box(width = 12,
+                      title = "Cromwell Overview",
+                      collapsible = TRUE, solidHeader = TRUE,
+                      DTOutput("joblistCromwell")
+                  )
+                ),
+                fluidRow(h3("Workflow Specific Job Information"), align = "center"),
                 valueBoxOutput("pendingBatch", width = 4),
                 infoBoxOutput("runningBatch", width = 4),
                 infoBoxOutput("failedBatch", width = 4),
@@ -69,24 +66,31 @@ ui <- dashboardPage( skin = "black",
               ),
               fluidRow(
                 box(width = 12,
-                    title = "Workflow Job List",
-                    collapsible = TRUE,solidHeader = TRUE,collapsed = TRUE,
+                    title = "Job List",
+                    collapsible = TRUE,solidHeader = TRUE,collapsed = FALSE,
                     downloadButton("downloadJobs", "Download Workflow Jobs Data"),
                     DTOutput("tasklistBatch"))
               ),
               fluidRow(
                 box(width = 12,
-                    title = "Workflow Job Failures",
-                    collapsible = TRUE,solidHeader = TRUE,collapsed = TRUE,
+                    title = "Job Failures",
+                    collapsible = TRUE,solidHeader = TRUE,collapsed = FALSE,
                     downloadButton("downloadFails", "Download Call Failure Data"),
                     DTOutput("failurelistBatch"))
               ),
               fluidRow(
                 box(width = 12,
-                    title = "Workflow Call Caching",collapsed = TRUE,
-                    collapsible = TRUE,solidHeader = TRUE,
+                    title = "Call Caching",
+                    collapsible = TRUE,solidHeader = TRUE,collapsed = FALSE,
                     downloadButton("downloadCache", "Download Call Caching Data"),
                     DTOutput("cachingListBatch"))
+              ),
+              fluidRow(
+                box(width = 12,
+                    title = "Workflow Outputs",
+                    collapsible = TRUE, solidHeader = TRUE, collapsed = FALSE,
+                    downloadButton("downloadOutputs", "Download Workflow Output Data"),
+                    DTOutput("outputslistBatch"))
               )
       )
     )
