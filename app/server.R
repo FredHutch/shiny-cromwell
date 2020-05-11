@@ -1,9 +1,10 @@
-#require(devtools)
-#devtools::install_github('FredHutch/tgR@v0.1.1') # Minimum version v0.1.1
+## remotes::install_github('FredHutch/fh.wdlR@v0.1.1')
 library(shiny); library(shinydashboard);
 library(data.table); library(DT); library(tidyverse);
 library(RColorBrewer)
 library(fh.wdlR)
+# for rendering the About page:
+library(markdown)
 
 focusID <- 1
 
@@ -31,6 +32,15 @@ server <- function(input, output, session) {
   ## Show the workflow submission result in a box
   output$submissionResult <- renderPrint(submitWorkflowJob())
   
+  ## Troubleshoot a workflow
+  troubleWorkflowJob <- eventReactive(input$troubleWorkflow, {
+    Sys.setenv("CROMWELLURL" = paste0("http://", input$submitCromwellURL))
+    cromwellGlob(workflow_id = input$troubleWorkflowID)
+  }, ignoreNULL = TRUE)
+  ## Show the abort workflow result in a box
+  output$troubleResult <- renderPrint(troubleWorkflowJob())
+  
+  
   ## Abort a workflow
   abortWorkflowJob <- eventReactive(input$abortWorkflow, {
     Sys.setenv("CROMWELLURL" = paste0("http://", input$submitCromwellURL))
@@ -53,8 +63,9 @@ server <- function(input, output, session) {
     print("workflowUpdate")
     if(nrow(cromTable) == 1 & is.na(cromTable$workflow_id[1]) == T){workflowDat <- cromTable } else {
       workflowDat <- purrr::map_dfr(cromTable$workflow_id, cromwellWorkflow) %>% arrange(desc(submission)) %>% 
-        select(-c("workflow", "workflowUrl", "inputs")) # select(one_of("workflow_id", "workflowName", "actualWorkflowLanguage",
-      #  "status", "submission", "workflowDuration")) 
+        select(-c("workflow", "workflowUrl", "inputs", "metadataSource")) %>% 
+        select("workflowName", "workflow_id", "status", "submission","start", 
+               "end", "workflowDuration", "workflowRoot", everything()) 
     }
     workflowDat
   }, ignoreNULL = TRUE)
@@ -156,7 +167,7 @@ server <- function(input, output, session) {
         callDat <<- theseCalls } else {
           callDat <<- theseCalls %>% mutate(executionStatus = "NA")
         }
-      callDat
+      callDat %>% select("workflowName", "callName", "executionStatus", "shardIndex", "callRoot", "start", "end", "callDuration", "docker", "modules", everything()) 
     }, ignoreNULL = TRUE)
   
   output$workflowTiming <- renderPlot({
