@@ -167,7 +167,7 @@ server <- function(input, output, session) {
         callDat <<- theseCalls } else {
           callDat <<- theseCalls %>% mutate(executionStatus = "NA")
         }
-      callDat %>% select("workflowName", "callName", "executionStatus", "shardIndex", "callRoot", "start", "end", "callDuration", "docker", "modules", everything()) 
+      callDat %>% select(one_of("workflowName", "callName", "executionStatus", "shardIndex", "callRoot", "start", "end", "callDuration", "docker", "modules"), everything()) 
     }, ignoreNULL = TRUE)
   
   output$workflowTiming <- renderPlot({
