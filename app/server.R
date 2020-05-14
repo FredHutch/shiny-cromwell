@@ -1,4 +1,4 @@
-## remotes::install_github('FredHutch/fh.wdlR@v0.1.1')
+## remotes::install_github('FredHutch/fh.wdlR') @v0.1.1')
 library(shiny); library(shinydashboard);
 library(data.table); library(DT); library(tidyverse);
 library(RColorBrewer)
@@ -59,7 +59,8 @@ server <- function(input, output, session) {
   
   workflowUpdate <- eventReactive(input$trackingUpdate, {
     Sys.setenv("CROMWELLURL" = paste0("http://", input$currentCromwellURL))
-    cromTable <- cromwellJobs(days = input$daysToShow)
+    
+    cromTable <- cromwellJobs(days = input$daysToShow, workflowStatus = input$workStatus)
     print("workflowUpdate")
     if(nrow(cromTable) == 1 & is.na(cromTable$workflow_id[1]) == T){workflowDat <- cromTable } else {
       workflowDat <- purrr::map_dfr(cromTable$workflow_id, cromwellWorkflow) %>% arrange(desc(submission)) %>% 
@@ -231,7 +232,7 @@ server <- function(input, output, session) {
   
   
   ## Failure data
-  failsUpdate <- eventReactive(input$joblistCromwell_rows_selected,{
+  failsUpdate <- eventReactive(input$getFailedData,{
     data <- workflowUpdate()
     focusID <<- data[input$joblistCromwell_rows_selected,]$workflow_id
     print("cromwellFailures(); Querying cromwell for metadata for failures.")
@@ -258,7 +259,7 @@ server <- function(input, output, session) {
   )
   
   ### Call Caching data
-  cacheUpdate <- eventReactive(input$joblistCromwell_rows_selected,{
+  cacheUpdate <- eventReactive(input$getCacheData,{
     data <- workflowUpdate()
     focusID <<- data[input$joblistCromwell_rows_selected,]$workflow_id
     print("cromwellCache(); Querying cromwell for metadata for call caching.")
@@ -305,7 +306,7 @@ server <- function(input, output, session) {
   
   ## Outputs Data 
   ### Go get the output data for the selected workflow
-  outputsUpdate <- eventReactive(input$joblistCromwell_rows_selected,{
+  outputsUpdate <- eventReactive(input$getOutputData,{
     data <- workflowUpdate()
     focusID <<- data[input$joblistCromwell_rows_selected,]$workflow_id
     print("cromwellOutputs(); Querying cromwell for a list of workflow outputs.")
