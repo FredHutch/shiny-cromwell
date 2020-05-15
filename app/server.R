@@ -64,7 +64,7 @@ server <- function(input, output, session) {
     else {
     cromTable <- cromwellJobs(days = input$daysToShow, workflowStatus = input$workStatus,
                               workflowName = input$workName)}
-    print("workflowUpdate")
+    print("workflowUpdate(); Requesting Crowmell Job info")
     if(nrow(cromTable) == 1 & is.na(cromTable$workflow_id[1]) == T){workflowDat <- cromTable } else {
       workflowDat <- purrr::map_dfr(cromTable$workflow_id, cromwellWorkflow) %>% arrange(desc(submission)) %>% 
         select(-c("workflow", "workflowUrl", "inputs", "metadataSource")) %>% 
@@ -164,14 +164,13 @@ server <- function(input, output, session) {
     input$joblistCromwell_rows_selected,{
       data <- workflowUpdate()
       focusID <<- data[input$joblistCromwell_rows_selected,]$workflow_id
-      print("cromwellCall(); Querying cromwell for metadata for calls.")
-      print(input$joblistCromwell_rows_selected)
+      print("callsUpdate(); Querying cromwell for metadata for calls.")
       theseCalls <- cromwellCall(focusID)
       if ("executionStatus" %in% colnames(theseCalls)) {
         callDat <<- theseCalls } else {
           callDat <<- theseCalls %>% mutate(executionStatus = "NA")
         }
-      callDat %>% select(one_of("workflowName", "callName", "executionStatus", "shardIndex", "callRoot", "start", "end", "callDuration", "docker", "modules"), everything()) 
+      suppressWarnings(callDat %>% select(one_of("workflowName", "callName", "executionStatus", "shardIndex", "callRoot", "start", "end", "callDuration", "docker", "modules"), everything())) 
     }, ignoreNULL = TRUE)
   
   output$workflowTiming <- renderPlot({
@@ -237,10 +236,10 @@ server <- function(input, output, session) {
   failsUpdate <- eventReactive(input$getFailedData,{
     data <- workflowUpdate()
     focusID <- data[input$joblistCromwell_rows_selected,]$workflow_id
-    print("cromwellFailures(); Querying cromwell for metadata for failures.")
-    failDat <- cromwellFailures(focusID) %>%
+    print("failsUpdate(); Querying cromwell for metadata for failures.")
+    suppressWarnings(failDat <- cromwellFailures(focusID) %>%
       select(one_of("callName" ,"jobId", "workflow_id", "shardIndex", 'attempt',
-                    "failures.message", "failures.causedBy.message")) %>% unique()
+                    "failures.message", "failures.causedBy.message"), everything()) %>% unique())
     return(failDat)
   }, ignoreNULL = TRUE)
   
@@ -264,7 +263,7 @@ server <- function(input, output, session) {
   cacheUpdate <- eventReactive(input$getCacheData,{
     data <- workflowUpdate()
     focusID <<- data[input$joblistCromwell_rows_selected,]$workflow_id
-    print("cromwellCache(); Querying cromwell for metadata for call caching.")
+    print("cacheUpdate(); Querying cromwell for metadata for call caching.")
     theseCache <- cromwellCache(focusID)
     if ("callCaching.effectiveCallCachingMode" %in% colnames(theseCache)) {
       cacheDat <- theseCache %>% filter(callCaching.effectiveCallCachingMode %in% c("ReadAndWriteCache", "WriteCache"))} else {
@@ -311,7 +310,7 @@ server <- function(input, output, session) {
   outputsUpdate <- eventReactive(input$getOutputData,{
     data <- workflowUpdate()
     focusID <<- data[input$joblistCromwell_rows_selected,]$workflow_id
-    print("cromwellOutputs(); Querying cromwell for a list of workflow outputs.")
+    print("outputsUpdate(); Querying cromwell for a list of workflow outputs.")
     outDat <<- try(cromwellOutputs(focusID), silent = TRUE)
     if (is.data.frame(outDat)==F) {
       outDat <- data.frame("workflow_id" = "No outputs are available for this workflow yet.",  stringsAsFactors = F)
