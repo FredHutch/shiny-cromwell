@@ -178,7 +178,7 @@ server <- function(input, output, session) {
       ggplot(callsUpdate(), aes(x = as.factor(callName), y = callDuration)) +
         geom_jitter(aes(color = executionStatus)) + #coord_flip() +
         theme_minimal() + 
-        theme(axis.text.x = element_text( hjust = 1)) + #angle = 45,
+        theme(axis.text.x = element_text( hjust = 1, angle = 25)) +
         scale_color_manual(values = my.cols) +
         ylab("Call Duration (mins)") +
         xlab("Call Name")
