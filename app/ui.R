@@ -115,6 +115,8 @@ ui <- dashboardPage( skin = "black",
                                                    choices = c("Submitted", "Running",
                                                                "Succeeded", "Failed", "Aborting", 
                                                                "Aborted"),  multiple = TRUE),
+                                       textInput("workName", "Show workflow's with this name (must be a valid name!):",
+                                                 value = ""),
                                        actionButton(inputId = "trackingUpdate",
                                                     label = "Update View",
                                                     icon = icon("refresh"))

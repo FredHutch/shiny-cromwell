@@ -59,8 +59,11 @@ server <- function(input, output, session) {
   
   workflowUpdate <- eventReactive(input$trackingUpdate, {
     Sys.setenv("CROMWELLURL" = paste0("http://", input$currentCromwellURL))
-    
-    cromTable <- cromwellJobs(days = input$daysToShow, workflowStatus = input$workStatus)
+    if(input$workName == ""){ 
+      cromTable <- cromwellJobs(days = input$daysToShow, workflowStatus = input$workStatus)}
+    else {
+    cromTable <- cromwellJobs(days = input$daysToShow, workflowStatus = input$workStatus,
+                              workflowName = input$workName)}
     print("workflowUpdate")
     if(nrow(cromTable) == 1 & is.na(cromTable$workflow_id[1]) == T){workflowDat <- cromTable } else {
       workflowDat <- purrr::map_dfr(cromTable$workflow_id, cromwellWorkflow) %>% arrange(desc(submission)) %>% 
