@@ -229,17 +229,16 @@ server <- function(input, output, session) {
       write.csv(callsUpdate(), file, row.names = FALSE)
     }
   )
-  
-  
+
   ## Failure data
   failsUpdate <- eventReactive(input$getFailedData,{
     data <- workflowUpdate()
-    focusID <<- data[input$joblistCromwell_rows_selected,]$workflow_id
+    focusID <- data[input$joblistCromwell_rows_selected,]$workflow_id
     print("cromwellFailures(); Querying cromwell for metadata for failures.")
-    failDat <<- cromwellFailures(focusID) %>%
+    failDat <- cromwellFailures(focusID) %>%
       select(one_of("callName" ,"jobId", "workflow_id", "shardIndex", 'attempt',
                     "failures.message", "failures.causedBy.message")) %>% unique()
-    failDat
+    return(failDat)
   }, ignoreNULL = TRUE)
   
   output$failurelistBatch <- renderDT(
@@ -265,14 +264,14 @@ server <- function(input, output, session) {
     print("cromwellCache(); Querying cromwell for metadata for call caching.")
     theseCache <- cromwellCache(focusID)
     if ("callCaching.effectiveCallCachingMode" %in% colnames(theseCache)) {
-      cacheDat <<- theseCache %>% filter(callCaching.effectiveCallCachingMode %in% c("ReadAndWriteCache", "WriteCache"))} else {
-        cacheDat <<- theseCache %>% mutate(callCaching.effectiveCallCachingMode = "NA")
+      cacheDat <- theseCache %>% filter(callCaching.effectiveCallCachingMode %in% c("ReadAndWriteCache", "WriteCache"))} else {
+        cacheDat <- theseCache %>% mutate(callCaching.effectiveCallCachingMode = "NA")
       }
     cacheDat
   }, ignoreNULL = TRUE)
   
   output$cachingListBatch <- renderDT(
-    data <- cacheUpdate() %>% unique(),
+    data <- cacheUpdate() %>% select(workflowName, workflow_id, callName, shardIndex, executionStatus, everything()) %>% unique(),
     class = "compact",
     filter = "top",
     options = list(scrollX = TRUE),
