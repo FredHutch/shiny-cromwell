@@ -7,7 +7,7 @@ library(fh.wdlR)
 library(markdown)
 
 focusID <- 1
-
+my.cols <- brewer.pal(6, "RdYlBu")
 server <- function(input, output, session) {
   ###### Cromwell Submit tab ######
   ## Validate a possible workflow
@@ -79,9 +79,9 @@ server <- function(input, output, session) {
     if ("workflowName" %in% colnames(workflowUpdate())){
       ggplot(workflowUpdate(), aes(workflowName, fill=status)) +
         geom_bar(position = "stack") + coord_flip() +
-        theme_minimal() +
+        theme_minimal() + 
         theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
-        scale_fill_brewer(palette = "Spectral") + ylab("Number of Workflow Submissions") +
+        scale_fill_manual(values = my.cols) + ylab("Number of Workflow Submissions") +
         xlab("Workflow Name")
     } else {
       ggplot() + geom_blank()
@@ -103,12 +103,12 @@ server <- function(input, output, session) {
   
   output$workflowDuration <- renderPlot({
     if ("workflowName" %in% colnames(workflowUpdate())){
-      ggplot(workflowUpdate(), aes(workflowName, workflowDuration)) +
-        geom_boxplot(aes(fill = status)) + coord_flip() +
-        theme_minimal() +
+      ggplot(workflowUpdate(), aes(x = as.factor(workflowName), y = workflowDuration)) +
+        geom_point(aes(color = status), size = 3) + coord_flip() +
+        theme_minimal() + 
         theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-        scale_fill_brewer(type = "qualitative", palette = "Set1") +
-        ylab("Workflow Duration (hrs)") +
+        scale_color_manual(values = my.cols) +
+        ylab("Workflow Duration (mins)") +
         xlab("Workflow Name")
     } else {ggplot() + geom_blank()}
   })
@@ -175,11 +175,11 @@ server <- function(input, output, session) {
   
   output$workflowTiming <- renderPlot({
     if ("callName" %in% colnames(callsUpdate())){
-      ggplot(callsUpdate(), aes(callName, callDuration)) +
-        geom_boxplot(aes(fill = executionStatus)) + coord_flip() +
-        theme_minimal() +
-        theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-        scale_fill_brewer(type = "qualitative", palette = "Set1") +
+      ggplot(callsUpdate(), aes(x = as.factor(callName), y = callDuration)) +
+        geom_jitter(aes(color = executionStatus)) + #coord_flip() +
+        theme_minimal() + 
+        theme(axis.text.x = element_text( hjust = 1)) + #angle = 45,
+        scale_color_manual(values = my.cols) +
         ylab("Call Duration (mins)") +
         xlab("Call Name")
     } else {ggplot() + geom_blank()}
