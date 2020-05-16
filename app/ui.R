@@ -128,13 +128,9 @@ ui <- dashboardPage( skin = "black",
                                        infoBoxOutput("failBox", width = 6)
                                    )),
                                    fluidRow(
-                                     box(width = 6, 
-                                         title = "Workflow Status",
-                                         collapsible = TRUE, solidHeader = TRUE,
-                                         plotOutput("workflowStatus")
-                                     ),
-                                     box(width = 6, 
-                                         title = "Workflow Duration",
+
+                                     box(width = 12, 
+                                         title = "Workflows Run",
                                          collapsible = TRUE, solidHeader = TRUE,
                                          plotOutput("workflowDuration")
                                      )

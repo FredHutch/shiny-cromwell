@@ -75,19 +75,6 @@ server <- function(input, output, session) {
   }, ignoreNULL = TRUE)
   
   
-  output$workflowStatus <- renderPlot({
-    if ("workflowName" %in% colnames(workflowUpdate())){
-      ggplot(workflowUpdate(), aes(workflowName, fill=status)) +
-        geom_bar(position = "stack") + coord_flip() +
-        theme_minimal() + 
-        theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
-        scale_fill_manual(values = my.cols) + ylab("Number of Workflow Submissions") +
-        xlab("Workflow Name")
-    } else {
-      ggplot() + geom_blank()
-    }
-  })
-  
   callDurationUpdate <- eventReactive(input$trackingUpdate, {
     print("callDurationUpdate")
     if(nrow(workflowUpdate()) == 1 & is.na(workflowUpdate()$workflow_id[1]) == T) {
@@ -104,7 +91,7 @@ server <- function(input, output, session) {
   output$workflowDuration <- renderPlot({
     if ("workflowName" %in% colnames(workflowUpdate())){
       ggplot(workflowUpdate(), aes(x = as.factor(workflowName), y = workflowDuration)) +
-        geom_point(aes(color = status), size = 3) + coord_flip() +
+        geom_jitter(aes(color = status), width = 0.05, size = 4) + coord_flip() +
         theme_minimal() + 
         theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
         scale_color_manual(values = my.cols) +
@@ -176,7 +163,7 @@ server <- function(input, output, session) {
   output$workflowTiming <- renderPlot({
     if ("callName" %in% colnames(callsUpdate())){
       ggplot(callsUpdate(), aes(x = as.factor(callName), y = callDuration)) +
-        geom_jitter(aes(color = executionStatus), width = 0.1) + #coord_flip() +
+        geom_jitter(aes(color = executionStatus), width = 0.1, size = 3) + #coord_flip() +
         theme_minimal() + 
         theme(axis.text.x = element_text( hjust = 1, angle = 25)) +
         scale_color_manual(values = my.cols) +
