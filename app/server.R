@@ -69,7 +69,7 @@ server <- function(input, output, session) {
       workflowDat <- purrr::map_dfr(cromTable$workflow_id, cromwellWorkflow) %>% arrange(desc(submission)) %>% 
         select(-c("workflow", "workflowUrl", "inputs", "metadataSource")) %>% 
         select("workflowName", "workflow_id", "status", "submission","start", 
-               "end", "workflowDuration", "workflowRoot", everything()) 
+               "end", "workflowDuration",  everything()) # "workflowRoot",
     }
     workflowDat
   }, ignoreNULL = TRUE)
