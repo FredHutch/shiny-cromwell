@@ -7,12 +7,27 @@ library(fh.wdlR)
 library(markdown)
 
 focusID <- 1
+backends <- "No server found"
 my.cols <- brewer.pal(6, "RdYlBu")
 server <- function(input, output, session) {
+  ##### Set or update a Cromwell server url for the session ######
+  observeEvent(input$setCromwellURL, {
+    Sys.setenv("CROMWELLURL" = paste0("http://", input$cromwellURL))
+  }, ignoreNULL = TRUE)
+  
+  theBackends <- eventReactive(input$setCromwellURL, {
+    try(cromwellBackends()$supportedBackends, silent = TRUE)}, 
+    ignoreNULL = TRUE)
+  
+  output$connectionResult <- renderText({
+    if(class(theBackends()) == "try-error") print(theBackends())
+       else paste0("Server address valid! \n Available backends: ", 
+                   paste0(theBackends(), collapse = ", "))}, 
+    quoted = FALSE)
   ###### Cromwell Submit tab ######
   ## Validate a possible workflow
   validateWorkflow <- eventReactive(input$validateWorkflow, {
-    Sys.setenv("CROMWELLURL" = paste0("http://", input$submitCromwellURL))
+    #Sys.setenv("CROMWELLURL" = paste0("http://", input$submitCromwellURL))
     womtoolValidate(WDL = input$validatewdlFile$datapath, 
                     allInputs = input$validateinputFile$datapath)
     
@@ -22,7 +37,7 @@ server <- function(input, output, session) {
   
   ## Submit a workflow
   submitWorkflowJob <- eventReactive(input$submitWorkflow, {
-    Sys.setenv("CROMWELLURL" = paste0("http://", input$submitCromwellURL))
+    #Sys.setenv("CROMWELLURL" = paste0("http://", input$submitCromwellURL))
     cromwellSubmitBatch(WDL = input$wdlFile$datapath,
                         Params = input$inputJSON$datapath,
                         Batch = input$input2JSON$datapath,
@@ -34,7 +49,7 @@ server <- function(input, output, session) {
   
   ## Troubleshoot a workflow
   troubleWorkflowJob <- eventReactive(input$troubleWorkflow, {
-    Sys.setenv("CROMWELLURL" = paste0("http://", input$submitCromwellURL))
+    #Sys.setenv("CROMWELLURL" = paste0("http://", input$submitCromwellURL))
     cromwellGlob(workflow_id = input$troubleWorkflowID)
   }, ignoreNULL = TRUE)
   ## Show the abort workflow result in a box
@@ -43,7 +58,7 @@ server <- function(input, output, session) {
   
   ## Abort a workflow
   abortWorkflowJob <- eventReactive(input$abortWorkflow, {
-    Sys.setenv("CROMWELLURL" = paste0("http://", input$submitCromwellURL))
+    #Sys.setenv("CROMWELLURL" = paste0("http://", input$submitCromwellURL))
     cromwellAbort(workflow_id = input$abortWorkflowID)
   }, ignoreNULL = TRUE)
   ## Show the abort workflow result in a box
@@ -53,12 +68,9 @@ server <- function(input, output, session) {
   
   
   ############ CROMWELL Tracking Tab  ############
-  updateServer <- eventReactive(input$trackingUpdate, {
-    Sys.setenv("CROMWELLURL" = paste0("http://", input$submitCromwellURL))
-  }, ignoreNULL = FALSE)
-  
+
   workflowUpdate <- eventReactive(input$trackingUpdate, {
-    Sys.setenv("CROMWELLURL" = paste0("http://", input$currentCromwellURL))
+    #Sys.setenv("CROMWELLURL" = paste0("http://", input$currentCromwellURL))
     if(input$workName == ""){ 
       cromTable <- cromwellJobs(days = input$daysToShow, workflowStatus = input$workStatus)}
     else {
