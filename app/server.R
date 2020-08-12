@@ -11,12 +11,13 @@ focusID <- 1
 my.cols <- brewer.pal(6, "RdYlBu")
 server <- function(input, output, session) {
   ##### Set or update a Cromwell server url for the session ######
-  observeEvent(input$setCromwellURL, {
-    Sys.setenv("CROMWELLURL" = paste0("http://", input$cromwellURL))
-  }, ignoreNULL = TRUE)
+  # observeEvent(input$setCromwellURL, {
+  #   Sys.setenv("CROMWELLURL" = paste0("http://", input$cromwellURL))
+  # }, ignoreNULL = TRUE)
   
   theBackends <- eventReactive(input$setCromwellURL, {
-    try(cromwellBackends()$supportedBackends, silent = TRUE)}, 
+      print(input$setCromwellURL)
+    try(cromwellBackends(cromURL = paste0("http://", input$cromwellURL))$supportedBackends, silent = TRUE)}, 
     ignoreNULL = TRUE)
   
   output$connectionResult <- renderText({
@@ -28,7 +29,8 @@ server <- function(input, output, session) {
   ## Validate a possible workflow
   validateWorkflow <- eventReactive(input$validateWorkflow, {
     womtoolValidate(WDL = input$validatewdlFile$datapath, 
-                    allInputs = input$validateinputFile$datapath)
+                    allInputs = input$validateinputFile$datapath, 
+                    cromURL = paste0("http://", input$cromwellURL))
     
   }, ignoreNULL = TRUE)
   ## Show the validation result in a box
@@ -40,14 +42,15 @@ server <- function(input, output, session) {
                         Params = input$inputJSON$datapath,
                         Batch = input$input2JSON$datapath,
                         Options = input$workOptions$datapath,
-                        Labels = data.frame("workflowType" = "AppSubmission"))
+                        Labels = data.frame("workflowType" = "AppSubmission"),
+                        cromURL = paste0("http://", input$cromwellURL))
   }, ignoreNULL = TRUE)
   ## Show the workflow submission result in a box
   output$submissionResult <- renderPrint(submitWorkflowJob())
   
   ## Troubleshoot a workflow
   troubleWorkflowJob <- eventReactive(input$troubleWorkflow, {
-    cromwellGlob(workflow_id = input$troubleWorkflowID)
+    cromwellGlob(workflow_id = input$troubleWorkflowID,cromURL = paste0("http://", input$cromwellURL))
   }, ignoreNULL = TRUE)
   ## Show the abort workflow result in a box
   output$troubleResult <- renderPrint(troubleWorkflowJob())
@@ -55,7 +58,7 @@ server <- function(input, output, session) {
   
   ## Abort a workflow
   abortWorkflowJob <- eventReactive(input$abortWorkflow, {
-    cromwellAbort(workflow_id = input$abortWorkflowID)
+    cromwellAbort(workflow_id = input$abortWorkflowID, cromURL = paste0("http://", input$cromwellURL))
   }, ignoreNULL = TRUE)
   ## Show the abort workflow result in a box
   output$abortResult <- renderPrint(abortWorkflowJob())
@@ -67,13 +70,15 @@ server <- function(input, output, session) {
 
   workflowUpdate <- eventReactive(input$trackingUpdate, {
     if(input$workName == ""){ 
-      cromTable <- cromwellJobs(days = input$daysToShow, workflowStatus = input$workStatus)}
+      cromTable <- cromwellJobs(days = input$daysToShow, workflowStatus = input$workStatus, 
+                                cromURL = paste0("http://", input$cromwellURL))}
     else {
     cromTable <- cromwellJobs(days = input$daysToShow, workflowStatus = input$workStatus,
-                              workflowName = input$workName)}
+                              workflowName = input$workName,
+                              cromURL = paste0("http://", input$cromwellURL))}
     print("workflowUpdate(); Requesting Crowmell Job info")
     if(nrow(cromTable) == 1 & is.na(cromTable$workflow_id[1]) == T){workflowDat <- cromTable } else {
-      workflowDat <- purrr::map_dfr(cromTable$workflow_id, cromwellWorkflow) %>% arrange(desc(submission)) %>% 
+      workflowDat <- purrr::map_dfr(cromTable$workflow_id, cromwellWorkflow, cromURL = paste0("http://", input$cromwellURL)) %>% arrange(desc(submission)) %>% 
         select(-c("workflow", "workflowUrl", "inputs", "metadataSource")) %>% 
         select("workflowName", "workflow_id", "status", "submission","start", 
                "end", "workflowDuration",  everything()) # "workflowRoot",
@@ -159,7 +164,7 @@ server <- function(input, output, session) {
       data <- workflowUpdate()
       focusID <<- data[input$joblistCromwell_rows_selected,]$workflow_id
       print("callsUpdate(); Querying cromwell for metadata for calls.")
-      theseCalls <- cromwellCall(focusID)
+      theseCalls <- cromwellCall(focusID,cromURL = paste0("http://", input$cromwellURL))
       if ("executionStatus" %in% colnames(theseCalls)) {
         callDat <<- theseCalls } else {
           callDat <<- theseCalls %>% mutate(executionStatus = "NA")
@@ -231,7 +236,7 @@ server <- function(input, output, session) {
     data <- workflowUpdate()
     focusID <- data[input$joblistCromwell_rows_selected,]$workflow_id
     print("failsUpdate(); Querying cromwell for metadata for failures.")
-    suppressWarnings(failDat <- cromwellFailures(focusID) %>%
+    suppressWarnings(failDat <- cromwellFailures(focusID, cromURL = paste0("http://", input$cromwellURL)) %>%
       select(one_of("callName" ,"jobId", "workflow_id", "shardIndex", 'attempt',
                     "failures.message", "failures.causedBy.message"), everything()) %>% unique())
     return(failDat)
@@ -258,7 +263,7 @@ server <- function(input, output, session) {
     data <- workflowUpdate()
     focusID <<- data[input$joblistCromwell_rows_selected,]$workflow_id
     print("cacheUpdate(); Querying cromwell for metadata for call caching.")
-    theseCache <- cromwellCache(focusID)
+    theseCache <- cromwellCache(focusID, cromURL = paste0("http://", input$cromwellURL))
     if ("callCaching.effectiveCallCachingMode" %in% colnames(theseCache)) {
       cacheDat <- theseCache %>% filter(callCaching.effectiveCallCachingMode %in% c("ReadAndWriteCache", "WriteCache"))} else {
         cacheDat <- theseCache %>% mutate(callCaching.effectiveCallCachingMode = "NA")
@@ -305,7 +310,7 @@ server <- function(input, output, session) {
     data <- workflowUpdate()
     focusID <<- data[input$joblistCromwell_rows_selected,]$workflow_id
     print("outputsUpdate(); Querying cromwell for a list of workflow outputs.")
-    outDat <<- try(cromwellOutputs(focusID), silent = TRUE)
+    outDat <<- try(cromwellOutputs(focusID, cromURL = paste0("http://", input$cromwellURL)), silent = TRUE)
     if (is.data.frame(outDat)==F) {
       outDat <- data.frame("workflow_id" = "No outputs are available for this workflow yet.",  stringsAsFactors = F)
     } 
