@@ -22,7 +22,7 @@ ui <- dashboardPage( skin = "black",
                                   actionButton(inputId = "setCromwellURL",
                                                label = "Submit/Reset",
                                                icon = icon("refresh")),
-                                  verbatimTextOutput(outputId = "connectionResult")
+                                  h4(textOutput(outputId = "connectionResult"))
                          ),
                          menuItem("Submit Jobs", tabName = "submission", icon = icon("paper-plane"),
                                   badgeLabel = "compute", badgeColor = "light-blue"),

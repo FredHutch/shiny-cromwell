@@ -19,7 +19,15 @@ server <- function(input, output, session) {
       print(input$setCromwellURL)
     try(cromwellBackends(cromURL = paste0("http://", input$cromwellURL))$supportedBackends, silent = TRUE)}, 
     ignoreNULL = TRUE)
+ 
   
+  observeEvent(input$setCromwellURL, {
+    if(class(theBackends()) == "try-error") showNotification(ui = print(theBackends()), type = "error", duration = NULL)
+        else showNotification(ui = paste0("Server address valid! \n Available backends: ", 
+                                       paste0(theBackends(), collapse = ", ")),
+                              type = "message", duration = 10)
+  })
+
   output$connectionResult <- renderText({
     if(class(theBackends()) == "try-error") print(theBackends())
        else paste0("Server address valid! \n Available backends: ", 
