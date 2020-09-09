@@ -97,12 +97,12 @@ server <- function(input, output, session) {
                               workflowName = input$workName,
                               cromURL = paste0("http://", input$cromwellURL))}
     print("workflowUpdate(); Requesting Crowmell Job info")
-    # if(nrow(cromTable) == 1 & is.na(cromTable$workflow_id[1]) == T){workflowDat <- cromTable } else {
-    #   workflowDat <- purrr::map_dfr(cromTable$workflow_id, cromwellWorkflow, cromURL = paste0("http://", input$cromwellURL)) %>% arrange(desc(submission)) %>%
-    #     select(-c("workflow", "workflowUrl", "inputs", "metadataSource"))
-    # }
+    if("workflowName" %in% colnames(cromTable)) {
     workflowDat <- cromTable %>% select("workflowName", "workflow_id", "status", "submission","start",
                                         "end", "workflowDuration",  everything())
+    } else workflowDat <- data.frame(workflowName=character(0), workflow_id=character(0), 
+                                     status=character(0), submission=character(0),start=character(0),
+                                     end=character(0), workflowDuration=character(0))
     workflowDat
   }, ignoreNULL = TRUE)
   
