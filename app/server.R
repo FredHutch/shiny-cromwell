@@ -5,27 +5,39 @@ library(RColorBrewer)
 library(fh.wdlR)
 # for rendering the About page:
 library(markdown)
-
+library(shinyWidgets)
 focusID <- 1
 
 my.cols <- brewer.pal(6, "RdYlBu")
 server <- function(input, output, session) {
-  ##### Set or update a Cromwell server url for the session ######
-  # observeEvent(input$setCromwellURL, {
-  #   Sys.setenv("CROMWELLURL" = paste0("http://", input$cromwellURL))
-  # }, ignoreNULL = TRUE)
-  
-  theBackends <- eventReactive(input$setCromwellURL, {
-      print(input$setCromwellURL)
+    
+    observeEvent(input$getStarted, {
+        inputSweetAlert(
+            session = session, inputId = "cromwellURL", input = "text",
+            title = "What's your server node name and port?",
+            inputPlaceholder = "gizmot32:8000",
+            btn_labels = "Submit"
+        )
+    })
+
+  theBackends <- eventReactive(input$cromwellURL, {
     try(cromwellBackends(cromURL = paste0("http://", input$cromwellURL))$supportedBackends, silent = TRUE)}, 
     ignoreNULL = TRUE)
  
   
-  observeEvent(input$setCromwellURL, {
-    if(class(theBackends()) == "try-error") showNotification(ui = print(theBackends()), type = "error", duration = NULL)
-        else showNotification(ui = paste0("Server address valid! \n Available backends: ", 
-                                       paste0(theBackends(), collapse = ", ")),
-                              type = "message", duration = 10)
+  observeEvent(input$cromwellURL, {
+    if(class(theBackends()) == "try-error") {
+        sendSweetAlert(
+            session = session,
+            title = "Whoops, that didn't work!",
+            text = print(theBackends()),
+            type = "error")}
+        else sendSweetAlert(
+                session = session,
+                title = "Server address valid.",
+                text = paste0("Available backends: ",
+                              paste0(theBackends(), collapse = ", ")),
+                type = "success")
   })
 
   output$connectionResult <- renderText({

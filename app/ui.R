@@ -5,6 +5,7 @@ library(RColorBrewer)
 library(fh.wdlR)
 # for rendering the About page:
 library(markdown)
+library(shinyWidgets)
 
 ui <- dashboardPage( skin = "black",
                      dashboardHeader(title = "Fred Hutch Cromwell Dashboard",
@@ -13,16 +14,11 @@ ui <- dashboardPage( skin = "black",
                        sidebarMenu(
                          menuItem("Welcome", tabName = "welcome", icon = icon("book-open"), 
                                   badgeLabel = "info", badgeColor = "green"),
-                         menuItem("Connect to Server", tabName = "serverConf", 
-                                  startExpanded = TRUE, icon = icon("plug"), 
-                                  textInput("cromwellURL", 
-                                            label = "Set Cromwell host:port",
-                                            value = "",
-                                            placeholder = "gizmoz45:8000"),
-                                  actionButton(inputId = "setCromwellURL",
-                                               label = "Submit/Reset",
-                                               icon = icon("refresh")),
-                                  h4(textOutput(outputId = "connectionResult"))
+                         menuItem(tabName = "serverConf", 
+                                  startExpanded = TRUE,
+                                  actionButton(inputId = "getStarted",
+                                               label = "Connect to Server",
+                                               icon = icon("plug"))
                          ),
                          menuItem("Submit Jobs", tabName = "submission", icon = icon("paper-plane"),
                                   badgeLabel = "compute", badgeColor = "light-blue"),
