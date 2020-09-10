@@ -98,8 +98,8 @@ server <- function(input, output, session) {
                               cromURL = paste0("http://", input$cromwellURL))}
     print("workflowUpdate(); Requesting Crowmell Job info")
     if("workflowName" %in% colnames(cromTable)) {
-    workflowDat <- cromTable %>% select("workflowName", "workflow_id", "status", "submission","start",
-                                        "end", "workflowDuration",  everything())
+    workflowDat <- cromTable %>% select(one_of("workflowName", "workflow_id", "status", "submission","start",
+                                        "end", "workflowDuration"),  everything())
     } else workflowDat <- data.frame(workflowName=character(0), workflow_id=character(0), 
                                      status=character(0), submission=character(0),start=character(0),
                                      end=character(0), workflowDuration=character(0))
