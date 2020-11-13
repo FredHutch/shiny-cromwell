@@ -56,13 +56,16 @@ server <- function(input, output, session) {
   }, ignoreNULL = TRUE)
   ## Show the validation result in a box
   output$validationResult <- renderPrint(validateWorkflow())
+
+  output$labeldf <- renderPrint(input$labelValue)
+  
   ## Submit a workflow
   submitWorkflowJob <- eventReactive(input$submitWorkflow, {
     cromwellSubmitBatch(WDL = input$wdlFile$datapath,
                         Params = input$inputJSON$datapath,
                         Batch = input$input2JSON$datapath,
                         Options = input$workOptions$datapath,
-                        Labels = data.frame("workflowType" = "AppSubmission", 
+                        Labels = data.frame("workflowType" = "AppSubmission",
                                             "Label" = input$labelValue,
                                             "secondaryLabel" = input$seclabelValue),
                         cromURL = paste0("http://", input$cromwellURL))
