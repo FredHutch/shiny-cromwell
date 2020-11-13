@@ -6,6 +6,7 @@ library(fh.wdlR)
 # for rendering the About page:
 library(markdown)
 library(shinyWidgets)
+library(jsonlite)
 focusID <- 1
 
 my.cols <- brewer.pal(6, "RdYlBu")
@@ -55,14 +56,15 @@ server <- function(input, output, session) {
   }, ignoreNULL = TRUE)
   ## Show the validation result in a box
   output$validationResult <- renderPrint(validateWorkflow())
-  
   ## Submit a workflow
   submitWorkflowJob <- eventReactive(input$submitWorkflow, {
     cromwellSubmitBatch(WDL = input$wdlFile$datapath,
                         Params = input$inputJSON$datapath,
                         Batch = input$input2JSON$datapath,
                         Options = input$workOptions$datapath,
-                        Labels = data.frame("workflowType" = "AppSubmission"),
+                        Labels = data.frame("workflowType" = "AppSubmission", 
+                                            "Label" = input$labelValue,
+                                            "secondaryLabel" = input$seclabelValue),
                         cromURL = paste0("http://", input$cromwellURL))
   }, ignoreNULL = TRUE)
   ## Show the workflow submission result in a box
@@ -97,12 +99,12 @@ server <- function(input, output, session) {
                               workflowName = input$workName,
                               cromURL = paste0("http://", input$cromwellURL))}
     print("workflowUpdate(); Requesting Crowmell Job info")
-    if("workflowName" %in% colnames(cromTable)) {
+    if("workflow_id" %in% colnames(cromTable)) {
     workflowDat <- cromTable %>% select(one_of("workflowName", "workflow_id", "status", "submission","start",
                                         "end", "workflowDuration"),  everything())
     } else workflowDat <- data.frame(workflowName=character(0), workflow_id=character(0), 
                                      status=character(0), submission=character(0),start=character(0),
-                                     end=character(0), workflowDuration=character(0))
+                                     end=character(0), workflowDuration=integer(0))
     workflowDat
   }, ignoreNULL = TRUE)
   
@@ -170,6 +172,50 @@ server <- function(input, output, session) {
       color = "green", width = 3
     )
   })
+  ## Get a table of workflow labels
+  workflowLabels <- eventReactive(input$joblistCromwell_rows_selected, {
+    print("find Labels")
+    data <- workflowUpdate()
+    focusID <- data[input$joblistCromwell_rows_selected,]$workflow_id
+    workflow <- cromwellWorkflow(focusID, cromURL = paste0("http://", input$cromwellURL))
+    if ("workflowName" %in% colnames(workflow)) {
+      workflowDat <- workflow %>% select(-one_of("options", "workflow", "metadataSource", "inputs"))} else {
+        workflowDat <<- workflow %>% mutate(workflowName = "NA")
+      }
+    suppressWarnings(workflowDat %>% select(one_of("workflowName", "workflowRoot", "submission", "start", "end", "status", "workflowDuration"), everything())) 
+    })
+  output$workflowDescribe <- renderDT(
+    data <- workflowLabels(),
+    class = "compact",
+    filter = "top",
+    options = list(scrollX = TRUE), selection = "single", rownames= FALSE
+  )
+  ## Get a table of workflow options
+  workflowOptions <- eventReactive(input$joblistCromwell_rows_selected, {
+    print("find options")
+    data <- workflowUpdate()
+    focusID <- data[input$joblistCromwell_rows_selected,]$workflow_id
+    as.data.frame(jsonlite::fromJSON(cromwellWorkflow(focusID, cromURL = paste0("http://", input$cromwellURL))$options))
+  })
+  output$workflowOpt <- renderDT(
+    data <- workflowOptions(),
+    class = "compact",
+    filter = "top",
+    options = list(scrollX = TRUE), selection = "single", rownames= FALSE
+  )
+  ## Get a table of workflow inputs
+  workflowInputs <- eventReactive(input$joblistCromwell_rows_selected, {
+    print("find inputs")
+    data <- workflowUpdate()
+    focusID <- data[input$joblistCromwell_rows_selected,]$workflow_id
+    as.data.frame(jsonlite::fromJSON(cromwellWorkflow(focusID, cromURL = paste0("http://", input$cromwellURL))$inputs)) 
+  })
+  output$workflowInp <- renderDT(
+    data <- workflowInputs(),
+    class = "compact",
+    filter = "top",
+    options = list(scrollX = TRUE), selection = "single", rownames= FALSE
+  )
   ## Render a list of jobs in a table for a workflow
   output$joblistCromwell <- renderDT(
     data <- workflowUpdate(),

@@ -6,6 +6,7 @@ library(fh.wdlR)
 # for rendering the About page:
 library(markdown)
 library(shinyWidgets)
+library(jsonlite)
 
 ui <- dashboardPage( skin = "black",
                      dashboardHeader(title = "Fred Hutch Cromwell Dashboard",
@@ -63,24 +64,31 @@ ui <- dashboardPage( skin = "black",
                                               verbatimTextOutput(outputId = "validationResult")
                                           )),
                                  fluidRow(
-                                           box(width = 8, solidHeader = FALSE, status = "success",
+                                           box(width = 12, solidHeader = FALSE, status = "success",
                                                collapsible = TRUE, collapsed = FALSE,
                                                title = "Submit a Workflow",
+                                               column( width = 6,
                                                fileInput(inputId = "wdlFile", "Upload WDL File:",
                                                          accept = ".wdl"),
                                                fileInput(inputId = "inputJSON", "Upload First Input JSON:",
                                                          accept = ".json"),
                                                fileInput(inputId = "input2JSON","Upload Second Input JSON:",
-                                                         accept = ".json"),
+                                                         accept = ".json")),
+                                                column( width = 6,
                                                fileInput(inputId = "workOptions","Upload Workflow Options JSON:",
                                                          accept = ".json"),
+                                               textInput(inputId = "labelValue", "Workflow Label",
+                                                         placeholder = ""),
+                                               textInput(inputId = "seclabelName", "Secondary Workflow Label",
+                                                         placeholder = ""),
                                                actionButton(inputId = "submitWorkflow",
                                                             label = "SubmitWorkflow",
                                                             icon = icon("paper-plane")),
-                                               verbatimTextOutput(outputId = "submissionResult")),
+                                               verbatimTextOutput(outputId = "submissionResult")))),
+                                fluidRow(
                                                box(title = "Abort a Workflow",
                                                    collapsible = TRUE, collapsed = FALSE,
-                                                   width = 4,  solidHeader = FALSE, status = "danger",
+                                                   width = 12,  solidHeader = FALSE, status = "danger",
                                                    textInput("abortWorkflowID", "Cromwell workflow id to abort:",
                                                              value = ""),
                                                    actionButton(inputId = "abortWorkflow",
@@ -149,6 +157,19 @@ ui <- dashboardPage( skin = "black",
                                    infoBoxOutput("runningBatch", width = 3),
                                    infoBoxOutput("succeededBatch", width = 3),
                                    infoBoxOutput("failedBatch", width = 3)
+                                 ),
+                                 fluidRow(
+                                     box(width = 12,
+                                         title = "Workflow Description",
+                                         DTOutput("workflowDescribe"))
+                                 ),
+                                 fluidRow(
+                                     box(width = 6,
+                                         title = "Workflow Options",
+                                         DTOutput("workflowOpt")),
+                                     box(width = 6,
+                                         title = "Workflow Inputs",
+                                         DTOutput("workflowInp"))
                                  ),
                                  fluidRow( align = "center",
                                  box(width = 12,
