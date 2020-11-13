@@ -56,8 +56,6 @@ server <- function(input, output, session) {
   }, ignoreNULL = TRUE)
   ## Show the validation result in a box
   output$validationResult <- renderPrint(validateWorkflow())
-
-  output$labeldf <- renderPrint(input$labelValue)
   
   ## Submit a workflow
   submitWorkflowJob <- eventReactive(input$submitWorkflow, {

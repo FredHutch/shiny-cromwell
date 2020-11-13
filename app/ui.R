@@ -85,7 +85,7 @@ ui <- dashboardPage( skin = "black",
                                                             label = "SubmitWorkflow",
                                                             icon = icon("paper-plane")),
                                                verbatimTextOutput(outputId = "submissionResult")
-                                               )),
+                                               ))),
                                 fluidRow(
                                                box(title = "Abort a Workflow",
                                                    collapsible = TRUE, collapsed = FALSE,
