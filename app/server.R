@@ -1,4 +1,4 @@
-## remotes::install_github('FredHutch/fh.wdlR') @v0.1.1')
+## remotes::install_github('FredHutch/fh.wdlR')')
 library(shiny); library(shinydashboard);
 library(data.table); library(DT); library(tidyverse);
 library(RColorBrewer)
