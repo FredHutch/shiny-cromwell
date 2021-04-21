@@ -7,6 +7,7 @@ library(fh.wdlR)
 library(markdown)
 library(shinyWidgets)
 library(jsonlite)
+library(lubridate)
 
 ui <- dashboardPage( skin = "black",
                      dashboardHeader(title = "Fred Hutch Cromwell Dashboard",

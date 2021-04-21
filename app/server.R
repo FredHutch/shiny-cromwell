@@ -7,6 +7,7 @@ library(fh.wdlR)
 library(markdown)
 library(shinyWidgets)
 library(jsonlite)
+library(lubridate)
 focusID <- 1
 
 my.cols <- brewer.pal(6, "RdYlBu")
