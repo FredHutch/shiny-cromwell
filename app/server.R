@@ -237,7 +237,7 @@ server <- function(input, output, session) {
         callDat <<- theseCalls } else {
           callDat <<- theseCalls %>% mutate(executionStatus = "NA")
         }
-      suppressWarnings(callDat %>% select(one_of("workflowName", "callName", "executionStatus", "shardIndex", "callRoot", "start", "end", "callDuration", "docker", "modules"), everything())) 
+      suppressWarnings(callDat %>% select(one_of("workflowName","detailedSubName", "callName", "executionStatus", "shardIndex", "callRoot", "start", "end", "callDuration", "docker", "modules"), everything())) 
     }, ignoreNULL = TRUE)
   
   output$workflowTiming <- renderPlot({
@@ -305,7 +305,7 @@ server <- function(input, output, session) {
     focusID <- data[input$joblistCromwell_rows_selected,]$workflow_id
     print("failsUpdate(); Querying cromwell for metadata for failures.")
     suppressWarnings(failDat <- cromwellFailures(focusID, cromURL = paste0("http://", input$cromwellURL)) %>%
-      select(one_of("callName" ,"jobId", "workflow_id", "shardIndex", 'attempt',
+      select(one_of("callName" ,"jobId", "workflow_id","detailsSubName", "shardIndex", 'attempt',
                     "failures.message", "failures.causedBy.message"), everything()) %>% unique())
     return(failDat)
   }, ignoreNULL = TRUE)
