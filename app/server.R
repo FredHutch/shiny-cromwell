@@ -305,7 +305,7 @@ server <- function(input, output, session) {
     focusID <- data[input$joblistCromwell_rows_selected,]$workflow_id
     print("failsUpdate(); Querying cromwell for metadata for failures.")
     suppressWarnings(failDat <- cromwellFailures(focusID, cromURL = paste0("http://", input$cromwellURL)) %>%
-      select(one_of("callName" ,"jobId", "workflow_id","detailsSubName", "shardIndex", 'attempt',
+      select(one_of("callName" ,"jobId", "workflow_id","detailedSubName", "shardIndex", 'attempt',
                     "failures.message", "failures.causedBy.message"), everything()) %>% unique())
     return(failDat)
   }, ignoreNULL = TRUE)
