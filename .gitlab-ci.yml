@@ -19,10 +19,11 @@ build_test:
 deploy:
   only:
     refs:
-       - master
+       - main
   script:
     - docker login --username $DOCKERIMAGES_USER --password $DOCKERIMAGES_PASS https://dockerimages.fhcrc.org
     - docker push dockerimages.fhcrc.org/shiny-cromwell:latest
     - sleep 15
     - rancher-v0.6.2/rancher --url https://ponderosa.fhcrc.org --access-key $RANCHERAPI_KEY --secret-key $RANCHERAPI_SECRET up -d --pull --force-upgrade --confirm-upgrade --stack shiny-cromwell --file docker-compose.yml --rancher-file rancher-compose.yml
   
+
