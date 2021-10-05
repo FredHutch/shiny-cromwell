@@ -4,7 +4,7 @@ RUN apt-get update -y && apt-get install -y libssh-dev
 
 RUN R -q -e 'install.packages(c("shiny", "shinyWidgets", "shinydashboard", "ssh", "paws", "remotes", "markdown", "lubridate", "jsonlite"), repos="https://cran.r-project.org")'
 
-RUN R -q -e "remotes::install_github('FredHutch/fh.wdlR@v1.0.1')"
+RUN R -q -e "remotes::install_github('FredHutch/fh.wdlR@v1.1.0')"
 
 RUN rm -rf /srv/shiny-server/
 ADD app/. /srv/shiny-server/

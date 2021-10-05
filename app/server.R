@@ -255,7 +255,7 @@ server <- function(input, output, session) {
   ## Render some info boxes
   output$pendingBatch <- renderValueBox({
     infoBox(
-      "Pending",value = nrow(callsUpdate()  %>% filter(executionStatus %in% c("Starting"))),
+      "Pending",value = nrow(callsUpdate()  %>% filter(executionStatus %in% c("Starting", "QueuedInCromwell"))),
       icon = icon("clock"),
       color = "yellow", width = 6
     )
