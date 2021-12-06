@@ -50,7 +50,7 @@ server <- function(input, output, session) {
   ###### Cromwell Submit tab ######
   ## Validate a possible workflow
   validateWorkflow <- eventReactive(input$validateWorkflow, {
-    womtoolValidate(WDL = input$validatewdlFile$datapath, 
+    cromwellValidate(WDL = input$validatewdlFile$datapath, 
                     allInputs = input$validateinputFile$datapath, 
                     cromURL = paste0("http://", input$cromwellURL))
     
@@ -101,7 +101,7 @@ server <- function(input, output, session) {
                               workflowName = input$workName,
                               cromURL = paste0("http://", input$cromwellURL))}
     print("workflowUpdate(); Requesting Crowmell Job info")
-    if("workflowName" %in% colnames(cromTable)) {
+    if("workflow_id" %in% colnames(cromTable)) {
     workflowDat <- cromTable %>% select(one_of("workflowName", "workflow_id", "status", "submission","start",
                                         "end", "workflowDuration"),  everything())
     } else workflowDat <- data.frame(workflowName=character(0), workflow_id=character(0), 
