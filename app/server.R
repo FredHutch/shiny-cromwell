@@ -243,7 +243,7 @@ server <- function(input, output, session) {
   output$workflowTiming <- renderPlot({
     if ("callName" %in% colnames(callsUpdate())){
       ggplot(callsUpdate(), aes(x = as.factor(callName), y = callDuration)) +
-        geom_jitter(aes(color = executionStatus), width = 0.1, size = 3) + #coord_flip() +
+        geom_point(aes(color = executionStatus), width = 0.1, size = 3) + #coord_flip() +
         theme_minimal() + 
         theme(axis.text.x = element_text( hjust = 1, angle = 25)) +
         scale_color_manual(values = my.cols) +
