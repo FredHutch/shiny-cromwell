@@ -127,7 +127,7 @@ server <- function(input, output, session) {
   output$workflowDuration <- renderPlot({
     if ("workflowName" %in% colnames(workflowUpdate())){
       ggplot(workflowUpdate(), aes(x = as.factor(workflowName), y = workflowDuration)) +
-        geom_jitter(aes(color = status), width = 0.05, size = 4) + coord_flip() +
+        geom_point(aes(color = status), width = 0.05, size = 4) + coord_flip() +
         theme_minimal() + 
         theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
         scale_color_manual(values = my.cols) +
