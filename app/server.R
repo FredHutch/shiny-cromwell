@@ -126,7 +126,7 @@ server <- function(input, output, session) {
   
   output$workflowDuration <- renderPlot({
     if ("workflowName" %in% colnames(workflowUpdate())){
-      ggplot(workflowUpdate(), aes(x = as.factor(workflowName), y = workflowDuration)) +
+      ggplot(workflowUpdate(), aes(x = as.factor(workflowName), y = as.numeric(workflowDuration, units = "minutes"))) +
         geom_point(aes(color = status), width = 0.05, size = 4) + coord_flip() +
         theme_minimal() + 
         theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
