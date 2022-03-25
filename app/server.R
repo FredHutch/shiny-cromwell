@@ -126,7 +126,7 @@ server <- function(input, output, session) {
   
   output$workflowDuration <- renderPlot({
     if ("workflowName" %in% colnames(workflowUpdate())){
-      ggplot(workflowUpdate(), aes(x = as.factor(workflowName), y = as.numeric(workflowDuration, units = "minutes"))) +
+      ggplot(workflowUpdate(), aes(x = as.factor(workflowName), y = as.numeric(workflowDuration))) +
         geom_point(aes(color = status), width = 0.05, size = 4) + coord_flip() +
         theme_minimal() + 
         theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
@@ -333,7 +333,7 @@ server <- function(input, output, session) {
     print("cacheUpdate(); Querying cromwell for metadata for call caching.")
     theseCache <- cromwellCache(focusID, cromURL = paste0("http://", input$cromwellURL))
     if ("callCaching.effectiveCallCachingMode" %in% colnames(theseCache)) {
-      cacheDat <- theseCache %>% filter(callCaching.effectiveCallCachingMode %in% c("ReadAndWriteCache", "WriteCache"))} else {
+      cacheDat <- theseCache } else {
         cacheDat <- theseCache %>% mutate(callCaching.effectiveCallCachingMode = "NA")
       }
     cacheDat
