@@ -1,9 +1,21 @@
-version: '2'
+version: '3.3'
 services:
   shiny-cromwell:
-    image: dockerimages.fhcrc.org/shiny-cromwell:latest
+    networks:
+      - proxy
+    image: sc-registry.fredhutch.org/shiny-cromwell:latest
+    deploy:
+      restart_policy:
+        condition: on-failure
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.shiny-cromwell.rule=Host(`cromwellapp0.fredhutch.org`)"
+        - "traefik.http.routers.shiny-cromwell-secured.rule=Host(`cromwellapp0.fredhutch.org`)"
+        - "traefik.http.routers.shiny-cromwell.entrypoints=web,web-secured"
+        - "traefik.http.services.shiny-cromwell.loadbalancer.server.port=3838" # it seems you always need to give traefik a port so it 'notices' the service
+        - "traefik.http.routers.shiny-cromwell.tls=true"
 
-    labels:
-      io.rancher.container.pull_image: always
 
-    restart: always
+networks:
+  proxy:
+    external: true
