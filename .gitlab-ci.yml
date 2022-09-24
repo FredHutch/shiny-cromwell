@@ -35,16 +35,6 @@ build:
     docker push sc-registry.fredhutch.org/shiny-cromwell:test
     sleep 5
 
-    - docker build -t sc-registry.fredhutch.org/shiny-cromwell:test .
-    - |
-        if docker ps -a|tr -s ' '|rev|cut -d ' ' -f 1|rev|grep -q shiny-cromwell
-        then
-        docker stop shiny-cromwell && docker rm --force shiny-cromwell
-        fi
-    - docker run -d --name shiny-cromwell -p 3838:3838 sc-registry.fredhutch.org/shiny-cromwell:latest
-    - sleep 15 && curl -sI  http://localhost:3838  |head -1|grep -q "200 OK"
-    - docker stop shiny-cromwell && docker rm --force shiny-cromwell
-
 test:
   stage: test
   services: 
