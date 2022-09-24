@@ -30,7 +30,7 @@ stages:
 build:
   stage: build
   script: |
-    python3 build_helper.py docker-compose-prod.yml > /dev/null
+    python3 build_helper.py docker-compose.yml > /dev/null
     docker build -t sc-registry.fredhutch.org/shiny-cromwell:test .
     docker push sc-registry.fredhutch.org/shiny-cromwell:test
     sleep 5
@@ -70,7 +70,7 @@ deploy:
     - sleep 15
     - echo $SC_SWARM_CICD_SSH_KEY | base64 -d > ./sc_swarm_cicd_ssh_key
     - chmod 0400 ./sc_swarm_cicd_ssh_key
-    - python3 build_helper.py docker-compose-prod.yml | ssh -i ./sc_swarm_cicd_ssh_key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@sc-swarm-mgr.fhcrc.org docker stack deploy --prune --with-registry-auth -c - shiny-cromwell
+    - python3 build_helper.py docker-compose.yml | ssh -i ./sc_swarm_cicd_ssh_key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@sc-swarm-mgr.fhcrc.org docker stack deploy --prune --with-registry-auth -c - shiny-cromwell
     - rm -f ./sc_swarm_cicd_ssh_key
 
 
