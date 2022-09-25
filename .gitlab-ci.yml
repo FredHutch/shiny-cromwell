@@ -54,6 +54,9 @@ deploy:
   only:
     refs:
        - main
+       # TODO REMOVE THIS!!!
+       - migrate-to-swarm
+       # REMOVE ^^^ THAT!!!
   script:
     - docker tag sc-registry.fredhutch.org/shiny-cromwell:test sc-registry.fredhutch.org/shiny-cromwell:latest
     - docker push sc-registry.fredhutch.org/shiny-cromwell:latest
