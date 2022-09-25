@@ -43,7 +43,7 @@ test:
       alias: shiny-cromwell
   script: |
     sleep 30
-    docker ps
+    # docker ps
     # CONTAINER_ID=$(docker ps | grep sc-registry.fredhutch.org__shiny-cromwell- | cut -d' ' -f1)
     # env
     # curl -si http://shiny-cromwell:3838/
