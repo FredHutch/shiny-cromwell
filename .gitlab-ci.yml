@@ -42,13 +42,13 @@ test:
     - name: sc-registry.fredhutch.org/shiny-cromwell:test
       alias: shiny-cromwell
   script: |
-    sleep 90
+    sleep 30
     docker ps
-    CONTAINER_ID=$(docker ps | grep sc-registry.fredhutch.org__shiny-cromwell- | cut -d' ' -f1)
-    env
-    curl -si http://shiny-cromwell:3838/
-    docker logs $CONTAINER_ID
-    # curl -sI http://shiny-cromwell:3838 | head -1 | grep -q "200 OK"
+    # CONTAINER_ID=$(docker ps | grep sc-registry.fredhutch.org__shiny-cromwell- | cut -d' ' -f1)
+    # env
+    # curl -si http://shiny-cromwell:3838/
+    # docker logs $CONTAINER_ID
+    curl -sI http://shiny-cromwell:3838 | head -1 | grep -q "200 OK"
 
   
 deploy:
@@ -56,9 +56,6 @@ deploy:
   only:
     refs:
        - main
-       # TODO REMOVE THIS!!!
-       - migrate-to-swarm
-       # REMOVE ^^^ THAT!!!
   script:
     - docker tag sc-registry.fredhutch.org/shiny-cromwell:test sc-registry.fredhutch.org/shiny-cromwell:latest
     - docker push sc-registry.fredhutch.org/shiny-cromwell:latest
