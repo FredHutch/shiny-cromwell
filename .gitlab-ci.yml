@@ -41,7 +41,7 @@ test:
     - name: sc-registry.fredhutch.org/shiny-cromwell:test
       alias: shiny-cromwell
   script: |
-    sleep 30
+    sleep 90
     docker ps
     CONTAINER_ID=$(docker ps | grep sc-registry.fredhutch.org__shiny-cromwell- | cut -d' ' -f1)
     env
