@@ -12,6 +12,7 @@ stages:
   - build
   - test
   - deploy
+
 before_script:
   - apk update
   - apk --no-cache add py3-pip python3 curl
@@ -51,6 +52,7 @@ test:
 
   
 deploy:
+  stage: deploy
   only:
     refs:
        - main
