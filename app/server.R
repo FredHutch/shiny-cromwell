@@ -31,7 +31,7 @@ server <- function(input, output, session) {
     if(class(theBackends()) == "try-error") {
         sendSweetAlert(
             session = session,
-            title = "Whoops, that didn't work!",
+            title = "Whoops, that didn't work! If your server has only been running for <1 min, wait and try to reconnect again. ",
             text = print(theBackends()),
             type = "error")}
         else sendSweetAlert(

@@ -4,15 +4,18 @@ This is a basic shiny app that you can use once you have used the Fred Hutch HPC
 #### Submit Jobs Tab
 This tab allows you to:
 - validate a workflow you'd like to run,
-- run said workflow,
-- troubleshoot the workflow itself by looking at the raw json of workflow metadata (sometimes it's helpful!),
-- abort a workflow.
+- run said workflow.
 
 #### Track Jobs Tab
-This tab allows to:
+This tab allows you to:
 - query your Cromwell database for the jobs run the most recent days (your choice how far back to go),
 - see how all of your workflows status',
 - look within a workflow at the individual calls, failures and call caching results,
 - download a list of the final workflow outputs for further processing.
 
-If you have issues or wishlist items for this app specifically, please file them as issues in the GitHub repo [for this Cromwell app](https://github.com/FredHutch/shiny-cromwell).  You can also ask questions about the app, Cromwell or WDL in general over in The Coop's [Slack channel for cromwell-wdl](https://fhbig.slack.com/archives/CTFU13URJ).
+#### Troubleshoot Tab
+This tab allows you to:
+- abort a workflow
+- troubleshoot the workflow itself by looking at the entire, raw json of workflow metadata (sometimes it's helpful but especially for complex workflows, this is can be large and daunting to parse!).
+
+If you have issues or wishlist items for this app specifically, please file them as issues in the GitHub repo [for this Cromwell app](https://github.com/FredHutch/shiny-cromwell).  You can also ask questions about the app, Cromwell or WDL in general over in the [FH-Data Slack channel for #workflow-managers](https://fhdata.slack.com/archives/CJFP1NYSZ).

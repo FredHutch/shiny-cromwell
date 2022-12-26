@@ -10,8 +10,7 @@ library(jsonlite)
 library(lubridate)
 
 ui <- dashboardPage( skin = "black",
-                     dashboardHeader(title = "Fred Hutch Cromwell Dashboard",
-                                     titleWidth = 450),
+                     dashboardHeader(title = "Fred Hutch Cromwell Dashboard"),
                      dashboardSidebar(
                        sidebarMenu(
                          menuItem("Welcome", tabName = "welcome", icon = icon("book-open"), 
@@ -25,7 +24,9 @@ ui <- dashboardPage( skin = "black",
                          menuItem("Submit Jobs", tabName = "submission", icon = icon("paper-plane"),
                                   badgeLabel = "compute", badgeColor = "light-blue"),
                          menuItem("Track Jobs", tabName = "tracking", icon = icon("binoculars"),
-                                  badgeLabel = "monitor", badgeColor = "purple")
+                                  badgeLabel = "monitor", badgeColor = "purple"),
+                         menuItem("Troubleshoot", tabName = "troubleshoot", icon = icon("wrench"),
+                                  badgeLabel = "troubleshoot", badgeColor = "teal")
                        )
                      ),
                      dashboardBody(
@@ -50,14 +51,18 @@ ui <- dashboardPage( skin = "black",
                          ),
                          tabItem(tabName = "submission",
                                  fluidRow(h2("Run Workflows on Cromwell"), align = "center"),
-                                 fluidRow(align = "center", 
+                                 fluidRow(align = "left", 
                                           ## Validate a Workflow
                                           box(width = 12,  solidHeader = FALSE, status = "info",
                                               collapsible = TRUE, collapsed = FALSE,
                                               title = "Validate a Workflow",
-                                              fileInput(inputId = "validatewdlFile", "Upload WDL File:",
+                                              p("This tool will check to see if the WDL (and it's input JSON if you choose to upload it)
+                                                are both in the correct format required and if not will give you some
+                                                hints as to what might be wrong.  If your workflow does not validate, the feedback often hints 
+                                                at a problem just below where your error actually is. "),
+                                              fileInput(inputId = "validatewdlFile", "Upload WDL File (required):",
                                                         accept = ".wdl"),
-                                              fileInput(inputId = "validateinputFile", "Upload Consolidated Input JSON:",
+                                              fileInput(inputId = "validateinputFile", "Upload Consolidated Input JSON (optional):",
                                                         accept = ".json"),
                                               actionButton(inputId = "validateWorkflow",
                                                            label = "Validate Workflow",
@@ -68,51 +73,33 @@ ui <- dashboardPage( skin = "black",
                                            box(width = 12, solidHeader = FALSE, status = "success",
                                                collapsible = TRUE, collapsed = FALSE,
                                                title = "Submit a Workflow",
+                                               p("Here you can submit your workflow to your Cromwell server for execution.  Only a WDL is required. Up to two different input JSONs
+                                                 can be uploaded (if variables are specified in both, the second input's variable value will overwrite the first). Workflow options
+                                                 can be provided if desired.  Workflow labels are user-defined values you'd like to use to describe your workflows for your own
+                                                 future reference. "),
                                                column( width = 6,
-                                               fileInput(inputId = "wdlFile", "Upload WDL File:",
+                                                fileInput(inputId = "wdl", "Upload WDL (required):",
                                                          accept = ".wdl"),
-                                               fileInput(inputId = "inputJSON", "Upload First Input JSON:",
+                                               fileInput(inputId = "inputJSON", "Upload First Input JSON (optional):",
                                                          accept = ".json"),
-                                               fileInput(inputId = "input2JSON","Upload Second Input JSON:",
-                                                         accept = ".json")),
+                                               fileInput(inputId = "input2JSON","Upload Second Input JSON (optional):",
+                                                         accept = ".json")
+                                               ),
                                                 column( width = 6,
-                                               fileInput(inputId = "workOptions","Upload Workflow Options JSON:",
+                                               fileInput(inputId = "workOptions","Upload Workflow Options JSON (optional):",
                                                          accept = ".json"),
-                                               textInput(inputId = "labelValue", "Workflow Label",
-                                                         value = ""),
-                                               textInput(inputId = "seclabelValue", "Secondary Workflow Label",
-                                                         value = ""),
+                                               textInput(inputId = "labelValue", "Workflow Label (optional)",
+                                                         value = "",
+                                                         placeholder = "e.g., First Try"),
+                                               textInput(inputId = "seclabelValue", "Secondary Workflow Label (optional)",
+                                                         value = "",
+                                                         placeholder = "e.g., Cohort 2"),
                                                actionButton(inputId = "submitWorkflow",
                                                             label = "SubmitWorkflow",
                                                             icon = icon("paper-plane")),
                                                verbatimTextOutput(outputId = "submissionResult")
-                                               ))),
-                                fluidRow(
-                                               box(title = "Abort a Workflow",
-                                                   collapsible = TRUE, collapsed = FALSE,
-                                                   width = 12,  solidHeader = FALSE, status = "danger",
-                                                   textInput("abortWorkflowID", "Cromwell workflow id to abort:",
-                                                             value = ""),
-                                                   actionButton(inputId = "abortWorkflow",
-                                                                label = "Abort Workflow",
-                                                                icon = icon("thumbs-down")),
-                                                   verbatimTextOutput(outputId = "abortResult")
-                                               )
-                                           ),
-
-                                 fluidRow(align = "center", 
-                                          ## Troubleshoot a workflow via Glob
-                                          box(width = 12,  solidHeader = FALSE, status = "info",
-                                              collapsible = TRUE, collapsed = FALSE,
-                                              title = "Troubleshoot a Workflow",
-                                              textInput("troubleWorkflowID", "Cromwell workflow id to get metadata for:",
-                                                        value = ""),
-                                              actionButton(inputId = "troubleWorkflow",
-                                                           label = "Get Workflow Metadata",
-                                                           icon = icon("question-circle")),
-                                              verbatimTextOutput(outputId = "troubleResult")
-                                          ))
-                         ),
+                                               )))
+                                 ),
                          tabItem(tabName = "tracking", 
                                  fluidRow(h2("Cromwell Workflow Tracking"), align = "center"),
                                  fluidRow(
@@ -142,19 +129,20 @@ ui <- dashboardPage( skin = "black",
                                    fluidRow(
 
                                      box(width = 12, 
-                                         title = "Workflows Run",
+                                         title = "Workflow Timing",
                                          collapsible = TRUE, solidHeader = TRUE,
                                          plotOutput("workflowDuration")
                                      )
                                    ),
                                    fluidRow(
                                      box(width = 12,
-                                         title = "Cromwell Overview",
+                                         title = "Workflows Run",
                                          collapsible = TRUE, solidHeader = TRUE,
                                          DTOutput("joblistCromwell")
                                      )
                                    ),
-                                   fluidRow(h3("Workflow Specific Job Information (select a row above)"), align = "center",
+                                   fluidRow(h3("Workflow Specific Job Information"), align = "center",
+                                            p("Select a row in the above table for a specific workflow id in order to populate the tables below.  "),
                                    valueBoxOutput("pendingBatch", width = 3),
                                    infoBoxOutput("runningBatch", width = 3),
                                    infoBoxOutput("succeededBatch", width = 3),
@@ -188,7 +176,8 @@ ui <- dashboardPage( skin = "black",
                                  ),
                                  fluidRow(
                                    box(width = 12,
-                                       title = "Job Failures (only upon request)",
+                                       title = "Job Failures",
+                                       p("Specific information for jobs with a status of 'Failed', only available upon request."),
                                        collapsible = TRUE,solidHeader = TRUE,collapsed = FALSE,
                                        actionButton(inputId = "getFailedData",
                                                     label = "Get/Refresh Failed Job Metadata",
@@ -202,17 +191,19 @@ ui <- dashboardPage( skin = "black",
                                           ),
                                  fluidRow(
                                    box(width = 12,
-                                       title = "Call Caching (only upon request)", 
+                                       title = "Call Caching ", 
+                                       p("Only available upon request.  Note: this can be slow for very complex workflows.  "),
                                        collapsible = TRUE,solidHeader = TRUE,collapsed = FALSE,
                                        actionButton(inputId = "getCacheData",
-                                                    label = "Get/Refresh Call Caching Metadata (may be slow for workflows with many calls and/or inputs)",
+                                                    label = "Get/Refresh Call Caching Metadata",
                                                     icon("refresh")),
                                        downloadButton("downloadCache", "Download Call Caching Data"),
                                        DTOutput("cachingListBatch"))
                                  ),
                                  fluidRow(
                                    box(width = 12,
-                                       title = "Workflow Outputs (only upon request and after workflow succeeds)",
+                                       title = "Get Workflow Outputs",
+                                       p("The specific outputs to the entire workflow itself are listed here only upon request and only if they are all available. "),
                                        collapsible = TRUE, solidHeader = TRUE, collapsed = FALSE,
                                        actionButton(inputId = "getOutputData",
                                                     label = "Get/Refresh Workflow Output Metadata",
@@ -220,6 +211,37 @@ ui <- dashboardPage( skin = "black",
                                        downloadButton("downloadOutputs", "Download Workflow Output Data"),
                                        DTOutput("outputslistBatch"))
                                  )
+                         ),
+                         tabItem(tabName = "troubleshoot",
+                                 fluidRow(align = "left", 
+                                     box(title = "Abort a Workflow",
+                                         p("Aborting a workflow cannot be undone and can take some time to fully stop all jobs submitted in complex or highly parallelized workflows."),
+                                         collapsible = TRUE, collapsed = FALSE,
+                                         width = 12,  solidHeader = FALSE, status = "danger",
+                                         textInput("abortWorkflowID", "Workflow id to abort:",
+                                                   value = "",
+                                                   placeholder = "577b9aa4-b26b-4fd6-9f17-7fb33780bbd0"),
+                                         actionButton(inputId = "abortWorkflow",
+                                                      label = "Abort Workflow",
+                                                      icon = icon("thumbs-down")),
+                                         verbatimTextOutput(outputId = "abortResult")
+                                     )
+                                 ),
+                                 
+                                 fluidRow(align = "left", 
+                                          ## Troubleshoot a workflow via Glob
+                                          box(width = 12,  solidHeader = FALSE, status = "info",
+                                              collapsible = TRUE, collapsed = FALSE,
+                                              title = "Troubleshoot a Workflow",
+                                              p("When a workflow fails but no jobs were started, or there appears to be no clear reason for a workflow to have failed, this tool can provide you the entire set of workflow metadata Cromwell has for your workflow in it's raw and unprocessed (json) form. For complex workflows, this can be rather large (and ugly!)."),
+                                              textInput("troubleWorkflowID", "Cromwell workflow id to get metadata for:",
+                                                        value = "",
+                                                        placeholder = "577b9aa4-b26b-4fd6-9f17-7fb33780bbd0"),
+                                              actionButton(inputId = "troubleWorkflow",
+                                                           label = "Get Complete Workflow Metadata",
+                                                           icon = icon("question-circle")),
+                                              verbatimTextOutput(outputId = "troubleResult")
+                                          ))
                          )
                        )
                      )
