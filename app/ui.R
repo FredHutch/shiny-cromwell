@@ -78,7 +78,7 @@ ui <- dashboardPage( skin = "black",
                                                  can be provided if desired.  Workflow labels are user-defined values you'd like to use to describe your workflows for your own
                                                  future reference. "),
                                                column( width = 6,
-                                                fileInput(inputId = "wdl", "Upload WDL (required):",
+                                                fileInput(inputId = "wdlFile", "Upload WDL (required):",
                                                          accept = ".wdl"),
                                                fileInput(inputId = "inputJSON", "Upload First Input JSON (optional):",
                                                          accept = ".json"),
