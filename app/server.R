@@ -159,7 +159,7 @@ server <- function(input, output, session) {
   callDurationUpdate <- eventReactive(input$trackingUpdate,
     {
       print("callDurationUpdate")
-      if (nrow(workflowUpdate()) == 1 & is.na(workflowUpdate()$workflow_id[1]) == T) {
+      if (nrow(workflowUpdate()) == 1 & is.na(workflowUpdate()$workflow_id[1])) {
         callDuration <- data.frame("noCalls" = "No workflows with calls were submitted, please choose a different time period. ")
       } else {
         callDuration <- purrr::map_dfr(workflowUpdate()$workflow_id, cromwell_call) %>%
@@ -191,7 +191,10 @@ server <- function(input, output, session) {
   ## Render some info boxes
   output$submittedBox <- renderInfoBox({
     infoBox(
-      "Total \nSubmitted", workflowUpdate() %>% filter(is.na(workflow_id) == F) %>% summarize(n_distinct(workflow_id)),
+      "Total \nSubmitted",
+      workflowUpdate() %>%
+        filter(!is.na(workflow_id)) %>%
+        summarize(n_distinct(workflow_id)),
       icon = icon("list"),
       color = "purple", width = 3
     )
@@ -205,7 +208,7 @@ server <- function(input, output, session) {
   })
   output$successBox <- renderInfoBox({
     infoBox(
-      "Successful", if (is.na(workflowUpdate()$workflow_id[1]) == T) {
+      "Successful", if (is.na(workflowUpdate()$workflow_id[1])) {
         0
       } else {
         workflowUpdate() %>%
@@ -218,7 +221,7 @@ server <- function(input, output, session) {
   })
   output$failBox <- renderInfoBox({
     infoBox(
-      "Failed", if (is.na(workflowUpdate()$workflow_id[1]) == T) {
+      "Failed", if (is.na(workflowUpdate()$workflow_id[1])) {
         0
       } else {
         workflowUpdate() %>%
@@ -231,7 +234,7 @@ server <- function(input, output, session) {
   })
   output$inprogressBox <- renderInfoBox({
     infoBox(
-      "In Progress", if (is.na(workflowUpdate()$workflow_id[1]) == T) {
+      "In Progress", if (is.na(workflowUpdate()$workflow_id[1])) {
         0
       } else {
         workflowUpdate() %>%
@@ -452,7 +455,7 @@ server <- function(input, output, session) {
     infoBox(
       "Cache Hits",
       value = if ("callCaching.hit" %in% colnames(cacheUpdate())) {
-        nrow(cacheUpdate() %>% filter(callCaching.hit == TRUE))
+        nrow(cacheUpdate() %>% filter(callCaching.hit))
       } else {
         0
       },
@@ -464,7 +467,7 @@ server <- function(input, output, session) {
     infoBox(
       "Cache Misses",
       value = if ("callCaching.hit" %in% colnames(cacheUpdate())) {
-        nrow(cacheUpdate() %>% filter(callCaching.hit == FALSE))
+        nrow(cacheUpdate() %>% filter(!callCaching.hit))
       } else {
         0
       },
@@ -481,8 +484,8 @@ server <- function(input, output, session) {
       focusID <<- data[input$joblistCromwell_rows_selected, ]$workflow_id
       print("outputsUpdate(); Querying cromwell for a list of workflow outputs.")
       outDat <<- try(cromwell_outputs(focusID), silent = TRUE)
-      if (is.data.frame(outDat) == F) {
-        outDat <- data.frame("workflow_id" = "No outputs are available for this workflow yet.", stringsAsFactors = F)
+      if (!is.data.frame(outDat)) {
+        outDat <- dplyr::tibble("workflow_id" = "No outputs are available for this workflow yet.")
       }
       outDat
     },
