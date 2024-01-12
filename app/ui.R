@@ -1,8 +1,8 @@
-## remotes::install_github('FredHutch/fh.wdlR')
+## remotes::install_github('getwilds/rcromwell')
 library(shiny); library(shinydashboard);
 library(data.table); library(DT); library(tidyverse); 
 library(RColorBrewer) 
-library(fh.wdlR)
+library(rcromwell)
 # for rendering the About page:
 library(markdown)
 library(shinyWidgets)
