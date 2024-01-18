@@ -22,6 +22,15 @@ ui <- dashboardPage(
         badgeLabel = "info", badgeColor = "green"
       ),
       menuItem(
+        tabName = "auth",
+        startExpanded = TRUE,
+        actionButton(
+          inputId = "proofAuth",
+          label = "PROOF Login",
+          icon = icon("lock")
+        )
+      ),
+      menuItem(
         tabName = "serverConf",
         startExpanded = TRUE,
         actionButton(
