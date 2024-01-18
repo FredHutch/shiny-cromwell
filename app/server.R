@@ -13,8 +13,61 @@ library(jsonlite)
 library(lubridate)
 focusID <- 1
 
+library(proofr)
+library(httr)
+
+proof_loggedin <- function() {
+  !identical(Sys.getenv("PROOF_TOKEN"), "") &&
+    rlang::is_list(cromwell_version())
+}
+
+dataModal <- function(failed = FALSE, error = "Invalid username or password") {
+  modalDialog(
+    textInput("username", "Username",
+      placeholder = "HutchNet username"
+    ),
+    passwordInput("password", "Password",
+      placeholder = "HutchNet password"
+    ),
+    if (failed) {
+      div(tags$b(error, style = "color: red;"))
+    },
+    footer = tagList(
+      modalButton("Cancel"),
+      actionButton("submit", "Submit")
+    )
+  )
+}
+
 my.cols <- brewer.pal(6, "RdYlBu")
+
 server <- function(input, output, session) {
+  observeEvent(input$proofAuth, {
+    showModal(dataModal())
+  })
+
+  observeEvent(input$submit, {
+    if (!is.null(input$username) && !is.null(input$password)) {
+      try_auth <- tryCatch(
+        proof_authenticate(input$username, input$password),
+        error = function(e) e
+      )
+      if (rlang::is_error(try_auth)) {
+        showModal(dataModal(failed = TRUE, error = try_auth$message))
+      }
+      httr::set_config(proof_header())
+      removeModal()
+    } else {
+      showModal(dataModal(failed = TRUE))
+    }
+  })
+
+  # update the icon in the PROOF Login button
+  # (FIXME: ideally we change the color of the button too but not sure how to do that yet)
+  observeEvent(proof_loggedin(), {
+    updateActionButton(session, "proofAuth", icon = icon("unlock"))
+  })
+
   observeEvent(input$getStarted, {
     inputSweetAlert(
       session = session, inputId = "cromwellURL", input = "text",
@@ -26,7 +79,7 @@ server <- function(input, output, session) {
 
   theBackends <- eventReactive(input$cromwellURL,
     {
-      cromwell_config(paste0("http://", input$cromwellURL), verbose = FALSE)
+      cromwell_config(paste0("https://", input$cromwellURL), verbose = FALSE)
       try(cromwell_backends()$supportedBackends, silent = TRUE)
     },
     ignoreNULL = TRUE
@@ -34,7 +87,7 @@ server <- function(input, output, session) {
 
 
   observeEvent(input$cromwellURL, {
-    if (class(theBackends()) == "try-error") {
+    if (inherits(theBackends(), "try-error")) {
       sendSweetAlert(
         session = session,
         title = "Whoops, that didn't work! If your server has only been running for <1 min, wait and try to reconnect again. ",
@@ -56,7 +109,7 @@ server <- function(input, output, session) {
 
   output$connectionResult <- renderText(
     {
-      if (class(theBackends()) == "try-error") {
+      if (inherits(theBackends(), "try-error")) {
         print(theBackends())
       } else {
         paste0(
