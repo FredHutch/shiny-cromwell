@@ -6,6 +6,8 @@ library(DT)
 library(tidyverse)
 library(RColorBrewer)
 library(rcromwell)
+library(shinyBS)
+library(shinyjs)
 # for rendering the About page:
 library(markdown)
 library(shinyWidgets)
@@ -30,14 +32,18 @@ ui <- dashboardPage(
           icon = icon("lock")
         )
       ),
-      menuItem(
-        tabName = "serverConf",
-        startExpanded = TRUE,
-        actionButton(
-          inputId = "getStarted",
-          label = "Connect to Server",
-          icon = icon("plug")
-        )
+      # menuItem(
+      #   tabName = "serverConf",
+      #   startExpanded = TRUE,
+      #   actionButton(
+      #     inputId = "getStarted",
+      #     label = "Connect to Server",
+      #     icon = icon("plug")
+      #   )
+      # ),
+      menuItem("Cromwell Servers",
+        tabName = "cromwell", icon = icon("server"),
+        badgeLabel = "cromwell", badgeColor = "yellow"
       ),
       menuItem("Submit Jobs",
         tabName = "submission", icon = icon("paper-plane"),
@@ -54,6 +60,7 @@ ui <- dashboardPage(
     )
   ),
   dashboardBody(
+    shinyjs::useShinyjs(),
     tabItems(
       tabItem(
         tabName = "welcome",
@@ -83,6 +90,62 @@ ui <- dashboardPage(
             includeMarkdown("about.md")
           )
         )
+      ),
+      tabItem(
+        tabName = "cromwell",
+        fluidRow(h2("Manage Your PROOF Based Cromwell Server"), align = "center"),
+        fluidRow(
+          align = "left",
+          box(
+            width = 12, solidHeader = FALSE, status = "info",
+            collapsed = FALSE,
+            title = "Start/delete your Cromwell Server",
+            p(strong("Note"), " stopping your server requires making sure you mean it :)"),
+            br(),
+            br(),
+            actionButton(
+              inputId = "cromwellStart",
+              label = "Start",
+              icon = icon("play"),
+              class = "btn-primary btn-lg "
+            ),
+            actionButton(
+              inputId = "cromwellDelete",
+              label = "Delete",
+              icon = icon("stop"),
+              class = "btn-warning btn-lg"
+            )
+          )
+        ),
+        fluidRow(
+          align = "left",
+          box(
+            width = 12, solidHeader = FALSE, status = "info",
+            collapsed = FALSE,
+            title = "Status",
+            p("Cromwell server details will show below when your server is running"),
+            actionButton(
+              inputId = "cromwellStatus",
+              label = "Update Status",
+              icon = icon("recycle"),
+              class = "btn-info"
+            ),
+            br(),
+            br(),
+            shinyBS::bsAlert("alert"),
+            htmlOutput("proofStatusJobStatus"),
+            htmlOutput("proofStatusUrlStr"),
+            htmlOutput("proofStatusWorkflowLogDir"),
+            htmlOutput("proofStatusScratchDir"),
+            htmlOutput("proofStatusSlurmJobId"),
+            htmlOutput("proofStatusCromwellDir"),
+            htmlOutput("proofStatusServerLogDir"),
+            htmlOutput("proofStatusSingularityCacheDir"),
+            htmlOutput("proofStatusServerTime"),
+            htmlOutput("proofStatusUseAWS"),
+            htmlOutput("proofStatusSlurmJobAccount")
+          ),
+        ),
       ),
       tabItem(
         tabName = "submission",
