@@ -373,12 +373,12 @@ server <- function(input, output, session) {
       print("workflowUpdate(); Requesting Crowmell Job info")
       if ("workflow_id" %in% colnames(cromTable)) {
         workflowDat <- cromTable %>% select(one_of(
-          "workflowName", "workflow_id", "status", "submission", "start",
+          "workflow_name", "workflow_id", "status", "submission", "start",
           "end", "workflowDuration"
         ), everything())
       } else {
         workflowDat <- data.frame(
-          workflowName = character(0), workflow_id = character(0),
+          workflow_name = character(0), workflow_id = character(0),
           status = character(0), submission = character(0), start = character(0),
           end = character(0), workflowDuration = integer(0)
         )
@@ -406,8 +406,9 @@ server <- function(input, output, session) {
 
 
   output$workflowDuration <- renderPlot({
-    if ("workflowName" %in% colnames(workflowUpdate())) {
-      ggplot(workflowUpdate(), aes(x = as.factor(workflowName), y = as.numeric(workflowDuration))) +
+    if ("workflow_name" %in% colnames(workflowUpdate())) {
+      print("inside workflowDuration ...")
+      ggplot(workflowUpdate(), aes(x = as.factor(workflow_name), y = as.numeric(workflowDuration))) +
         geom_point(aes(color = status), width = 0.05, size = 4) +
         coord_flip() +
         theme_minimal() +
@@ -484,12 +485,12 @@ server <- function(input, output, session) {
     data <- workflowUpdate()
     focusID <- data[input$joblistCromwell_rows_selected, ]$workflow_id
     workflow <- cromwell_workflow(focusID)
-    if ("workflowName" %in% colnames(workflow)) {
+    if ("workflow_name" %in% colnames(workflow)) {
       workflowDat <- workflow %>% select(-one_of("options", "workflow", "metadataSource", "inputs"))
     } else {
-      workflowDat <<- workflow %>% mutate(workflowName = "NA")
+      workflowDat <<- workflow %>% mutate(workflow_name = "NA")
     }
-    suppressWarnings(workflowDat %>% select(one_of("workflowName", "workflowRoot", "submission", "start", "end", "status", "workflowDuration"), everything()))
+    suppressWarnings(workflowDat %>% select(one_of("workflow_name", "workflowRoot", "submission", "start", "end", "status", "workflowDuration"), everything()))
   })
   output$workflowDescribe <- renderDT(
     data <- workflowLabels(),
@@ -545,13 +546,14 @@ server <- function(input, output, session) {
       } else {
         callDat <<- theseCalls %>% mutate(executionStatus = "NA")
       }
-      suppressWarnings(callDat %>% select(one_of("workflowName", "detailedSubName", "callName", "executionStatus", "shardIndex", "callRoot", "start", "end", "callDuration", "docker", "modules"), everything()))
+      suppressWarnings(callDat %>% select(one_of("workflow_name", "detailedSubName", "callName", "executionStatus", "shardIndex", "callRoot", "start", "end", "callDuration", "docker", "modules"), everything()))
     },
     ignoreNULL = TRUE
   )
 
   output$workflowTiming <- renderPlot({
     if ("callName" %in% colnames(callsUpdate())) {
+      print("in render plot ...")
       ggplot(callsUpdate(), aes(x = as.factor(callName), y = callDuration)) +
         geom_point(aes(color = executionStatus), size = 3) + # coord_flip() +
         theme_minimal() +
@@ -667,7 +669,7 @@ server <- function(input, output, session) {
   )
 
   output$cachingListBatch <- renderDT(
-    data <- cacheUpdate() %>% select(workflowName, workflow_id, callName, shardIndex, executionStatus, everything()) %>% unique(),
+    data <- cacheUpdate() %>% select(workflow_name, workflow_id, callName, shardIndex, executionStatus, everything()) %>% unique(),
     class = "compact",
     filter = "top",
     options = list(scrollX = TRUE),
