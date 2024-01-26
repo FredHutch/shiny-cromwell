@@ -1,4 +1,4 @@
-## remotes::install_github('getwilds/rcromwell')')
+## remotes::install_github('getwilds/rcromwell')
 library(shiny)
 library(shinydashboard)
 library(data.table)
@@ -99,13 +99,16 @@ server <- function(input, output, session) {
       if (rlang::is_error(try_auth)) {
         showModal(loginModal(failed = TRUE, error = try_auth$message))
       }
+      print(try_auth)
       # set auth header
       httr::set_config(proof_header())
       # if cromwell server already up, set that url
       cromwell_up <- tryCatch(proof_status()$jobStatus, error = function(e) e)
       print(cromwell_up)
       if (!rlang::is_error(cromwell_up)) {
-        cromwell_config(proof_wait(), verbose = FALSE)
+        if (!is.null(cromwell_up)) {
+          cromwell_config(proof_wait(), verbose = FALSE)
+        }
       }
       # remove modal
       removeModal()
