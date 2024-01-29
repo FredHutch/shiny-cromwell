@@ -197,13 +197,13 @@ server <- function(input, output, session) {
 
   # Hide or show start and stop buttons
   observe({
-    if (!proof_loggedin()) shinyjs::hide(id = "cromwellDelete")
-    if (!proof_serverup()) shinyjs::hide(id = "cromwellDelete")
+    if (!proof_loggedin()) shinyjs::disable(id = "cromwellDelete")
+    if (!proof_serverup()) shinyjs::disable(id = "cromwellDelete")
     if (proof_loggedin_serverup()) {
       if (proof_status()$canJobStart) {
-        shinyjs::hide(id = "cromwellDelete")
+        shinyjs::disable(id = "cromwellDelete")
       } else {
-        shinyjs::hide(id = "cromwellStart")
+        shinyjs::disable(id = "cromwellStart")
       }
     }
   })
@@ -232,8 +232,8 @@ server <- function(input, output, session) {
       print("refresh metadata on cromwell servers page - not actually doing anything")
 
       # hide/show buttons
-      shinyjs::show(id = "cromwellDelete")
-      shinyjs::hide(id = "cromwellStart")
+      shinyjs::enable(id = "cromwellDelete")
+      shinyjs::disable(id = "cromwellStart")
     }
   })
 
@@ -252,9 +252,10 @@ server <- function(input, output, session) {
       if (rlang::is_error(try_delete)) {
         showModal(verifyCromwellDeleteModal(failed = TRUE, error = try_delete$message))
       }
+      print("running removeModal() for input$deleteCromwell")
       removeModal()
-      shinyjs::hide(id = "cromwellDelete")
-      shinyjs::show(id = "cromwellStart")
+      shinyjs::disable(id = "cromwellDelete")
+      shinyjs::enable(id = "cromwellStart")
     } else {
       showModal(verifyCromwellDeleteModal(failed = TRUE))
     }
@@ -262,25 +263,27 @@ server <- function(input, output, session) {
 
   # Gather/show PROOF server status metadata when logged in
   # OR when user clicks "Update Status" button
-  cromwellProofStatusData <- eventReactive({
-    input$cromwellStatus
-    proof_loggedin_serverup()
-  },
-    proof_status()
+  cromwellProofStatusData <- reactivePoll(1000, session,
+    checkFunc = function() {
+      if (proof_loggedin()) proof_status()$jobStatus
+    },
+    valueFunc = function() {
+      proof_status()
+    }
   )
 
-  proofStatusTextGenerator <- function(name, list_index) {
+  proofStatusTextGenerator <- function(name, list_index, value_if_null = NULL) {
     if (proof_loggedin()) {
       renderText(
         paste0(
           strong(glue("{name}: ")),
-          purrr::flatten(cromwellProofStatusData())[[list_index]]
+          purrr::flatten(cromwellProofStatusData())[[list_index]] %||% value_if_null
         )
       )
     }
   }
 
-  output$proofStatusJobStatus <- proofStatusTextGenerator('Job status', 'jobStatus')
+  output$proofStatusJobStatus <- proofStatusTextGenerator('Job status', 'jobStatus', "Stopped")
   output$proofStatusUrlStr <- if (proof_loggedin()) {
     renderText(
       paste0(
@@ -299,7 +302,7 @@ server <- function(input, output, session) {
   output$proofStatusCromwellDir <- proofStatusTextGenerator('Cromwell directory', 'CROMWELL_DIR')
   output$proofStatusServerLogDir <- proofStatusTextGenerator('Server log directory', 'SERVERLOGDIR')
   output$proofStatusSingularityCacheDir <- proofStatusTextGenerator('Singlarity cache directory', 'SINGULARITY_CACHEDIR')
-  output$proofStatusServerTime <- proofStatusTextGenerator('Server time zone', 'SERVERTIME')
+  output$proofStatusServerTime <- proofStatusTextGenerator('Server time', 'SERVERTIME')
   output$proofStatusUseAWS <- proofStatusTextGenerator('Use AWS?', 'USE_AWS')
   output$proofStatusSlurmJobAccount <- proofStatusTextGenerator('Slurm job account', 'SLURM_JOB_ACCOUNT')
 
