@@ -19,6 +19,9 @@ focusID <- 1
 library(proofr)
 library(httr)
 
+# FIXME: maybe remove later, was running into some timeouts during testing
+proof_timeout(sec = 10)
+
 proof_wait <- function() {
   not_up <- TRUE
   while (not_up) {
@@ -98,20 +101,16 @@ server <- function(input, output, session) {
       )
       if (rlang::is_error(try_auth)) {
         showModal(loginModal(failed = TRUE, error = try_auth$message))
-      }
-      print(try_auth)
-      # set auth header
-      httr::set_config(proof_header())
-      # if cromwell server already up, set that url
-      cromwell_up <- tryCatch(proof_status()$jobStatus, error = function(e) e)
-      print(cromwell_up)
-      if (!rlang::is_error(cromwell_up)) {
-        if (!is.null(cromwell_up)) {
-          cromwell_config(proof_wait(), verbose = FALSE)
+      } else {
+        cromwell_up <- tryCatch(proof_status()$jobStatus, error = function(e) e)
+        print(glue("cromwell_up {cromwell_up}"))
+        if (!rlang::is_error(cromwell_up)) {
+          if (!is.null(cromwell_up)) {
+            cromwell_config(proof_wait(), verbose = FALSE)
+          }
         }
+        removeModal()
       }
-      # remove modal
-      removeModal()
     } else {
       showModal(loginModal(failed = TRUE))
     }
@@ -186,12 +185,35 @@ server <- function(input, output, session) {
   observe({
     if (!proof_loggedin()) {
       shinyBS::createAlert(session,
-        "alert",
+        "alert_loggedin",
         title = "Heads up",
         content = HTML("You aren't logged in. Click the <strong>Proof Login</strong> button to the left"),
         style = "warning",
         append = FALSE
       )
+    }
+  })
+
+  # server up or not alert
+  observe({
+    if (proof_loggedin()) {
+      if (!proof_status()$canJobStart) {
+        shinyBS::createAlert(session,
+          "alert_server_status",
+          title = "Cromwell Server Status",
+          content = HTML("Your server is running"),
+          style = "success",
+          append = FALSE
+        )
+      } else {
+        shinyBS::createAlert(session,
+          "alert_server_status",
+          title = "Cromwell Server Status",
+          content = HTML("Your server is stopped. Click the <strong>Start</strong> button above to start it"),
+          style = "warning",
+          append = FALSE
+        )
+      }
     }
   })
 
