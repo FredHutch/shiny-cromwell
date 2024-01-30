@@ -177,8 +177,12 @@ ui <- dashboardPage(
             actionButton(
               inputId = "validateWorkflow",
               label = "Validate Workflow",
-              icon = icon("question-circle")
+              class = "btn-info"
+              # icon = icon("question-circle")
             ),
+            br(),
+            br(),
+            actionButton('resetValidate', 'Reset'),
             verbatimTextOutput(outputId = "validationResult")
           )
         )
@@ -208,7 +212,16 @@ ui <- dashboardPage(
               fileInput(
                 inputId = "input2JSON", "Upload Second Input JSON (optional):",
                 accept = ".json"
-              )
+              ),
+              actionButton(
+                inputId = "submitWorkflow",
+                label = "SubmitWorkflow",
+                icon = icon("paper-plane"),
+                class = "btn-info"
+              ),
+              verbatimTextOutput(outputId = "submissionResult"),
+              br(),
+              actionButton('resetSubmission', 'Reset')
             ),
             column(
               width = 6,
@@ -225,13 +238,7 @@ ui <- dashboardPage(
                 inputId = "seclabelValue", "Secondary Workflow Label (optional)",
                 value = "",
                 placeholder = "e.g., Cohort 2"
-              ),
-              actionButton(
-                inputId = "submitWorkflow",
-                label = "SubmitWorkflow",
-                icon = icon("paper-plane")
-              ),
-              verbatimTextOutput(outputId = "submissionResult")
+              )
             )
           )
         )
