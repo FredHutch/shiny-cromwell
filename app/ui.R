@@ -45,6 +45,10 @@ ui <- dashboardPage(
         tabName = "cromwell", icon = icon("server"),
         badgeLabel = "cromwell", badgeColor = "yellow"
       ),
+      menuItem("Validate",
+        tabName = "validate", icon = icon("stethoscope"),
+        badgeLabel = "check", badgeColor = "orange"
+      ),
       menuItem("Submit Jobs",
         tabName = "submission", icon = icon("paper-plane"),
         badgeLabel = "compute", badgeColor = "light-blue"
@@ -149,8 +153,8 @@ ui <- dashboardPage(
         ),
       ),
       tabItem(
-        tabName = "submission",
-        fluidRow(h2("Run Workflows on Cromwell"), align = "center"),
+        tabName = "validate",
+        fluidRow(h2("Validate a Workflow"), align = "center"),
         fluidRow(
           align = "left",
           ## Validate a Workflow
@@ -177,7 +181,11 @@ ui <- dashboardPage(
             ),
             verbatimTextOutput(outputId = "validationResult")
           )
-        ),
+        )
+      ),
+      tabItem(
+        tabName = "submission",
+        fluidRow(h2("Run Workflows on Cromwell"), align = "center"),
         fluidRow(
           box(
             width = 12, solidHeader = FALSE, status = "success",
