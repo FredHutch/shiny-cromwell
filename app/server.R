@@ -9,6 +9,7 @@ library(rcromwell)
 library(glue)
 library(shinyBS)
 library(shinyjs)
+library(shinyFeedback)
 # for rendering the About page:
 library(markdown)
 library(shinyWidgets)
@@ -22,7 +23,7 @@ library(httr)
 # FIXME: maybe remove later, was running into some timeouts during testing
 proof_timeout(sec = 10)
 
-proof_wait <- function() {
+proof_wait_for_up <- function() {
   not_up <- TRUE
   while (not_up) {
     cromwell_url <- proof_status()$cromwellUrl
@@ -31,6 +32,13 @@ proof_wait <- function() {
   cromwell_url
 }
 
+proof_wait_for_down <- function() {
+  up <- TRUE
+  while (up) {
+    cromwell_url <- proof_status()$cromwellUrl
+    if (is.null(cromwell_url)) up <- FALSE
+  }
+}
 
 proof_loggedin <- function() {
   !identical(Sys.getenv("PROOF_TOKEN"), "")
@@ -64,6 +72,26 @@ loginModal <- function(failed = FALSE, error = "Invalid username or password") {
   )
 }
 
+cromwellStartModal <- function() {
+  modalDialog(
+    title = "Start your PROOF Cromwell server",
+    br(),
+    textInput(
+      inputId = "slurmAccount",
+      label = div(HTML("Slurm account (optional)")),
+      value = NULL
+    ),
+    footer = tagList(
+      modalButton("Cancel"),
+      shinyFeedback::loadingButton(
+        inputId = "beginCromwell",
+        label = "Start",
+        class = "btn btn-primary"
+      )
+    )
+  )
+}
+
 verifyCromwellDeleteModal <- function(failed = FALSE, error = "Woops, an error! Contact DaSL") {
   modalDialog(
     title = "Delete your PROOF Cromwell server",
@@ -80,7 +108,11 @@ verifyCromwellDeleteModal <- function(failed = FALSE, error = "Woops, an error! 
     footer = tagList(
       modalButton("Cancel"),
       shinyjs::disabled(
-        actionButton("deleteCromwell", "Delete", class = "btn-warning")
+        shinyFeedback::loadingButton(
+          inputId = "deleteCromwell",
+          label = "Delete",
+          class = "btn btn-warning"
+        )
       )
     )
   )
@@ -106,7 +138,7 @@ server <- function(input, output, session) {
         print(glue("cromwell_up {cromwell_up}"))
         if (!rlang::is_error(cromwell_up)) {
           if (!is.null(cromwell_up)) {
-            cromwell_config(proof_wait(), verbose = FALSE)
+            cromwell_config(proof_wait_for_up(), verbose = FALSE)
           }
         }
         removeModal()
@@ -194,29 +226,6 @@ server <- function(input, output, session) {
     }
   })
 
-  # server up or not alert
-  observe({
-    if (proof_loggedin()) {
-      if (!proof_status()$canJobStart) {
-        shinyBS::createAlert(session,
-          "alert_server_status",
-          title = "Cromwell Server Status",
-          content = HTML("Your server is running"),
-          style = "success",
-          append = FALSE
-        )
-      } else {
-        shinyBS::createAlert(session,
-          "alert_server_status",
-          title = "Cromwell Server Status",
-          content = HTML("Your server is stopped. Click the <strong>Start</strong> button above to start it"),
-          style = "warning",
-          append = FALSE
-        )
-      }
-    }
-  })
-
   # Hide or show start and stop buttons
   observe({
     if (!proof_loggedin()) shinyjs::disable(id = "cromwellDelete")
@@ -232,6 +241,10 @@ server <- function(input, output, session) {
 
   # Start button handling
   observeEvent(input$cromwellStart, {
+    showModal(cromwellStartModal())
+  })
+
+  observeEvent(input$beginCromwell, {
     if (proof_loggedin()) {
       # fail out early if already running
       if (!proof_status()$canJobStart) {
@@ -239,10 +252,10 @@ server <- function(input, output, session) {
       }
 
       # start cromwell server
-      proof_start()
+      proof_start(slurm_account = input$slurmAccount)
 
       # set cromwell server url
-      cromwell_config(proof_wait(), verbose = FALSE)
+      cromwell_config(proof_wait_for_up(), verbose = FALSE)
       shiny::validate(
         shiny::need(
           !proof_status()$canJobStart,
@@ -250,10 +263,12 @@ server <- function(input, output, session) {
         )
       )
 
-      # refresh metadata on cromwell servers page
-      print("refresh metadata on cromwell servers page - not actually doing anything")
+      # reset loading spinner
+      print("resetting loading spinner")
+      shinyFeedback::resetLoadingButton("beginCromwell")
 
-      # hide/show buttons
+      print("running removeModal() for Start")
+      removeModal()
       shinyjs::enable(id = "cromwellDelete")
       shinyjs::disable(id = "cromwellStart")
     }
@@ -264,6 +279,7 @@ server <- function(input, output, session) {
     showModal(verifyCromwellDeleteModal())
   })
 
+  # For the button WITHIN the Delete modal
   observe({
     shinyjs::toggleState("deleteCromwell", input$stopCromwell == "delete me")
   })
@@ -274,7 +290,15 @@ server <- function(input, output, session) {
       if (rlang::is_error(try_delete)) {
         showModal(verifyCromwellDeleteModal(failed = TRUE, error = try_delete$message))
       }
-      print("running removeModal() for input$deleteCromwell")
+
+      # wait for server to go down
+      proof_wait_for_down()
+
+      # reset loading spinner
+      print("resetting loading spinner")
+      shinyFeedback::resetLoadingButton("deleteCromwell")
+
+      print("running removeModal() for Delete")
       removeModal()
       shinyjs::disable(id = "cromwellDelete")
       shinyjs::enable(id = "cromwellStart")
