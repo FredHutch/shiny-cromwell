@@ -23,6 +23,9 @@ library(httr)
 # FIXME: maybe remove later, was running into some timeouts during testing
 proof_timeout(sec = 10)
 
+# sanitize errors - note that some actual errors will still happen
+options(shiny.sanitize.errors = TRUE)
+
 proof_wait_for_up <- function() {
   not_up <- TRUE
   while (not_up) {
