@@ -355,7 +355,7 @@ server <- function(input, output, session) {
   output$proofStatusUseAWS <- proofStatusTextGenerator('Use AWS?', 'USE_AWS')
   output$proofStatusSlurmJobAccount <- proofStatusTextGenerator('Slurm job account', 'SLURM_JOB_ACCOUNT')
 
-  ###### Cromwell Submit tab ######
+  ###### Cromwell Validate tab ######
   ## Validate a possible workflow
   validateWorkflow <- eventReactive(input$validateWorkflow,
     {
@@ -369,6 +369,19 @@ server <- function(input, output, session) {
   ## Show the validation result in a box
   output$validationResult <- renderPrint(validateWorkflow())
 
+  # reset
+  observeEvent(input$resetValidate, {
+    purrr::map(
+      c('validatewdlFile', 'validateinputFile'),
+      shinyjs::reset
+    )
+    output$validationResult <- renderText({})
+  })
+
+
+
+
+  ###### Cromwell Submit tab ######
   ## Submit a workflow
   submitWorkflowJob <- eventReactive(input$submitWorkflow,
     {
@@ -410,7 +423,16 @@ server <- function(input, output, session) {
   ## Show the abort workflow result in a box
   output$abortResult <- renderPrint(abortWorkflowJob())
 
-
+  # reset
+  observeEvent(input$resetSubmission, {
+    purrr::map(c(
+      'wdlFile', 'inputJSON', 'input2JSON',
+      'workOptions', 'labelValue', 'seclabelValue'),
+      shinyjs::reset
+    )
+    output$submissionResult <- renderText({})
+    print(input$wdlFile)
+  })
 
 
   ############ CROMWELL Tracking Tab  ############
