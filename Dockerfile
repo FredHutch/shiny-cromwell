@@ -15,7 +15,7 @@ RUN R -q -e "remotes::install_github('getwilds/proofr@v0.1')"
 
 ADD check.R /tmp/
 
-RUN RUN R -f /tmp/check.R --args ellipsis shiny shinyWidgets shinydashboard ssh paws remotes markdown lubridate jsonlite rcromwell DT tidyverse RColorBrewer glue shinyBS shinyjs shinyFeedback rmarkdown proofr httr 
+RUN R -f /tmp/check.R --args ellipsis shiny shinyWidgets shinydashboard ssh paws remotes markdown lubridate jsonlite rcromwell DT tidyverse RColorBrewer glue shinyBS shinyjs shinyFeedback rmarkdown proofr httr 
 
 RUN rm -rf /srv/shiny-server/
 ADD app/. /srv/shiny-server/
