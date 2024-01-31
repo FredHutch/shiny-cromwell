@@ -1,4 +1,4 @@
-FROM fredhutch/r-shiny-server-base
+FROM fredhutch/r-shiny-server-base:4.3.2
 
 RUN apt-get update -y && apt-get install -y libssh-dev
 
