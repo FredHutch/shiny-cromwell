@@ -1,15 +1,25 @@
 ### What is this app?
-This is a basic shiny app that you can use once you have used the Fred Hutch HPC system to get a Cromwell server running on the `gizmo` cluster.  To learn more about how to get your Cromwell server running, read through the instructions in this [GitHub repo](https://github.com/FredHutch/diy-cromwell-server) or contact Amy Paguirigan for assistance (Fred Hutch email `apaguiri`, or GitHub user `vortexing`).  Once you have a Cromwell server running, then you can use this app on campus (or on VPN) to interact with your server.
+This is a basic shiny app that you can use to interact with a Cromwell server. 
+
+For Fred Hutch people, you can get a Cromwell server one of two ways:
+
+- Login with your Hutchnet username and password, then start a Cromwell server on the **Cromwell servers** page
+- Get a Cromwell server running by yourself (does not require logging in). To learn more about how to get your Cromwell server running, read through the instructions in this [GitHub repo](https://github.com/FredHutch/diy-cromwell-server) or contact Amy Paguirigan for assistance (Fred Hutch email `apaguiri`, or GitHub user `vortexing`)
+
+Once you have a Cromwell server running (via either of the two routes above), then you can use this app on campus (or on VPN) to interact with your server.
 
 #### Cromwell Servers Tab
 This tab allows you to:
 - Start or delete your PROOF based Cromwell server
 - Get metadata for your PROOF based Cromwell server
 
+#### Validate Tab
+This tab allows you to:
+- validate a workflow you'd like to run
+
 #### Submit Jobs Tab
 This tab allows you to:
-- validate a workflow you'd like to run,
-- run said workflow.
+- run a workflow
 
 #### Track Jobs Tab
 This tab allows you to:
