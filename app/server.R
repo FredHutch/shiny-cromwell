@@ -1,4 +1,3 @@
-## remotes::install_github('getwilds/rcromwell')
 library(shiny)
 library(shinydashboard)
 library(data.table)
@@ -10,21 +9,24 @@ library(glue)
 library(shinyBS)
 library(shinyjs)
 library(shinyFeedback)
-# for rendering the About page:
 library(markdown)
 library(shinyWidgets)
 library(jsonlite)
 library(lubridate)
-focusID <- 1
-
 library(proofr)
 library(httr)
+
+focusID <- 1
 
 # FIXME: maybe remove later, was running into some timeouts during testing
 proof_timeout(sec = 10)
 
 # sanitize errors - note that some actual errors will still happen
 options(shiny.sanitize.errors = TRUE)
+
+cromwell_url_display <- function() {
+  paste0("Cromwell URL: ", Sys.getenv("CROMWELLURL", "No Cromwell Server found"))
+}
 
 proof_wait_for_up <- function() {
   not_up <- TRUE
@@ -56,6 +58,13 @@ proof_loggedin_serverup <- function() {
 proof_serverup <- function() {
   rlang::is_list(cromwell_version_safe()$result)
 }
+
+stop_safe <- function(fun, message) if (!fun()) stop(safeError(message))
+stop_safe_loggedin_serverup <- function() {
+  stop_safe(proof_loggedin, "Not logged in! Please log in")
+  stop_safe(proof_serverup, "Your Cromwell server is not up!")
+}
+
 
 loginModal <- function(failed = FALSE, error = "Invalid username or password") {
   modalDialog(
@@ -277,6 +286,10 @@ server <- function(input, output, session) {
     }
   })
 
+  output$cromwellURI <- renderText({
+    cromwell_url_display()
+  })
+
   # Disable or enable the Delete button for deleting proof server
   observeEvent(input$cromwellDelete, {
     showModal(verifyCromwellDeleteModal())
@@ -309,6 +322,7 @@ server <- function(input, output, session) {
       showModal(verifyCromwellDeleteModal(failed = TRUE))
     }
   })
+
 
   # Gather/show PROOF server status metadata when logged in
   # OR when user clicks "Update Status" button
@@ -359,6 +373,7 @@ server <- function(input, output, session) {
   ## Validate a possible workflow
   validateWorkflow <- eventReactive(input$validateWorkflow,
     {
+      stop_safe_loggedin_serverup()
       cromwell_validate(
         wdl = input$validatewdlFile$datapath,
         all_inputs = input$validateinputFile$datapath
@@ -385,6 +400,7 @@ server <- function(input, output, session) {
   ## Submit a workflow
   submitWorkflowJob <- eventReactive(input$submitWorkflow,
     {
+      stop_safe_loggedin_serverup()
       cromwell_submit_batch(
         wdl = input$wdlFile$datapath,
         params = input$inputJSON$datapath,
@@ -405,6 +421,7 @@ server <- function(input, output, session) {
   ## Troubleshoot a workflow
   troubleWorkflowJob <- eventReactive(input$troubleWorkflow,
     {
+      stop_safe_loggedin_serverup()
       cromwell_glob(workflow_id = input$troubleWorkflowID)
     },
     ignoreNULL = TRUE
@@ -416,6 +433,7 @@ server <- function(input, output, session) {
   ## Abort a workflow
   abortWorkflowJob <- eventReactive(input$abortWorkflow,
     {
+      stop_safe_loggedin_serverup()
       cromwell_abort(workflow_id = input$abortWorkflowID)
     },
     ignoreNULL = TRUE
@@ -439,6 +457,7 @@ server <- function(input, output, session) {
 
   workflowUpdate <- eventReactive(input$trackingUpdate,
     {
+      stop_safe_loggedin_serverup()
       if (input$workName == "") {
         cromTable <- cromwell_jobs(days = input$daysToShow, workflow_status = input$workStatus)
       } else {
@@ -468,6 +487,7 @@ server <- function(input, output, session) {
 
   callDurationUpdate <- eventReactive(input$trackingUpdate,
     {
+      stop_safe_loggedin_serverup()
       print("callDurationUpdate")
       if (nrow(workflowUpdate()) == 1 & is.na(workflowUpdate()$workflow_id[1])) {
         callDuration <- data.frame("noCalls" = "No workflows with calls were submitted, please choose a different time period. ")
