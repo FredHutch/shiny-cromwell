@@ -1,6 +1,6 @@
-## remotes::install_github('getwilds/rcromwell')
 library(shiny)
 library(shinydashboard)
+library(shinydashboardPlus)
 library(data.table)
 library(DT)
 library(tidyverse)
@@ -8,7 +8,6 @@ library(RColorBrewer)
 library(rcromwell)
 library(shinyBS)
 library(shinyjs)
-# for rendering the About page:
 library(markdown)
 library(shinyWidgets)
 library(jsonlite)
@@ -16,7 +15,27 @@ library(lubridate)
 
 ui <- dashboardPage(
   skin = "black",
-  dashboardHeader(title = "Fred Hutch Cromwell Dashboard"),
+  dashboardHeader(
+    title = "Fred Hutch Cromwell Dashboard",
+    leftUi = tagList(
+      dropdownBlock(
+        id = "mydropdown",
+        title = textOutput(outputId = "cromwellURI"),
+        badgeStatus = NULL
+      )
+    ),
+    dropdownMenu(
+      type = "notifications",
+      badgeStatus = NULL,
+      icon = icon("circle-question", "fa-solid"),
+      headerText =
+        helpText(
+          HTML('<u>Need Help?:</u> <p>
+                <br>
+                <b>Email:</b>. <a href="mailto:sachamber@fredhutch.org">sachamber@fredhutch.org</a></p>
+                <b>Open a ticket: <a href="https://github.com/FredHutch/shiny-cromwell/issues", target="_blank">here</a></b><P></P><P>'))
+    )
+  ),
   dashboardSidebar(
     sidebarMenu(
       menuItem("Welcome",
