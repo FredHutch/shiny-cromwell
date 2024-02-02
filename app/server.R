@@ -1,6 +1,7 @@
 library(shiny)
 library(shinydashboard)
 library(data.table)
+library(uuid)
 library(DT)
 library(tidyverse)
 library(RColorBrewer)
@@ -126,6 +127,15 @@ verifyCromwellDeleteModal <- function(failed = FALSE, error = "Woops, an error! 
           class = "btn btn-warning"
         )
       )
+    )
+  )
+}
+
+validate_workflowid <- function(x) {
+  shiny::validate(
+    shiny::need(
+      uuid::UUIDvalidate(x),
+      "That doesn't look like a workflow ID; check your ID"
     )
   )
 }
@@ -422,6 +432,7 @@ server <- function(input, output, session) {
   troubleWorkflowJob <- eventReactive(input$troubleWorkflow,
     {
       stop_safe_loggedin_serverup()
+      validate_workflowid(input$troubleWorkflowID)
       cromwell_glob(workflow_id = input$troubleWorkflowID)
     },
     ignoreNULL = TRUE
@@ -429,11 +440,11 @@ server <- function(input, output, session) {
   ## Show the abort workflow result in a box
   output$troubleResult <- renderPrint(troubleWorkflowJob())
 
-
   ## Abort a workflow
   abortWorkflowJob <- eventReactive(input$abortWorkflow,
     {
       stop_safe_loggedin_serverup()
+      validate_workflowid(input$abortWorkflowID)
       cromwell_abort(workflow_id = input$abortWorkflowID)
     },
     ignoreNULL = TRUE

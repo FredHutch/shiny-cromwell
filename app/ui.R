@@ -234,7 +234,7 @@ ui <- dashboardPage(
               ),
               actionButton(
                 inputId = "submitWorkflow",
-                label = "SubmitWorkflow",
+                label = "Submit Workflow",
                 icon = icon("paper-plane"),
                 class = "btn-info"
               ),
