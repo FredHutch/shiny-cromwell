@@ -1,3 +1,4 @@
+# pak::pak("getwilds/shinyauthr@remote-api")
 library(shiny)
 library(shinydashboard)
 library(data.table)
@@ -16,6 +17,11 @@ library(jsonlite)
 library(lubridate)
 library(proofr)
 library(httr)
+library(shinyauthr)
+
+library(dplyr)
+library(RSQLite)
+library(DBI)
 
 focusID <- 1
 
@@ -142,7 +148,486 @@ validate_workflowid <- function(x) {
 
 my.cols <- brewer.pal(6, "RdYlBu")
 
+cookie_expiry <- 7
+
+get_sessions_from_db <- function(conn = db, expiry = cookie_expiry) {
+  print(dbReadTable(conn, "sessions"))
+  dbReadTable(conn, "sessions") %>%
+    mutate(login_time = ymd_hms(login_time)) %>%
+    as_tibble() %>%
+    filter(login_time > now() - days(expiry))
+}
+add_session_to_db <- function(user, sessionid, conn = db) {
+  tibble(user = user, sessionid = sessionid, login_time = as.character(now())) %>%
+    dbWriteTable(conn, "sessions", ., append = TRUE)
+}
+db <- dbConnect(SQLite(), ":memory:")
+dbCreateTable(db, "sessions", c(user = "TEXT", sessionid = "TEXT", login_time = "TEXT"))
+dbCreateTable(db, "users", c(user = "TEXT", password = "TEXT"))
+
+loggedInSidebar <- sidebarMenu(
+      menuItem("Welcome",
+        tabName = "welcome", icon = icon("book-open"),
+        badgeLabel = "info", badgeColor = "green",
+        selected = TRUE
+      ),
+      # menuItem(
+      #   tabName = "auth",
+      #   startExpanded = TRUE,
+      #   actionButton(
+      #     inputId = "proofAuth",
+      #     label = "PROOF Login",
+      #     icon = icon("lock")
+      #   )
+      # ),
+      # menuItem(
+      #   tabName = "serverConf",
+      #   startExpanded = TRUE,
+      #   actionButton(
+      #     inputId = "getStarted",
+      #     label = "Connect to Server",
+      #     icon = icon("plug")
+      #   )
+      # ),
+      menuItem("Cromwell Servers",
+        tabName = "cromwell", icon = icon("server"),
+        badgeLabel = "cromwell", badgeColor = "yellow"
+      ),
+      menuItem("Validate",
+        tabName = "validate", icon = icon("stethoscope"),
+        badgeLabel = "check", badgeColor = "orange"
+      ),
+      menuItem("Submit Jobs",
+        tabName = "submission", icon = icon("paper-plane"),
+        badgeLabel = "compute", badgeColor = "light-blue"
+      ),
+      menuItem("Track Jobs",
+        tabName = "tracking", icon = icon("binoculars"),
+        badgeLabel = "monitor", badgeColor = "purple"
+      ),
+      menuItem("Troubleshoot",
+        tabName = "troubleshoot", icon = icon("wrench"),
+        badgeLabel = "troubleshoot", badgeColor = "teal"
+      )
+    )
+
+loggedInBody <- tabItems(
+      tabItem(
+        tabName = "welcome",
+        fluidRow(
+          align = "center",
+          box(
+            title = "Find Cromwell and WDL Resources at Fred Hutch's GitHub",
+            actionButton(
+              inputId = "githubLink", label = "What resources are available?",
+              icon = icon("retweet"),
+              onclick = "window.open('https://github.com/FredHutch?utf8=%E2%9C%93&q=wdl+OR+cromwell&type=&language=', '_blank')"
+            )
+          ),
+          box(
+            title = "Learn about Cromwell and WDL at SciWIki",
+            actionButton(
+              inputId = "sciwikiLink", label = "I want to go read!",
+              icon = icon("book-open"),
+              onclick = "window.open('https://sciwiki.fredhutch.org/compdemos/Cromwell/', '_blank')"
+            )
+          )
+        ),
+        fluidRow(
+          align = "center",
+          column(
+            width = 11, align = "left",
+            includeMarkdown("about.md")
+          )
+        )
+      ),
+      tabItem(
+        tabName = "cromwell",
+        fluidRow(h2("Manage Your PROOF Based Cromwell Server"), align = "center"),
+        fluidRow(
+          align = "left",
+          box(
+            width = 12, solidHeader = FALSE, status = "info",
+            collapsed = FALSE,
+            title = "Start/delete your Cromwell Server",
+            p(strong("Note"), " stopping your server requires making sure you mean it :)"),
+            br(),
+            br(),
+            actionButton(
+              inputId = "cromwellStart",
+              label = "Start",
+              icon = icon("play"),
+              class = "btn-primary btn-lg "
+            ),
+            actionButton(
+              inputId = "cromwellDelete",
+              label = "Delete",
+              icon = icon("stop"),
+              class = "btn-warning btn-lg"
+            )
+          )
+        ),
+        fluidRow(
+          align = "left",
+          box(
+            width = 12, solidHeader = FALSE, status = "info",
+            collapsed = FALSE,
+            title = "Status",
+            p("Cromwell server details will show below when your server is running"),
+            actionButton(
+              inputId = "cromwellStatus",
+              label = "Update Status",
+              icon = icon("recycle"),
+              class = "btn-info"
+            ),
+            br(),
+            br(),
+            shinyBS::bsAlert("alert_loggedin"),
+            shinyBS::bsAlert("alert_server_status"),
+            htmlOutput("proofStatusJobStatus"),
+            htmlOutput("proofStatusUrlStr"),
+            htmlOutput("proofStatusWorkflowLogDir"),
+            htmlOutput("proofStatusScratchDir"),
+            htmlOutput("proofStatusSlurmJobId"),
+            htmlOutput("proofStatusCromwellDir"),
+            htmlOutput("proofStatusServerLogDir"),
+            htmlOutput("proofStatusSingularityCacheDir"),
+            htmlOutput("proofStatusServerTime"),
+            htmlOutput("proofStatusUseAWS"),
+            htmlOutput("proofStatusSlurmJobAccount")
+          ),
+        ),
+      ),
+      tabItem(
+        tabName = "validate",
+        fluidRow(h2("Validate a Workflow"), align = "center"),
+        fluidRow(
+          align = "left",
+          ## Validate a Workflow
+          box(
+            width = 12, solidHeader = FALSE, status = "info",
+            collapsible = TRUE, collapsed = FALSE,
+            title = "Validate a Workflow",
+            p("This tool will check to see if the WDL (and it's input JSON if you choose to upload it)
+                                                are both in the correct format required and if not will give you some
+                                                hints as to what might be wrong.  If your workflow does not validate, the feedback often hints
+                                                at a problem just below where your error actually is. "),
+            fileInput(
+              inputId = "validatewdlFile", "Upload WDL File (required):",
+              accept = ".wdl"
+            ),
+            fileInput(
+              inputId = "validateinputFile", "Upload Consolidated Input JSON (optional):",
+              accept = ".json"
+            ),
+            actionButton(
+              inputId = "validateWorkflow",
+              label = "Validate Workflow",
+              class = "btn-info"
+              # icon = icon("question-circle")
+            ),
+            br(),
+            br(),
+            actionButton('resetValidate', 'Reset'),
+            verbatimTextOutput(outputId = "validationResult")
+          )
+        )
+      ),
+      tabItem(
+        tabName = "submission",
+        fluidRow(h2("Run Workflows on Cromwell"), align = "center"),
+        fluidRow(
+          box(
+            width = 12, solidHeader = FALSE, status = "success",
+            collapsible = TRUE, collapsed = FALSE,
+            title = "Submit a Workflow",
+            p("Here you can submit your workflow to your Cromwell server for execution.  Only a WDL is required. Up to two different input JSONs
+                                                 can be uploaded (if variables are specified in both, the second input's variable value will overwrite the first). Workflow options
+                                                 can be provided if desired.  Workflow labels are user-defined values you'd like to use to describe your workflows for your own
+                                                 future reference. "),
+            column(
+              width = 6,
+              fileInput(
+                inputId = "wdlFile", "Upload WDL (required):",
+                accept = ".wdl"
+              ),
+              fileInput(
+                inputId = "inputJSON", "Upload First Input JSON (optional):",
+                accept = ".json"
+              ),
+              fileInput(
+                inputId = "input2JSON", "Upload Second Input JSON (optional):",
+                accept = ".json"
+              ),
+              actionButton(
+                inputId = "submitWorkflow",
+                label = "Submit Workflow",
+                icon = icon("paper-plane"),
+                class = "btn-info"
+              ),
+              verbatimTextOutput(outputId = "submissionResult"),
+              br(),
+              actionButton('resetSubmission', 'Reset')
+            ),
+            column(
+              width = 6,
+              fileInput(
+                inputId = "workOptions", "Upload Workflow Options JSON (optional):",
+                accept = ".json"
+              ),
+              textInput(
+                inputId = "labelValue", "Workflow Label (optional)",
+                value = "",
+                placeholder = "e.g., First Try"
+              ),
+              textInput(
+                inputId = "seclabelValue", "Secondary Workflow Label (optional)",
+                value = "",
+                placeholder = "e.g., Cohort 2"
+              )
+            )
+          )
+        )
+      ),
+      tabItem(
+        tabName = "tracking",
+        fluidRow(h2("Cromwell Workflow Tracking"), align = "center"),
+        fluidRow(
+          box(
+            width = 6,
+            numericInput("daysToShow", "Days of History to Display:",
+              min = 1, max = 21, value = 1, step = 1
+            ),
+            actionButton(
+              inputId = "trackingUpdate",
+              label = "Update View",
+              icon = icon("refresh")
+            )
+          ),
+          box(
+            width = 6,
+            textInput("workName", "Filter for workflows with name:",
+              value = "",
+              placeholder = "myCustomWorkflow"
+            ),
+            selectInput("workStatus",
+              label = "Filter for Workflows with Status(es):",
+              choices = c(
+                "Submitted", "Running",
+                "Succeeded", "Failed", "Aborting",
+                "Aborted"
+              ), multiple = TRUE
+            )
+          )
+        ),
+        fluidRow(
+          box(
+            width = 12,
+            infoBoxOutput("submittedBox", width = 6),
+            infoBoxOutput("inprogressBox", width = 6),
+            infoBoxOutput("successBox", width = 6),
+            infoBoxOutput("failBox", width = 6)
+          )
+        ),
+        fluidRow(
+          box(
+            width = 12,
+            title = "Workflow Timing",
+            collapsible = TRUE, solidHeader = TRUE,
+            plotOutput("workflowDuration")
+          )
+        ),
+        fluidRow(
+          box(
+            width = 12,
+            title = "Workflows Run",
+            collapsible = TRUE, solidHeader = TRUE,
+            DTOutput("joblistCromwell")
+          )
+        ),
+        fluidRow(h3("Workflow Specific Job Information"),
+          align = "center",
+          p("Select a row in the above table for a specific workflow id in order to populate the tables below.  "),
+          valueBoxOutput("pendingBatch", width = 3),
+          infoBoxOutput("runningBatch", width = 3),
+          infoBoxOutput("succeededBatch", width = 3),
+          infoBoxOutput("failedBatch", width = 3)
+        ),
+        fluidRow(
+          box(
+            width = 12,
+            title = "Workflow Description",
+            DTOutput("workflowDescribe")
+          )
+        ),
+        fluidRow(
+          box(
+            width = 6,
+            title = "Workflow Options",
+            DTOutput("workflowOpt")
+          ),
+          box(
+            width = 6,
+            title = "Workflow Inputs",
+            DTOutput("workflowInp")
+          )
+        ),
+        fluidRow(
+          align = "center",
+          box(
+            width = 12,
+            title = "Workflow Call Duration",
+            collapsible = TRUE, solidHeader = TRUE,
+            plotOutput("workflowTiming")
+          )
+        ),
+        fluidRow(
+          box(
+            width = 12,
+            title = "Job List",
+            collapsible = TRUE, solidHeader = TRUE, collapsed = FALSE,
+            downloadButton("downloadJobs", "Download Workflow Jobs Data"),
+            DTOutput("tasklistBatch")
+          )
+        ),
+        fluidRow(
+          box(
+            width = 12,
+            title = "Job Failures",
+            p("Specific information for jobs with a status of 'Failed', only available upon request."),
+            collapsible = TRUE, solidHeader = TRUE, collapsed = FALSE,
+            actionButton(
+              inputId = "getFailedData",
+              label = "Get/Refresh Failed Job Metadata",
+              icon("refresh")
+            ),
+            downloadButton("downloadFails", "Download Call Failure Data"),
+            DTOutput("failurelistBatch")
+          )
+        ),
+        fluidRow(
+          align = "center",
+          infoBoxOutput("cacheHits", width = 6),
+          infoBoxOutput("cacheMisses", width = 6)
+        ),
+        fluidRow(
+          box(
+            width = 12,
+            title = "Call Caching ",
+            p("Only available upon request.  Note: this can be slow for very complex workflows.  "),
+            collapsible = TRUE, solidHeader = TRUE, collapsed = FALSE,
+            actionButton(
+              inputId = "getCacheData",
+              label = "Get/Refresh Call Caching Metadata",
+              icon("refresh")
+            ),
+            downloadButton("downloadCache", "Download Call Caching Data"),
+            DTOutput("cachingListBatch")
+          )
+        ),
+        fluidRow(
+          box(
+            width = 12,
+            title = "Get Workflow Outputs",
+            p("The specific outputs to the entire workflow itself are listed here only upon request and only if they are all available. "),
+            collapsible = TRUE, solidHeader = TRUE, collapsed = FALSE,
+            actionButton(
+              inputId = "getOutputData",
+              label = "Get/Refresh Workflow Output Metadata",
+              icon("refresh")
+            ),
+            downloadButton("downloadOutputs", "Download Workflow Output Data"),
+            DTOutput("outputslistBatch")
+          )
+        )
+      ),
+      tabItem(
+        tabName = "troubleshoot",
+        fluidRow(
+          align = "left",
+          box(
+            title = "Abort a Workflow",
+            p("Aborting a workflow cannot be undone and can take some time to fully stop all jobs submitted in complex or highly parallelized workflows."),
+            collapsible = TRUE, collapsed = FALSE,
+            width = 12, solidHeader = FALSE, status = "danger",
+            textInput("abortWorkflowID", "Workflow id to abort:",
+              value = "",
+              placeholder = "577b9aa4-b26b-4fd6-9f17-7fb33780bbd0"
+            ),
+            actionButton(
+              inputId = "abortWorkflow",
+              label = "Abort Workflow",
+              icon = icon("thumbs-down")
+            ),
+            verbatimTextOutput(outputId = "abortResult")
+          )
+        ),
+        fluidRow(
+          align = "left",
+          ## Troubleshoot a workflow via Glob
+          box(
+            width = 12, solidHeader = FALSE, status = "info",
+            collapsible = TRUE, collapsed = FALSE,
+            title = "Troubleshoot a Workflow",
+            p("When a workflow fails but no jobs were started, or there appears to be no clear reason for a workflow to have failed, this tool can provide you the entire set of workflow metadata Cromwell has for your workflow in it's raw and unprocessed (json) form. For complex workflows, this can be rather large (and ugly!)."),
+            textInput("troubleWorkflowID", "Cromwell workflow id to get metadata for:",
+              value = "",
+              placeholder = "577b9aa4-b26b-4fd6-9f17-7fb33780bbd0"
+            ),
+            actionButton(
+              inputId = "troubleWorkflow",
+              label = "Get Complete Workflow Metadata",
+              icon = icon("question-circle")
+            ),
+            verbatimTextOutput(outputId = "troubleResult")
+          )
+        )
+      )
+    )
+
 server <- function(input, output, session) {
+  # handling login/logout
+
+  # call the logout module with reactive trigger to hide/show
+  logout_init <- shinyauthr::logoutServer(
+    id = "logout",
+    active = reactive(credentials()$user_auth)
+  )
+
+  credentials <- shinyauthr::loginServer(
+    id = "login",
+    user_col = user,
+    pwd_col = password,
+    cookie_logins = TRUE,
+    sessionid_col = sessionid,
+    cookie_getter = get_sessions_from_db,
+    cookie_setter = add_session_to_db,
+    log_out = reactive(logout_init()),
+    sqlconn = db
+  )
+
+  output$loggedInSidebar <- renderUI({
+    req(credentials()$user_auth)
+
+    loggedInSidebar
+  })
+
+  output$loggedInBody <- renderUI({
+    req(credentials()$user_auth)
+
+    # remove the login tab
+    removeTab("tabs", "login")
+    # add sidebar
+    # appendTab("tabs", loggedInSidebar)
+    # add body
+    # appendTab("tabs", loggedInBody)
+    loggedInBody
+  })
+
+
+
+
+  # the app itself
   observeEvent(input$proofAuth, {
     showModal(loginModal())
   })
@@ -296,8 +781,20 @@ server <- function(input, output, session) {
     }
   })
 
-  output$cromwellURI <- renderText({
-    cromwell_url_display()
+  # output$cromwellURI <- renderText({
+  #   cromwell_url_display()
+  # })
+
+  output$cromwellinfo <- renderUI({
+    req(credentials()$user_auth)
+
+    tagList(
+      dropdownBlock(
+        id = "mydropdown",
+        title = textOutput(outputId = cromwell_url_display()),
+        badgeStatus = NULL
+      )
+    )
   })
 
   # Disable or enable the Delete button for deleting proof server
