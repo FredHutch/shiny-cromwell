@@ -15,7 +15,7 @@ pkg_deps:
 		-e 'deps = renv::dependencies(quiet = TRUE)' \
 		-e 'uniq_pkgs = sort(unique(deps$$Package))' \
 		-e 'uniq_pkgs = uniq_pkgs[!grepl("^proofr$$|^rcromwell$$", uniq_pkgs)]' \
-		-e 'uniq_pkgs = c("getwilds/proofr", "getwilds/rcromwell", uniq_pkgs)' \
+		-e 'uniq_pkgs = c("getwilds/proofr@v0.2", "getwilds/rcromwell@v3.2.0", uniq_pkgs)' \
 		-e 'cat("\n")' \
 		-e 'cli_alert_info("Found {length(uniq_pkgs)} packages")' \
 		-e 'cli_alert_info("Here are the installation instructions:")' \
