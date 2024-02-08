@@ -12,28 +12,46 @@ library(markdown)
 library(shinyWidgets)
 library(jsonlite)
 library(lubridate)
+library(cookies)
 
-ui <- dashboardPage(
+ui <- cookies::add_cookie_handlers(
+  dashboardPage(
   skin = "black",
   dashboardHeader(
     title = "Fred Hutch Cromwell Dashboard",
-    leftUi = tagList(
-      dropdownBlock(
-        id = "mydropdown",
-        title = textOutput(outputId = "cromwellURI"),
-        badgeStatus = NULL
-      )
+    # leftUi = tagList(
+    #   dropdownBlock(
+    #     id = "mydropdown",
+    #     title = textOutput(outputId = "cromwellURI"),
+    #     badgeStatus = NULL
+    #   )
+    # ),
+    tags$li(
+      class = "dropdown",
+      style = "padding: 8px;",
+      uiOutput("loggedInOut")
     ),
     dropdownMenu(
       type = "notifications",
       badgeStatus = NULL,
-      icon = icon("circle-question", "fa-solid"),
+      icon = icon("circle-question", "fa-solid fa-lg"),
       headerText =
         helpText(
-          HTML('<u>Need Help?:</u> <p>
+          HTML('<u>Need Help?:</u>
+                <p>
+                    <br>
+                    <b>Email:</b> <a href="mailto:sachamber@fredhutch.org"><span class="badge bg-secondary">sachamber@fredhutch.org</span></a>
+                </p>
                 <br>
-                <b>Email:</b>. <a href="mailto:sachamber@fredhutch.org">sachamber@fredhutch.org</a></p>
-                <b>Open a ticket: <a href="https://github.com/FredHutch/shiny-cromwell/issues", target="_blank">here</a></b><P></P><P>'))
+                <b>
+                    Bug? Feature request? <a href="https://github.com/FredHutch/shiny-cromwell/issues" , target="_blank"><span class="badge bg-secondary">Open a ticket</span></a>
+                </b>
+                <br><br>
+                <p>
+                    <b>Questions</b> about this app, Cromwell or WDL? <a href="https://fhdata.slack.com/archives/CJFP1NYSZ"><span class="badge bg-secondary"><i class="fa-brands fa-slack"></i> FH-Data Slack</span></a> channel for #workflow-managers.
+                </p>
+                <p></p>
+                <p>'))
     )
   ),
   dashboardSidebar(
@@ -41,15 +59,6 @@ ui <- dashboardPage(
       menuItem("Welcome",
         tabName = "welcome", icon = icon("book-open"),
         badgeLabel = "info", badgeColor = "green"
-      ),
-      menuItem(
-        tabName = "auth",
-        startExpanded = TRUE,
-        actionButton(
-          inputId = "proofAuth",
-          label = "PROOF Login",
-          icon = icon("lock")
-        )
       ),
       # menuItem(
       #   tabName = "serverConf",
@@ -91,6 +100,7 @@ ui <- dashboardPage(
           align = "center",
           box(
             title = "Find Cromwell and WDL Resources at Fred Hutch's GitHub",
+            # verbatimTextOutput("url")
             actionButton(
               inputId = "githubLink", label = "What resources are available?",
               icon = icon("retweet"),
@@ -99,6 +109,7 @@ ui <- dashboardPage(
           ),
           box(
             title = "Learn about Cromwell and WDL at SciWIki",
+            # verbatimTextOutput("token")
             actionButton(
               inputId = "sciwikiLink", label = "I want to go read!",
               icon = icon("book-open"),
@@ -151,7 +162,7 @@ ui <- dashboardPage(
               inputId = "cromwellStatus",
               label = "Update Status",
               icon = icon("recycle"),
-              class = "btn-info"
+              class = "btn-primary"
             ),
             br(),
             br(),
@@ -458,4 +469,5 @@ ui <- dashboardPage(
       )
     )
   )
+)
 )
