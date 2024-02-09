@@ -147,7 +147,7 @@ loginModal <- function(failed = FALSE, error = "Invalid username or password") {
   )
 }
 
-cromwellStartModal <- function() {
+cromwellStartModal <- function(failed = FALSE, error = "An error occurred") {
   modalDialog(
     title = "Start your PROOF Cromwell server",
     br(),
@@ -156,6 +156,9 @@ cromwellStartModal <- function() {
       label = div(HTML("Slurm account (optional)")),
       value = NULL
     ),
+    if (failed) {
+      div(tags$b(error, style = "color: red;"))
+    },
     footer = tagList(
       modalButton("Cancel"),
       shinyFeedback::loadingButton(
@@ -163,7 +166,8 @@ cromwellStartModal <- function() {
         label = "Start",
         class = "btn btn-primary"
       )
-    )
+    ),
+    easyClose = TRUE
   )
 }
 
@@ -189,7 +193,8 @@ verifyCromwellDeleteModal <- function(failed = FALSE, error = "Woops, an error! 
           class = "btn btn-warning"
         )
       )
-    )
+    ),
+    easyClose = TRUE
   )
 }
 
@@ -308,35 +313,35 @@ server <- function(input, output, session) {
 
   ###### Cromwell servers tab ######
   ## Alert that need to login first
-  observe({
-    if (!proof_loggedin(r_token())) {
-      shinyBS::createAlert(session,
-        "alert_loggedin",
-        title = "Heads up",
-        content = HTML("You aren't logged in. Click the <strong>Proof Login</strong> button to the left"),
-        style = "warning",
-        append = FALSE
-      )
-    } else {
-      shinyBS::closeAlert(session, "alert_loggedin")
-    }
-  })
+  # observe({
+  #   if (!proof_loggedin(r_token())) {
+  #     shinyBS::createAlert(session,
+  #       "alert_loggedin",
+  #       title = "Heads up",
+  #       content = HTML("You aren't logged in. Click the <strong>Proof Login</strong> button to the left"),
+  #       style = "warning",
+  #       append = FALSE
+  #     )
+  #   } else {
+  #     shinyBS::closeAlert(session, "alert_loggedin")
+  #   }
+  # })
 
   # Hide or show start and stop buttons
-  observe({
-    if (!proof_loggedin(r_token())) {
-      shinyjs::disable(id = "cromwellStart")
-      shinyjs::disable(id = "cromwellDelete")
-    }
-    if (!proof_serverup(r_url(), r_token())) shinyjs::disable(id = "cromwellDelete")
-    if (proof_loggedin_serverup(r_url(), r_token())) {
-      if (proof_status(token = r_token())$canJobStart) {
-        shinyjs::disable(id = "cromwellDelete")
-      } else {
-        shinyjs::disable(id = "cromwellStart")
-      }
-    }
-  })
+  # observe({
+  #   if (!proof_loggedin(r_token())) {
+  #     shinyjs::disable(id = "cromwellStart")
+  #     shinyjs::disable(id = "cromwellDelete")
+  #   }
+  #   if (!proof_serverup(r_url(), r_token())) shinyjs::disable(id = "cromwellDelete")
+  #   if (proof_loggedin_serverup(r_url(), r_token())) {
+  #     if (proof_status(token = r_token())$canJobStart) {
+  #       shinyjs::disable(id = "cromwellDelete")
+  #     } else {
+  #       shinyjs::disable(id = "cromwellStart")
+  #     }
+  #   }
+  # })
 
   # Start button handling
   observeEvent(input$cromwellStart, {
@@ -347,31 +352,39 @@ server <- function(input, output, session) {
     if (proof_loggedin(r_token())) {
       # fail out early if already running
       if (!proof_status(token = r_token())$canJobStart) {
-        stop(safeError("Your Cromwell server is already running"))
+        # stop(safeError("Your Cromwell server is already running"))
+        showModal(cromwellStartModal(failed = TRUE, error = "Your Cromwell server is already running"))
       }
 
       # start cromwell server
-      proof_start(slurm_account = input$slurmAccount, token = r_token())
-
-      # set cromwell server url
-      # cromwell_config(proof_wait_for_up(r_token()), verbose = FALSE)
-      cromwell_config(verbose = FALSE)
-      r_url(proof_wait_for_up(r_token()))
-      shiny::validate(
-        shiny::need(
-          !proof_status(token = r_token())$canJobStart,
-          "Your Cromwell server is not running. Go to  the Cromwell servers tab and click Start"
-        )
+      try_start <- tryCatch(
+        proof_start(slurm_account = input$slurmAccount, token = r_token()),
+        error = function(e) e
       )
-      user_drop_from_db(r_user())
-      user_to_db(r_user(), to_base64(r_token()), to_base64(r_url()))
 
-      # reset loading spinner
-      shinyFeedback::resetLoadingButton("beginCromwell")
+      if (rlang::is_error(try_start)) {
+        showModal(cromwellStartModal(failed = TRUE, error = try_start$message))
+      } else {
+        cromwell_config(verbose = FALSE)
+        r_url(proof_wait_for_up(r_token()))
+        shiny::validate(
+          shiny::need(
+            !proof_status(token = r_token())$canJobStart,
+            "Your Cromwell server is not running. Go to  the Cromwell servers tab and click Start"
+          )
+        )
+        user_drop_from_db(r_user())
+        user_to_db(r_user(), to_base64(r_token()), to_base64(r_url()))
 
-      removeModal()
-      shinyjs::enable(id = "cromwellDelete")
-      shinyjs::disable(id = "cromwellStart")
+        # reset loading spinner
+        shinyFeedback::resetLoadingButton("beginCromwell")
+
+        removeModal()
+        shinyjs::enable(id = "cromwellDelete")
+        shinyjs::disable(id = "cromwellStart")
+      }
+    } else {
+      showModal(cromwellStartModal(failed = TRUE, error = "You're not logged in"))
     }
   })
 
@@ -390,23 +403,27 @@ server <- function(input, output, session) {
   })
 
   observeEvent(input$deleteCromwell, {
-    if (input$stopCromwell == "delete me") {
-      try_delete <- tryCatch(proof_cancel(token = r_token()), error = function(e) e)
-      if (rlang::is_error(try_delete)) {
-        showModal(verifyCromwellDeleteModal(failed = TRUE, error = try_delete$message))
+    if (proof_loggedin(r_token())) {
+      if (input$stopCromwell == "delete me") {
+        try_delete <- tryCatch(proof_cancel(token = r_token()), error = function(e) e)
+        if (rlang::is_error(try_delete)) {
+          showModal(verifyCromwellDeleteModal(failed = TRUE, error = try_delete$message))
+        }
+
+        # wait for server to go down
+        proof_wait_for_down(r_token())
+
+        # reset loading spinner
+        shinyFeedback::resetLoadingButton("deleteCromwell")
+
+        removeModal()
+        shinyjs::disable(id = "cromwellDelete")
+        shinyjs::enable(id = "cromwellStart")
+      } else {
+        showModal(verifyCromwellDeleteModal(failed = TRUE))
       }
-
-      # wait for server to go down
-      proof_wait_for_down(r_token())
-
-      # reset loading spinner
-      shinyFeedback::resetLoadingButton("deleteCromwell")
-
-      removeModal()
-      shinyjs::disable(id = "cromwellDelete")
-      shinyjs::enable(id = "cromwellStart")
     } else {
-      showModal(verifyCromwellDeleteModal(failed = TRUE))
+      showModal(verifyCromwellDeleteModal(failed = TRUE, error = "You're not logged in"))
     }
   })
 
