@@ -20,11 +20,13 @@ library(cookies)
 library(dplyr)
 library(RSQLite)
 library(DBI)
+library(base64enc)
 
 SANITIZE_ERRORS <- FALSE
 PROOF_TIMEOUT <- 10
 COOKIE_EXPIRY_DAYS <- 1
-DB_LOCATION <- ":memory:"
+# DB_LOCATION <- ":memory:"
+DB_LOCATION <- "/Users/schambe3/my.sqlite"
 
 db <- dbConnect(RSQLite::SQLite(), DB_LOCATION)
 db_columns <- c(user = "TEXT", proof_token = "TEXT", cromwell_url = "TEXT", login_time = "TEXT")
@@ -54,6 +56,13 @@ user_drop_from_db <- function(user, conn = db) {
     WHERE user = {user}
   ", .con = db)
   dbSendQuery(db, sql_delete)
+}
+
+to_base64 <- function(x) {
+  base64enc::base64encode(charToRaw(x))
+}
+from_base64 <- function(x) {
+  rawToChar(base64enc::base64decode(x))
 }
 
 focusID <- 1
@@ -220,8 +229,8 @@ server <- function(input, output, session) {
     r_user(cookies::get_cookie("user"))
     user_df <- user_from_db(r_user()) %>% top_n(1)
     if (nrow(user_df)) {
-      r_url(user_df$cromwell_url)
-      r_token(user_df$proof_token)
+      r_url(from_base64(user_df$cromwell_url))
+      r_token(from_base64(user_df$proof_token))
     }
   })
 
@@ -235,6 +244,7 @@ server <- function(input, output, session) {
 
   observeEvent(input$proofAuthLogout, {
     cookies::remove_cookie("user")
+    user_drop_from_db(r_user())
     session$reload()
   })
 
@@ -269,7 +279,8 @@ server <- function(input, output, session) {
             r_url(proof_wait_for_up(r_token()))
           }
         }
-        user_to_db(r_user(), r_token(), r_url())
+
+        user_to_db(r_user(), to_base64(r_token()), to_base64(r_url()))
         removeModal()
         session$reload()
       }
@@ -349,7 +360,7 @@ server <- function(input, output, session) {
         )
       )
       user_drop_from_db(r_user())
-      user_to_db(r_user(), r_token(), r_url())
+      user_to_db(r_user(), to_base64(r_token()), to_base64(r_url()))
 
       # reset loading spinner
       shinyFeedback::resetLoadingButton("beginCromwell")
