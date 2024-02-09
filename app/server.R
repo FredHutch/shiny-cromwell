@@ -25,8 +25,7 @@ library(base64enc)
 SANITIZE_ERRORS <- FALSE
 PROOF_TIMEOUT <- 10
 COOKIE_EXPIRY_DAYS <- 1
-# DB_LOCATION <- ":memory:"
-DB_LOCATION <- "/Users/schambe3/my.sqlite"
+DB_LOCATION <- ":memory:"
 
 db <- dbConnect(RSQLite::SQLite(), DB_LOCATION)
 db_columns <- c(user = "TEXT", proof_token = "TEXT", cromwell_url = "TEXT", login_time = "TEXT")
