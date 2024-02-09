@@ -131,10 +131,12 @@ stop_safe_loggedin_serverup <- function(url, token) {
 loginModal <- function(failed = FALSE, error = "Invalid username or password") {
   modalDialog(
     textInput("username", "Username",
-      placeholder = "HutchNet username"
+      placeholder = "HutchNet username ('jane' of jane@fredhutch.org)",
+      width = "60%"
     ),
     passwordInput("password", "Password",
-      placeholder = "HutchNet password"
+      placeholder = "HutchNet password",
+      width = "60%"
     ),
     if (failed) {
       div(tags$b(error, style = "color: red;"))
