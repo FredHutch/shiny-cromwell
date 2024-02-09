@@ -1,26 +1,31 @@
 library(shiny)
-library(shinydashboard)
-library(data.table)
-library(uuid)
-library(DT)
-library(tidyverse)
-library(RColorBrewer)
-library(rcromwell)
-library(glue)
 library(shinyBS)
 library(shinyjs)
+library(shinydashboard)
 library(shinyFeedback)
-library(markdown)
 library(shinyWidgets)
-library(jsonlite)
-library(lubridate)
-library(proofr)
-library(httr)
 library(cookies)
+
+library(DT)
+library(glue)
+library(jsonlite)
+library(rlang)
+
+library(lubridate)
+library(ggplot2)
+library(RColorBrewer)
 library(dplyr)
+library(tibble)
+library(magrittr)
+
 library(RSQLite)
 library(DBI)
+
 library(base64enc)
+library(uuid)
+
+library(proofr)
+library(rcromwell)
 
 SANITIZE_ERRORS <- FALSE
 PROOF_TIMEOUT <- 10

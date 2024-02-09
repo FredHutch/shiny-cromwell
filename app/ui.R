@@ -1,18 +1,16 @@
 library(shiny)
-library(shinydashboard)
-library(shinydashboardPlus)
-library(data.table)
-library(DT)
-library(tidyverse)
-library(RColorBrewer)
-library(rcromwell)
 library(shinyBS)
 library(shinyjs)
-library(markdown)
+library(shinydashboard)
+library(shinydashboardPlus)
 library(shinyWidgets)
-library(jsonlite)
-library(lubridate)
 library(cookies)
+
+library(DT)
+library(jsonlite)
+
+library(RColorBrewer)
+library(lubridate)
 
 ui <- cookies::add_cookie_handlers(
   dashboardPage(
