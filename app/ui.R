@@ -56,7 +56,7 @@ ui <- cookies::add_cookie_handlers(
     sidebarMenu(
       menuItem("Welcome",
         tabName = "welcome", icon = icon("book-open"),
-        badgeLabel = "info", badgeColor = "green"
+        badgeLabel = "info", badgeColor = "black"
       ),
       # menuItem(
       #   tabName = "serverConf",
@@ -73,24 +73,30 @@ ui <- cookies::add_cookie_handlers(
       ),
       menuItem("Validate",
         tabName = "validate", icon = icon("stethoscope"),
-        badgeLabel = "check", badgeColor = "orange"
+        badgeLabel = "check", badgeColor = "blue"
       ),
       menuItem("Submit Jobs",
         tabName = "submission", icon = icon("paper-plane"),
-        badgeLabel = "compute", badgeColor = "light-blue"
+        badgeLabel = "compute", badgeColor = "green"
       ),
       menuItem("Track Jobs",
         tabName = "tracking", icon = icon("binoculars"),
-        badgeLabel = "monitor", badgeColor = "purple"
+        badgeLabel = "monitor", badgeColor = "aqua"
       ),
       menuItem("Troubleshoot",
         tabName = "troubleshoot", icon = icon("wrench"),
-        badgeLabel = "troubleshoot", badgeColor = "teal"
+        badgeLabel = "troubleshoot", badgeColor = "red"
       )
     )
   ),
   dashboardBody(
     shinyjs::useShinyjs(),
+    tags$style(HTML("
+      .alert {
+         width: 75%;
+         margin: auto;
+      }
+    ")),
     tabItems(
       tabItem(
         tabName = "welcome",
@@ -116,12 +122,62 @@ ui <- cookies::add_cookie_handlers(
           )
         ),
         fluidRow(
+          column(width = 12,
+            h2("What is this app?"),
+            shiny::includeMarkdown("about.md")
+          )
+        ),
+        fluidRow(
+          shinyBS::bsAlert("alert_proof_only")
+        ),
+        fluidRow(
           align = "center",
-          column(
-            width = 11, align = "left",
-            includeMarkdown("about.md")
+          h2("About the tabs"),
+          column(width = 8, align = "center", offset = 2,
+            box(
+              title = "Cromwell Servers", width = NULL, solidHeader = TRUE, status = "warning", icon = icon("server"),
+              shiny::markdown("This tab allows you to:
+              - Start or delete your PROOF based Cromwell server
+              - Get metadata for your PROOF based Cromwell server"),
+              align = "left"
+            ),
+            box(
+              title = "Validate", width = NULL, solidHeader = TRUE, status = "primary", icon = icon("stethoscope"),
+              shiny::markdown("This tab allows you to:
+              - Validate a workflow you'd like to run"),
+              align = "left"
+            ),
+            box(
+              title = "Submit Jobs", width = NULL, solidHeader = TRUE, status = "success", icon = icon("paper-plane"),
+              shiny::markdown("This tab allows you to:
+                - Run a workflow"),
+              align = "left"
+            ),
+            box(
+              title = "Track Jobs", width = NULL, solidHeader = TRUE, status = "info", icon = icon("binoculars"),
+              shiny::markdown("This tab allows you to:
+              - Query your Cromwell database for the jobs run the most recent days (your choice how far back to go),
+              - See how all of your workflows status',
+              - Look within a workflow at the individual calls, failures and call caching results,
+              - Download a list of the final workflow outputs for further processing"),
+              align = "left"
+            ),
+            box(
+              title = "Troubleshoot", width = NULL, solidHeader = TRUE, status = "danger", icon = icon("wrench"),
+              shiny::markdown("This tab allows you to:
+              - Abort a workflow
+              - Troubleshoot the workflow itself by looking at the entire, raw json of workflow metadata (sometimes it's helpful but especially for complex workflows, this is can be large and daunting to parse!)"),
+              align = "left"
+            )
           )
         )
+        # fluidRow(
+        #   align = "center",
+        #   column(
+        #     width = 11, align = "left",
+        #     includeMarkdown("about.md")
+        #   )
+        # )
       ),
       tabItem(
         tabName = "cromwell",
