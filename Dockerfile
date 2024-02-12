@@ -1,19 +1,27 @@
-FROM fredhutch/r-shiny-server-base:4.3.2
+FROM fredhutch/r-shiny-server-base:4.3.2 AS base
 
 RUN apt-get update -y && apt-get install -y libssh-dev
 
-RUN R -q -e 'install.packages(c("ellipsis"), repos="https://cran.rstudio.com/")'
-RUN R -q -e 'install.packages(c("shiny"), repos="https://cran.rstudio.com/")'
-RUN R -q -e 'install.packages(c("shinyFeedback", "shinyWidgets", "shinydashboard", "shinydashboardPlus", "ssh", "paws", "remotes", "markdown", "lubridate", "jsonlite", "cookies", "dplyr", "RSQLite", "DBI", "data.table", "DT", "glue", "httr", "purrr", "RColorBrewer", "rlang", "shinyBS", "shinyjs", "tidyverse", "uuid", "base64enc"), repos="https://cran.r-project.org")'
+RUN R -q -e "install.packages('pak', repos = c(CRAN = 'https://cloud.r-project.org'))"
+RUN R -q -e "pak::pak('renv')"
 
-RUN R -q -e "remotes::install_github('getwilds/proofr@v0.2')"
+WORKDIR /app
 
-RUN R -q -e "remotes::install_github('getwilds/rcromwell@v3.2.0')"
+RUN mkdir -p renv
+COPY renv.lock renv.lock
+COPY .Rprofile .Rprofile
+COPY renv/activate.R renv/activate.R
+COPY renv/settings.json renv/settings.json
 
+RUN mkdir renv/.cache
+ENV RENV_PATHS_CACHE renv/.cache
 
-ADD check.R /tmp/
+RUN R -q -e "renv::restore()"
 
-RUN R -f /tmp/check.R --args ellipsis shiny shinyWidgets shinydashboard shinydashboardPlus ssh paws remotes markdown lubridate jsonlite rcromwell DT tidyverse RColorBrewer glue shinyBS shinyjs shinyFeedback rmarkdown proofr httr cookies dplyr RSQLite DBI purrr data.table rlang uuid base64enc
+FROM base
+
+WORKDIR /app
+COPY --from=base /app .
 
 RUN rm -rf /srv/shiny-server/
 ADD app/. /srv/shiny-server/
