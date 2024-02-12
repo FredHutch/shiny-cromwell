@@ -226,6 +226,14 @@ logOutButton <-
   )
 
 server <- function(input, output, session) {
+  shinyBS::createAlert(session,
+    "alert_proof_only",
+    title = "Important!",
+    content = HTML("The app only supports the PROOF based flow right now"),
+    append = FALSE,
+    dismiss = FALSE
+  )
+
   r_url <- shiny::reactiveVal("")
   r_token <- shiny::reactiveVal("")
   r_user <- shiny::reactiveVal()
