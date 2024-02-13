@@ -18,7 +18,7 @@ library(dplyr)
 library(tibble)
 library(magrittr)
 
-library(RSQLite)
+library(RMariaDB)
 library(DBI)
 
 library(base64enc)
@@ -30,13 +30,25 @@ library(rcromwell)
 SANITIZE_ERRORS <- FALSE
 PROOF_TIMEOUT <- 10
 COOKIE_EXPIRY_DAYS <- 1
-DB_LOCATION <- ":memory:"
 
-db <- dbConnect(RSQLite::SQLite(), DB_LOCATION)
-db_columns <- c(user = "TEXT", proof_token = "TEXT", cromwell_url = "TEXT", login_time = "TEXT")
-if (!dbExistsTable(db, "users")) dbCreateTable(db, "users", db_columns)
+db <- dbConnect(RMariaDB::MariaDB(), group = "shinycromwell")
+if (!dbExistsTable(db, "users")) {
+  db_columns <- c(
+    user = "TEXT",
+    proof_token = "TEXT",
+    cromwell_url = "TEXT",
+    login_time = "TEXT"
+  )
+  dbCreateTable(db, "users", db_columns)
+}
+dbDisconnect(db)
 
-user_from_db <- function(user, conn = db, expiry = COOKIE_EXPIRY_DAYS) {
+make_db_con <- function() {
+  dbConnect(RMariaDB::MariaDB(), group = "shinycromwell")
+}
+
+user_from_db <- function(user, conn = make_db_con(), expiry = COOKIE_EXPIRY_DAYS) {
+  on.exit(dbDisconnect(conn))
   dbReadTable(conn, "users") %>%
     as_tibble() %>%
     filter(
@@ -45,7 +57,8 @@ user_from_db <- function(user, conn = db, expiry = COOKIE_EXPIRY_DAYS) {
     ) %>%
     arrange(desc(login_time))
 }
-user_to_db <- function(user, token, url, conn = db) {
+user_to_db <- function(user, token, url, conn = make_db_con()) {
+  on.exit(dbDisconnect(conn))
   tibble(
     user = user,
     proof_token = token,
@@ -54,7 +67,8 @@ user_to_db <- function(user, token, url, conn = db) {
   ) %>%
     dbWriteTable(conn, "users", ., append = TRUE)
 }
-user_drop_from_db <- function(user, conn = db) {
+user_drop_from_db <- function(user, conn = make_db_con()) {
+  on.exit(dbDisconnect(conn))
   sql_delete <- glue::glue_sql("
     DELETE from users
     WHERE user = {user}
