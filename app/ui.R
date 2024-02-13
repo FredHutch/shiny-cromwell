@@ -4,7 +4,6 @@ library(shinyjs)
 library(shinydashboard)
 library(shinydashboardPlus)
 library(shinyWidgets)
-library(cookies)
 
 library(DT)
 library(jsonlite)
@@ -12,18 +11,15 @@ library(jsonlite)
 library(RColorBrewer)
 library(lubridate)
 
-ui <- cookies::add_cookie_handlers(
-  dashboardPage(
+ui <- dashboardPage(
   skin = "black",
   dashboardHeader(
-    title = "Fred Hutch Cromwell Dashboard",
-    # leftUi = tagList(
-    #   dropdownBlock(
-    #     id = "mydropdown",
-    #     title = textOutput(outputId = "cromwellURI"),
-    #     badgeStatus = NULL
-    #   )
-    # ),
+    title = h4(HTML("Fred Hutch<br>Cromwell Dashboard")),
+    tags$li(
+      class = "dropdown",
+      style = "padding: 12px;",
+      textOutput("userName")
+    ),
     tags$li(
       class = "dropdown",
       style = "padding: 8px;",
@@ -91,93 +87,85 @@ ui <- cookies::add_cookie_handlers(
   ),
   dashboardBody(
     shinyjs::useShinyjs(),
-    tags$style(HTML("
-      .alert {
-         width: 75%;
-         margin: auto;
-      }
-    ")),
+    # tags$style(HTML("
+    #   .alert {
+    #      width: 75%;
+    #      margin: auto;
+    #   }
+    # ")),
     tabItems(
       tabItem(
         tabName = "welcome",
-        fluidRow(
-          align = "center",
-          box(
-            title = "Find Cromwell and WDL Resources at Fred Hutch's GitHub",
-            # verbatimTextOutput("url")
-            actionButton(
-              inputId = "githubLink", label = "What resources are available?",
-              icon = icon("retweet"),
-              onclick = "window.open('https://github.com/FredHutch?utf8=%E2%9C%93&q=wdl+OR+cromwell&type=&language=', '_blank')"
-            )
-          ),
-          box(
-            title = "Learn about Cromwell and WDL at SciWIki",
-            # verbatimTextOutput("token")
-            actionButton(
-              inputId = "sciwikiLink", label = "I want to go read!",
-              icon = icon("book-open"),
-              onclick = "window.open('https://sciwiki.fredhutch.org/compdemos/Cromwell/', '_blank')"
-            )
-          )
-        ),
+        # fluidRow(
+        #   align = "center",
+        #   box(
+        #     title = "Find Cromwell and WDL Resources at Fred Hutch's GitHub",
+        #     actionButton(
+        #       inputId = "githubLink", label = "What resources are available?",
+        #       icon = icon("retweet"),
+        #       onclick = "window.open('https://github.com/FredHutch?utf8=%E2%9C%93&q=wdl+OR+cromwell&type=&language=', '_blank')"
+        #     )
+        #   ),
+        #   box(
+        #     title = "Learn about Cromwell and WDL at SciWIki",
+        #     actionButton(
+        #       inputId = "sciwikiLink", label = "I want to go read!",
+        #       icon = icon("book-open"),
+        #       onclick = "window.open('https://sciwiki.fredhutch.org/compdemos/Cromwell/', '_blank')"
+        #     )
+        #   )
+        # ),
         fluidRow(
           column(width = 12,
             h2("What is this app?"),
             shiny::includeMarkdown("about.md")
           )
         ),
+        # fluidRow(
+        #   shinyBS::bsAlert("alert_proof_only")
+        # ),
         fluidRow(
-          shinyBS::bsAlert("alert_proof_only")
+          align = "center",
+          h2("Dashboard Tabs"),
+          box(
+            title = "Cromwell Servers", width = 4, solidHeader = TRUE, status = "warning", icon = icon("server"),
+            shiny::markdown("This tab allows you to:
+            - Start or delete your PROOF based Cromwell server
+            - Get metadata for your PROOF based Cromwell server"),
+            align = "left"
+          ),
+          box(
+            title = "Validate", width = 4, solidHeader = TRUE, status = "primary", icon = icon("stethoscope"),
+            shiny::markdown("This tab allows you to:
+            - Validate a workflow you'd like to run"),
+            align = "left"
+          ),
+          box(
+            title = "Submit Jobs", width = 4, solidHeader = TRUE, status = "success", icon = icon("paper-plane"),
+            shiny::markdown("This tab allows you to:
+              - Run a workflow"),
+            align = "left"
+          )
         ),
         fluidRow(
           align = "center",
-          h2("About the tabs"),
-          column(width = 8, align = "center", offset = 2,
-            box(
-              title = "Cromwell Servers", width = NULL, solidHeader = TRUE, status = "warning", icon = icon("server"),
-              shiny::markdown("This tab allows you to:
-              - Start or delete your PROOF based Cromwell server
-              - Get metadata for your PROOF based Cromwell server"),
-              align = "left"
-            ),
-            box(
-              title = "Validate", width = NULL, solidHeader = TRUE, status = "primary", icon = icon("stethoscope"),
-              shiny::markdown("This tab allows you to:
-              - Validate a workflow you'd like to run"),
-              align = "left"
-            ),
-            box(
-              title = "Submit Jobs", width = NULL, solidHeader = TRUE, status = "success", icon = icon("paper-plane"),
-              shiny::markdown("This tab allows you to:
-                - Run a workflow"),
-              align = "left"
-            ),
-            box(
-              title = "Track Jobs", width = NULL, solidHeader = TRUE, status = "info", icon = icon("binoculars"),
-              shiny::markdown("This tab allows you to:
-              - Query your Cromwell database for the jobs run the most recent days (your choice how far back to go),
-              - See how all of your workflows status',
-              - Look within a workflow at the individual calls, failures and call caching results,
-              - Download a list of the final workflow outputs for further processing"),
-              align = "left"
-            ),
-            box(
-              title = "Troubleshoot", width = NULL, solidHeader = TRUE, status = "danger", icon = icon("wrench"),
-              shiny::markdown("This tab allows you to:
-              - Abort a workflow
-              - Troubleshoot the workflow itself by looking at the entire, raw json of workflow metadata (sometimes it's helpful but especially for complex workflows, this is can be large and daunting to parse!)"),
-              align = "left"
-            )
+          box(
+            title = "Track Jobs", width = 6, solidHeader = TRUE, status = "info", icon = icon("binoculars"),
+            shiny::markdown("This tab allows you to:
+            - Query your Cromwell database for the jobs run the most recent days (your choice how far back to go),
+            - See how all of your workflows status',
+            - Look within a workflow at the individual calls, failures and call caching results,
+            - Download a list of the final workflow outputs for further processing"),
+            align = "left"
+          ),
+          box(
+            title = "Troubleshoot", width = 6, solidHeader = TRUE, status = "danger", icon = icon("wrench"),
+            shiny::markdown("This tab allows you to:
+            - Abort a workflow
+            - Troubleshoot the workflow itself by looking at the entire, raw json of workflow metadata (sometimes it's helpful but especially for complex workflows, this is can be large and daunting to parse!)"),
+            align = "left"
           )
         )
-        # fluidRow(
-        #   align = "center",
-        #   column(
-        #     width = 11, align = "left",
-        #     includeMarkdown("about.md")
-        #   )
-        # )
       ),
       tabItem(
         tabName = "cromwell",
@@ -523,5 +511,4 @@ ui <- cookies::add_cookie_handlers(
       )
     )
   )
-)
 )

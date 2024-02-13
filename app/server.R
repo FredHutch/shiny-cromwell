@@ -4,7 +4,6 @@ library(shinyjs)
 library(shinydashboard)
 library(shinyFeedback)
 library(shinyWidgets)
-library(cookies)
 
 library(DT)
 library(glue)
@@ -18,10 +17,6 @@ library(dplyr)
 library(tibble)
 library(magrittr)
 
-library(RMariaDB)
-library(DBI)
-
-library(base64enc)
 library(uuid)
 
 library(proofr)
@@ -29,61 +24,7 @@ library(rcromwell)
 
 SANITIZE_ERRORS <- FALSE
 PROOF_TIMEOUT <- 10
-COOKIE_EXPIRY_DAYS <- 1
-
-db <- dbConnect(RMariaDB::MariaDB(), group = "shinycromwell")
-if (!dbExistsTable(db, "users")) {
-  db_columns <- c(
-    user = "TEXT",
-    proof_token = "TEXT",
-    cromwell_url = "TEXT",
-    login_time = "TEXT"
-  )
-  dbCreateTable(db, "users", db_columns)
-}
-dbDisconnect(db)
-
-make_db_con <- function() {
-  dbConnect(RMariaDB::MariaDB(), group = "shinycromwell")
-}
-
-user_from_db <- function(user, conn = make_db_con(), expiry = COOKIE_EXPIRY_DAYS) {
-  on.exit(dbDisconnect(conn))
-  dbReadTable(conn, "users") %>%
-    as_tibble() %>%
-    filter(
-      user == user,
-      login_time > now() - days(expiry)
-    ) %>%
-    arrange(desc(login_time))
-}
-user_to_db <- function(user, token, url, conn = make_db_con()) {
-  on.exit(dbDisconnect(conn))
-  tibble(
-    user = user,
-    proof_token = token,
-    cromwell_url = url,
-    login_time = as.character(now())
-  ) %>%
-    dbWriteTable(conn, "users", ., append = TRUE)
-}
-user_drop_from_db <- function(user, conn = make_db_con()) {
-  on.exit(dbDisconnect(conn))
-  sql_delete <- glue::glue_sql("
-    DELETE from users
-    WHERE user = {user}
-  ", .con = db)
-  dbSendQuery(db, sql_delete)
-}
-
-to_base64 <- function(x) {
-  base64enc::base64encode(charToRaw(x))
-}
-from_base64 <- function(x) {
-  rawToChar(base64enc::base64decode(x))
-}
-
-focusID <- 1
+FOCUS_ID <- 1
 
 # FIXME: maybe remove later, was running into some timeouts during testing
 proof_timeout(sec = PROOF_TIMEOUT)
@@ -240,45 +181,28 @@ logOutButton <-
   )
 
 server <- function(input, output, session) {
-  shinyBS::createAlert(session,
-    "alert_proof_only",
-    title = "Important!",
-    content = HTML("The app only supports the PROOF based flow right now"),
-    append = FALSE,
-    dismiss = FALSE
-  )
+  session$allowReconnect(TRUE)
 
-  r_url <- shiny::reactiveVal("")
-  r_token <- shiny::reactiveVal("")
-  r_user <- shiny::reactiveVal()
+  # shinyBS::createAlert(session,
+  #   "alert_proof_only",
+  #   title = "Important!",
+  #   content = HTML("The app only supports the PROOF based flow right now"),
+  #   append = FALSE,
+  #   dismiss = FALSE
+  # )
+
+  rv <- reactiveValues(token = "", url = "")
 
   observeEvent(input$proofAuth, {
     showModal(loginModal())
   })
 
-  observeEvent(
-    cookies::get_cookie("user"), {
-
-    r_user(cookies::get_cookie("user"))
-    user_df <- user_from_db(r_user()) %>% top_n(1)
-    if (nrow(user_df)) {
-      r_url(from_base64(user_df$cromwell_url))
-      r_token(from_base64(user_df$proof_token))
-    }
-  })
-
-  output$loggedInOut <- renderUI({
-    if (proof_loggedin(r_token())) {
-      logOutButton
-    } else {
-      logInButton
-    }
-  })
-
   observeEvent(input$proofAuthLogout, {
-    cookies::remove_cookie("user")
-    user_drop_from_db(r_user())
     session$reload()
+  })
+
+  output$userName <- renderText({
+    input$username
   })
 
   observeEvent(input$submit, {
@@ -290,55 +214,43 @@ server <- function(input, output, session) {
       if (rlang::is_error(try_auth)) {
         showModal(loginModal(failed = TRUE, error = try_auth$message))
       } else {
-        r_token(try_auth)
-        r_user(input$username)
-
-        cookies::set_cookie(
-          cookie_name = "user",
-          cookie_value = r_user(),
-          expiration = COOKIE_EXPIRY_DAYS,
-          secure_only = TRUE,
-          same_site = "strict"
-        )
-
+        rv$token <- try_auth
         cromwell_up <- tryCatch(
-          proof_status(token = r_token())$jobStatus,
+          proof_status(token = rv$token)$jobStatus,
           error = function(e) e
         )
-        print(glue("cromwell_up {cromwell_up}"))
+        print(glue("cromwell_status {cromwell_up}"))
         if (!rlang::is_error(cromwell_up)) {
           if (!is.null(cromwell_up)) {
             cromwell_config(verbose = FALSE)
-            r_url(proof_wait_for_up(r_token()))
+            rv$url <- proof_wait_for_up(rv$token)
           }
         }
-
-        user_to_db(r_user(), to_base64(r_token()), to_base64(r_url()))
         removeModal()
-        session$reload()
       }
     } else {
       showModal(loginModal(failed = TRUE))
     }
   })
 
-  # output$url <- renderText({
-  #   r_url()
-  # })
-  # output$token <- renderText({
-  #   r_token()
-  # })
+  output$loggedInOut <- renderUI({
+    if (proof_loggedin(rv$token)) {
+      logOutButton
+    } else {
+      logInButton
+    }
+  })
 
   # update the icon in the PROOF Login button
   # (FIXME: ideally we change the color of the button too but not sure how to do that yet)
-  observeEvent(proof_loggedin_serverup(r_url(), r_token()), {
+  observeEvent(proof_loggedin_serverup(rv$url, rv$token), {
     updateActionButton(session, "proofAuth", icon = icon("unlock"))
   })
 
   ###### Cromwell servers tab ######
   ## Alert that need to login first
   # observe({
-  #   if (!proof_loggedin(r_token())) {
+  #   if (!proof_loggedin(rv$token)) {
   #     shinyBS::createAlert(session,
   #       "alert_loggedin",
   #       title = "Heads up",
@@ -353,13 +265,13 @@ server <- function(input, output, session) {
 
   # Hide or show start and stop buttons
   # observe({
-  #   if (!proof_loggedin(r_token())) {
+  #   if (!proof_loggedin(rv$token)) {
   #     shinyjs::disable(id = "cromwellStart")
   #     shinyjs::disable(id = "cromwellDelete")
   #   }
-  #   if (!proof_serverup(r_url(), r_token())) shinyjs::disable(id = "cromwellDelete")
-  #   if (proof_loggedin_serverup(r_url(), r_token())) {
-  #     if (proof_status(token = r_token())$canJobStart) {
+  #   if (!proof_serverup(rv$url, rv$token)) shinyjs::disable(id = "cromwellDelete")
+  #   if (proof_loggedin_serverup(rv$url, rv$token)) {
+  #     if (proof_status(token = rv$token)$canJobStart) {
   #       shinyjs::disable(id = "cromwellDelete")
   #     } else {
   #       shinyjs::disable(id = "cromwellStart")
@@ -373,16 +285,16 @@ server <- function(input, output, session) {
   })
 
   observeEvent(input$beginCromwell, {
-    if (proof_loggedin(r_token())) {
+    if (proof_loggedin(rv$token)) {
       # fail out early if already running
-      if (!proof_status(token = r_token())$canJobStart) {
+      if (!proof_status(token = rv$token)$canJobStart) {
         # stop(safeError("Your Cromwell server is already running"))
         showModal(cromwellStartModal(failed = TRUE, error = "Your Cromwell server is already running"))
       }
 
       # start cromwell server
       try_start <- tryCatch(
-        proof_start(slurm_account = input$slurmAccount, token = r_token()),
+        proof_start(slurm_account = input$slurmAccount, token = rv$token),
         error = function(e) e
       )
 
@@ -390,15 +302,13 @@ server <- function(input, output, session) {
         showModal(cromwellStartModal(failed = TRUE, error = try_start$message))
       } else {
         cromwell_config(verbose = FALSE)
-        r_url(proof_wait_for_up(r_token()))
+        rv$url <- proof_wait_for_up(rv$token)
         shiny::validate(
           shiny::need(
-            !proof_status(token = r_token())$canJobStart,
+            !proof_status(token = rv$token)$canJobStart,
             "Your Cromwell server is not running. Go to  the Cromwell servers tab and click Start"
           )
         )
-        user_drop_from_db(r_user())
-        user_to_db(r_user(), to_base64(r_token()), to_base64(r_url()))
 
         # reset loading spinner
         shinyFeedback::resetLoadingButton("beginCromwell")
@@ -413,7 +323,7 @@ server <- function(input, output, session) {
   })
 
   # output$cromwellURI <- renderText({
-  #   cromwell_url_display(r_url())
+  #   cromwell_url_display(rv$url)
   # })
 
   # Disable or enable the Delete button for deleting proof server
@@ -427,15 +337,15 @@ server <- function(input, output, session) {
   })
 
   observeEvent(input$deleteCromwell, {
-    if (proof_loggedin(r_token())) {
+    if (proof_loggedin(rv$token)) {
       if (input$stopCromwell == "delete me") {
-        try_delete <- tryCatch(proof_cancel(token = r_token()), error = function(e) e)
+        try_delete <- tryCatch(proof_cancel(token = rv$token), error = function(e) e)
         if (rlang::is_error(try_delete)) {
           showModal(verifyCromwellDeleteModal(failed = TRUE, error = try_delete$message))
         }
 
         # wait for server to go down
-        proof_wait_for_down(r_token())
+        proof_wait_for_down(rv$token)
 
         # reset loading spinner
         shinyFeedback::resetLoadingButton("deleteCromwell")
@@ -456,27 +366,27 @@ server <- function(input, output, session) {
   # OR when user clicks "Update Status" button
   cromwellProofStatusData <- reactivePoll(1000, session,
     checkFunc = function() {
-      if (proof_loggedin(r_token())) proof_status(token = r_token())$jobStatus
+      if (proof_loggedin(rv$token)) proof_status(token = rv$token)$jobStatus
     },
     valueFunc = function() {
-      proof_status(token = r_token())
+      proof_status(token = rv$token)
     }
   )
 
   proofStatusTextGenerator <- function(name, list_index, value_if_null = NULL) {
-      renderText(
-        if (proof_loggedin(r_token())) {
-          paste0(
-            strong(glue("{name}: ")),
-            purrr::flatten(cromwellProofStatusData())[[list_index]] %||% value_if_null
-          )
-        }
-      )
+    renderText(
+      if (proof_loggedin(rv$token)) {
+        paste0(
+          strong(glue("{name}: ")),
+          purrr::flatten(cromwellProofStatusData())[[list_index]] %||% value_if_null
+        )
+      }
+    )
   }
 
-  output$proofStatusJobStatus <- proofStatusTextGenerator('Job status', 'jobStatus', "Stopped")
+  output$proofStatusJobStatus <- proofStatusTextGenerator("Job status", "jobStatus", "Stopped")
   output$proofStatusUrlStr <- renderText(
-    if (proof_loggedin(r_token())) {
+    if (proof_loggedin(rv$token)) {
       paste0(
         strong("Cromwell URL: "),
         a(
@@ -487,26 +397,26 @@ server <- function(input, output, session) {
       )
     }
   )
-  output$proofStatusWorkflowLogDir <- proofStatusTextGenerator('Workflow log directory', 'WORKFLOWLOGDIR')
-  output$proofStatusScratchDir <- proofStatusTextGenerator('Scratch directory', 'SCRATCHDIR')
-  output$proofStatusSlurmJobId <- proofStatusTextGenerator('Slurm job ID', 'SLURM_JOB_ID')
-  output$proofStatusCromwellDir <- proofStatusTextGenerator('Cromwell directory', 'CROMWELL_DIR')
-  output$proofStatusServerLogDir <- proofStatusTextGenerator('Server log directory', 'SERVERLOGDIR')
-  output$proofStatusSingularityCacheDir <- proofStatusTextGenerator('Singlarity cache directory', 'SINGULARITY_CACHEDIR')
-  output$proofStatusServerTime <- proofStatusTextGenerator('Server time', 'SERVERTIME')
-  output$proofStatusUseAWS <- proofStatusTextGenerator('Use AWS?', 'USE_AWS')
-  output$proofStatusSlurmJobAccount <- proofStatusTextGenerator('Slurm job account', 'SLURM_JOB_ACCOUNT')
+  output$proofStatusWorkflowLogDir <- proofStatusTextGenerator("Workflow log directory", "WORKFLOWLOGDIR")
+  output$proofStatusScratchDir <- proofStatusTextGenerator("Scratch directory", "SCRATCHDIR")
+  output$proofStatusSlurmJobId <- proofStatusTextGenerator("Slurm job ID", "SLURM_JOB_ID")
+  output$proofStatusCromwellDir <- proofStatusTextGenerator("Cromwell directory", "CROMWELL_DIR")
+  output$proofStatusServerLogDir <- proofStatusTextGenerator("Server log directory", "SERVERLOGDIR")
+  output$proofStatusSingularityCacheDir <- proofStatusTextGenerator("Singlarity cache directory", "SINGULARITY_CACHEDIR")
+  output$proofStatusServerTime <- proofStatusTextGenerator("Server time", "SERVERTIME")
+  output$proofStatusUseAWS <- proofStatusTextGenerator("Use AWS?", "USE_AWS")
+  output$proofStatusSlurmJobAccount <- proofStatusTextGenerator("Slurm job account", "SLURM_JOB_ACCOUNT")
 
   ###### Cromwell Validate tab ######
   ## Validate a possible workflow
   validateWorkflow <- eventReactive(input$validateWorkflow,
     {
-      stop_safe_loggedin_serverup(r_url(), r_token())
+      stop_safe_loggedin_serverup(rv$url, rv$token)
       cromwell_validate(
         wdl = input$validatewdlFile$datapath,
         all_inputs = input$validateinputFile$datapath,
-        url = r_url(),
-        token = r_token()
+        url = rv$url,
+        token = rv$token
       )
     },
     ignoreNULL = TRUE
@@ -517,7 +427,7 @@ server <- function(input, output, session) {
   # reset
   observeEvent(input$resetValidate, {
     purrr::map(
-      c('validatewdlFile', 'validateinputFile'),
+      c("validatewdlFile", "validateinputFile"),
       shinyjs::reset
     )
     output$validationResult <- renderText({})
@@ -530,7 +440,7 @@ server <- function(input, output, session) {
   ## Submit a workflow
   submitWorkflowJob <- eventReactive(input$submitWorkflow,
     {
-      stop_safe_loggedin_serverup(r_url(), r_token())
+      stop_safe_loggedin_serverup(rv$url, rv$token)
       cromwell_submit_batch(
         wdl = input$wdlFile$datapath,
         params = input$inputJSON$datapath,
@@ -541,8 +451,8 @@ server <- function(input, output, session) {
           "Label" = input$labelValue,
           "secondaryLabel" = input$seclabelValue
         ),
-        url = r_url(),
-        token = r_token()
+        url = rv$url,
+        token = rv$token
       )
     },
     ignoreNULL = TRUE
@@ -553,12 +463,12 @@ server <- function(input, output, session) {
   ## Troubleshoot a workflow
   troubleWorkflowJob <- eventReactive(input$troubleWorkflow,
     {
-      stop_safe_loggedin_serverup(r_url(), r_token())
+      stop_safe_loggedin_serverup(rv$url, rv$token)
       validate_workflowid(input$troubleWorkflowID)
       cromwell_glob(
         workflow_id = input$troubleWorkflowID,
-        url = r_url(),
-        token = r_token()
+        url = rv$url,
+        token = rv$token
       )
     },
     ignoreNULL = TRUE
@@ -569,12 +479,12 @@ server <- function(input, output, session) {
   ## Abort a workflow
   abortWorkflowJob <- eventReactive(input$abortWorkflow,
     {
-      stop_safe_loggedin_serverup(r_url(), r_token())
+      stop_safe_loggedin_serverup(rv$url, rv$token)
       validate_workflowid(input$abortWorkflowID)
       cromwell_abort(
         workflow_id = input$abortWorkflowID,
-        url = r_url(),
-        token = r_token()
+        url = rv$url,
+        token = rv$token
       )
     },
     ignoreNULL = TRUE
@@ -584,9 +494,11 @@ server <- function(input, output, session) {
 
   # reset
   observeEvent(input$resetSubmission, {
-    purrr::map(c(
-      'wdlFile', 'inputJSON', 'input2JSON',
-      'workOptions', 'labelValue', 'seclabelValue'),
+    purrr::map(
+      c(
+        "wdlFile", "inputJSON", "input2JSON",
+        "workOptions", "labelValue", "seclabelValue"
+      ),
       shinyjs::reset
     )
     output$submissionResult <- renderText({})
@@ -598,21 +510,21 @@ server <- function(input, output, session) {
 
   workflowUpdate <- eventReactive(input$trackingUpdate,
     {
-      stop_safe_loggedin_serverup(r_url(), r_token())
+      stop_safe_loggedin_serverup(rv$url, rv$token)
       if (input$workName == "") {
         cromTable <- cromwell_jobs(
           days = input$daysToShow,
           workflow_status = input$workStatus,
-          url = r_url(),
-          token = r_token()
+          url = rv$url,
+          token = rv$token
         )
       } else {
         cromTable <- cromwell_jobs(
           days = input$daysToShow,
           workflow_status = input$workStatus,
           workflow_name = input$workName,
-          url = r_url(),
-          token = r_token()
+          url = rv$url,
+          token = rv$token
         )
       }
       if ("workflow_id" %in% colnames(cromTable)) {
@@ -635,7 +547,7 @@ server <- function(input, output, session) {
 
   callDurationUpdate <- eventReactive(input$trackingUpdate,
     {
-      stop_safe_loggedin_serverup(r_url(), r_token())
+      stop_safe_loggedin_serverup(rv$url, rv$token)
       if (nrow(workflowUpdate()) == 1 & is.na(workflowUpdate()$workflow_id[1])) {
         callDuration <- data.frame("noCalls" = "No workflows with calls were submitted, please choose a different time period. ")
       } else {
@@ -727,10 +639,10 @@ server <- function(input, output, session) {
   workflowLabels <- eventReactive(input$joblistCromwell_rows_selected, {
     print("find Labels")
     data <- workflowUpdate()
-    focusID <- data[input$joblistCromwell_rows_selected, ]$workflow_id
-    workflow <- cromwell_workflow(focusID,
-      url = r_url(),
-      token = r_token()
+    FOCUS_ID <- data[input$joblistCromwell_rows_selected, ]$workflow_id
+    workflow <- cromwell_workflow(FOCUS_ID,
+      url = rv$url,
+      token = rv$token
     )
     if ("workflow_name" %in% colnames(workflow)) {
       workflowDat <- workflow %>% select(-one_of("options", "workflow", "metadataSource", "inputs"))
@@ -749,12 +661,13 @@ server <- function(input, output, session) {
   workflowOptions <- eventReactive(input$joblistCromwell_rows_selected, {
     print("find options")
     data <- workflowUpdate()
-    focusID <- data[input$joblistCromwell_rows_selected, ]$workflow_id
+    FOCUS_ID <- data[input$joblistCromwell_rows_selected, ]$workflow_id
     as.data.frame(jsonlite::fromJSON(
-      cromwell_workflow(focusID,
-        url = r_url(),
-        token = r_token()
-      )$options))
+      cromwell_workflow(FOCUS_ID,
+        url = rv$url,
+        token = rv$token
+      )$options
+    ))
   })
   output$workflowOpt <- renderDT(
     data <- workflowOptions(),
@@ -766,11 +679,13 @@ server <- function(input, output, session) {
   workflowInputs <- eventReactive(input$joblistCromwell_rows_selected, {
     print("find inputs")
     data <- workflowUpdate()
-    focusID <- data[input$joblistCromwell_rows_selected, ]$workflow_id
+    FOCUS_ID <- data[input$joblistCromwell_rows_selected, ]$workflow_id
     as.data.frame(jsonlite::fromJSON(
-      cromwell_workflow(focusID,
-        url = r_url(),
-        token = r_token())$inputs))
+      cromwell_workflow(FOCUS_ID,
+        url = rv$url,
+        token = rv$token
+      )$inputs
+    ))
   })
   output$workflowInp <- renderDT(
     data <- workflowInputs(),
@@ -792,11 +707,11 @@ server <- function(input, output, session) {
     input$joblistCromwell_rows_selected,
     {
       data <- workflowUpdate()
-      focusID <<- data[input$joblistCromwell_rows_selected, ]$workflow_id
+      FOCUS_ID <<- data[input$joblistCromwell_rows_selected, ]$workflow_id
       print("callsUpdate(); Querying cromwell for metadata for calls.")
-      theseCalls <- cromwell_call(focusID,
-        url = r_url(),
-        token = r_token()
+      theseCalls <- cromwell_call(FOCUS_ID,
+        url = rv$url,
+        token = rv$token
       )
       if ("executionStatus" %in% colnames(theseCalls)) {
         callDat <<- theseCalls
@@ -879,11 +794,12 @@ server <- function(input, output, session) {
   failsUpdate <- eventReactive(input$getFailedData,
     {
       data <- workflowUpdate()
-      focusID <- data[input$joblistCromwell_rows_selected, ]$workflow_id
+      FOCUS_ID <- data[input$joblistCromwell_rows_selected, ]$workflow_id
       print("failsUpdate(); Querying cromwell for metadata for failures.")
-      suppressWarnings(failDat <- cromwell_failures(focusID,
-        url = r_url(),
-        token = r_token()) %>%
+      suppressWarnings(failDat <- cromwell_failures(FOCUS_ID,
+        url = rv$url,
+        token = rv$token
+      ) %>%
         select(one_of(
           "callName", "jobId", "workflow_id", "detailedSubName", "shardIndex", "attempt",
           "failures.message", "failures.causedBy.message"
@@ -914,11 +830,12 @@ server <- function(input, output, session) {
   cacheUpdate <- eventReactive(input$getCacheData,
     {
       data <- workflowUpdate()
-      focusID <<- data[input$joblistCromwell_rows_selected, ]$workflow_id
+      FOCUS_ID <<- data[input$joblistCromwell_rows_selected, ]$workflow_id
       print("cacheUpdate(); Querying cromwell for metadata for call caching.")
-      theseCache <- cromwell_cache(focusID,
-        url = r_url(),
-        token = r_token())
+      theseCache <- cromwell_cache(FOCUS_ID,
+        url = rv$url,
+        token = rv$token
+      )
       if ("callCaching.effectiveCallCachingMode" %in% colnames(theseCache)) {
         cacheDat <- theseCache
       } else {
@@ -977,11 +894,12 @@ server <- function(input, output, session) {
   outputsUpdate <- eventReactive(input$getOutputData,
     {
       data <- workflowUpdate()
-      focusID <<- data[input$joblistCromwell_rows_selected, ]$workflow_id
+      FOCUS_ID <<- data[input$joblistCromwell_rows_selected, ]$workflow_id
       print("outputsUpdate(); Querying cromwell for a list of workflow outputs.")
-      outDat <<- try(cromwell_outputs(focusID,
-        url = r_url(),
-        token = r_token()), silent = TRUE)
+      outDat <<- try(cromwell_outputs(FOCUS_ID,
+        url = rv$url,
+        token = rv$token
+      ), silent = TRUE)
       if (!is.data.frame(outDat)) {
         outDat <- dplyr::tibble("workflow_id" = "No outputs are available for this workflow yet.")
       }
