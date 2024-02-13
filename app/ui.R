@@ -200,12 +200,6 @@ ui <- dashboardPage(
             collapsed = FALSE,
             title = "Status",
             p("Cromwell server details will show below when your server is running"),
-            actionButton(
-              inputId = "cromwellStatus",
-              label = "Update Status",
-              icon = icon("recycle"),
-              class = "btn-primary"
-            ),
             br(),
             br(),
             shinyBS::bsAlert("alert_loggedin"),
