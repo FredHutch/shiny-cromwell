@@ -23,7 +23,7 @@ library(proofr)
 library(rcromwell)
 
 SANITIZE_ERRORS <- FALSE
-PROOF_TIMEOUT <- 10
+PROOF_TIMEOUT <- 20
 FOCUS_ID <- 1
 
 # FIXME: maybe remove later, was running into some timeouts during testing
