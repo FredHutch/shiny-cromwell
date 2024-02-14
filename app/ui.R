@@ -14,7 +14,9 @@ library(lubridate)
 ui <- dashboardPage(
   skin = "black",
   dashboardHeader(
-    title = h4(HTML("Fred Hutch<br>Cromwell Dashboard")),
+    title = tagList(
+        span(class = "logo-lg", h4(HTML("Fred Hutch<br>Cromwell Dashboard"))),
+        img(src = "fred-hutch.svg")),
     tags$li(
       class = "dropdown",
       style = "padding: 12px;",
