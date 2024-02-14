@@ -424,7 +424,7 @@ server <- function(input, output, session) {
   ## Show the validation result in a box
   output$validationResult <- renderPrint(validateWorkflow())
 
-  # reset
+  # reset validate
   observeEvent(input$resetValidate, {
     purrr::map(
       c("validatewdlFile", "validateinputFile"),
@@ -460,22 +460,22 @@ server <- function(input, output, session) {
   ## Show the workflow submission result in a box
   output$submissionResult <- renderPrint(submitWorkflowJob())
 
-  ## Troubleshoot a workflow
-  troubleWorkflowJob <- eventReactive(input$troubleWorkflow,
-    {
-      stop_safe_loggedin_serverup(rv$url, rv$token)
-      validate_workflowid(input$troubleWorkflowID)
-      cromwell_glob(
-        workflow_id = input$troubleWorkflowID,
-        url = rv$url,
-        token = rv$token
-      )
-    },
-    ignoreNULL = TRUE
-  )
-  ## Show the abort workflow result in a box
-  output$troubleResult <- renderPrint(troubleWorkflowJob())
+  # reset
+  observeEvent(input$resetSubmission, {
+    purrr::map(
+      c(
+        "wdlFile", "inputJSON", "input2JSON",
+        "workOptions", "labelValue", "seclabelValue"
+      ),
+      shinyjs::reset
+    )
+    output$submissionResult <- renderText({})
+    print(input$wdlFile)
+  })
 
+
+
+  ###### Troubleshoot tab ######
   ## Abort a workflow
   abortWorkflowJob <- eventReactive(input$abortWorkflow,
     {
@@ -492,18 +492,35 @@ server <- function(input, output, session) {
   ## Show the abort workflow result in a box
   output$abortResult <- renderPrint(abortWorkflowJob())
 
-  # reset
-  observeEvent(input$resetSubmission, {
-    purrr::map(
-      c(
-        "wdlFile", "inputJSON", "input2JSON",
-        "workOptions", "labelValue", "seclabelValue"
-      ),
-      shinyjs::reset
-    )
-    output$submissionResult <- renderText({})
-    print(input$wdlFile)
+  ## reset abort
+  observeEvent(input$resetAbort, {
+    shinyjs::reset("abortWorkflowID")
+    output$abortResult <- renderText({})
   })
+
+
+  ## Troubleshoot a workflow
+  troubleWorkflowJob <- eventReactive(input$troubleWorkflow,
+    {
+      stop_safe_loggedin_serverup(rv$url, rv$token)
+      validate_workflowid(input$troubleWorkflowID)
+      cromwell_glob(
+        workflow_id = input$troubleWorkflowID,
+        url = rv$url,
+        token = rv$token
+      )
+    },
+    ignoreNULL = TRUE
+  )
+  ## Show the troubleshoot workflow result in a box
+  output$troubleResult <- renderPrint(troubleWorkflowJob())
+
+  ## reset trouble
+  observeEvent(input$resetTrouble, {
+    shinyjs::reset("troubleWorkflowID")
+    output$troubleResult <- renderText({})
+  })
+
 
 
   ############ CROMWELL Tracking Tab  ############
