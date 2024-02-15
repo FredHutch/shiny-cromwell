@@ -53,7 +53,7 @@ ui <- dashboardPage(
       type = "notifications",
       badgeStatus = NULL,
       icon = icon("github", "fa-solid fa-lg"),
-      headerText = helpText(htmlOutput("outout"))
+      headerText = helpText(htmlOutput("gitHtml"))
     )
   ),
   dashboardSidebar(

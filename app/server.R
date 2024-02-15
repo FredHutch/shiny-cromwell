@@ -18,11 +18,11 @@ library(tibble)
 library(magrittr)
 
 library(uuid)
+library(httr)
+library(memoise)
 
 library(proofr)
 library(rcromwell)
-
-library(gert)
 
 SANITIZE_ERRORS <- FALSE
 PROOF_TIMEOUT <- 20
@@ -34,8 +34,22 @@ proof_timeout(sec = PROOF_TIMEOUT)
 # sanitize errors - note that some actual errors will still happen
 options(shiny.sanitize.errors = SANITIZE_ERRORS)
 
-# get lastet commit
-git_sha <- gert::git_log(max = 1)$commit
+# get lastet commit - memoised so after first call its cached
+git_sha <- memoise(
+  function(fallback_ref = "dev") {
+    sha <- tryCatch({
+        resp <- httr::GET(
+          url = "https://api.github.com",
+          path = "repos/FredHutch/shiny-cromwell/commits/dev",
+          query = list(per_page = 1)
+        )
+        httr::content(resp)$sha
+      },
+      error = function(e) e
+    )
+    if (rlang::is_error(sha)) fallback_ref else sha
+  }
+)
 
 cromwell_url_display <- function(url) {
   paste0("Cromwell URL: ", url %||% "No Cromwell Server found")
@@ -188,17 +202,10 @@ logOutButton <-
 server <- function(input, output, session) {
   session$allowReconnect(TRUE)
 
-  output$gitShaShort <- renderText({
-    substring(git_sha, 1, 7)
-  })
-  output$gitCommitUrl <- renderText({
-    # glue("https://github.com/FredHutch/shiny-cromwell/tree/{git_sha}")
-    glue('<a href="https://github.com/FredHutch/shiny-cromwell/tree/{git_sha}" target="_blank">{substring(git_sha, 1, 7)}</a>')
-  })
-  output$outout <- renderText({
+  output$gitHtml <- renderText({
     glue('<b>Code</b>: <a href="https://github.com/FredHutch/shiny-cromwell/tree/dev" target="_blank">FredHutch/shiny-cromwell</a>
                     <br>
-                    <b>Built from</b>: <a href="https://github.com/FredHutch/shiny-cromwell/tree/{git_sha}" target="_blank">{substring(git_sha, 1, 7)}</a>
+                    <b>Built from</b>: <a href="https://github.com/FredHutch/shiny-cromwell/tree/{git_sha()}" target="_blank">{substring(git_sha(), 1, 7)}</a>
           ')
   })
 
