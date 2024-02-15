@@ -22,6 +22,8 @@ library(uuid)
 library(proofr)
 library(rcromwell)
 
+library(gert)
+
 SANITIZE_ERRORS <- FALSE
 PROOF_TIMEOUT <- 20
 FOCUS_ID <- 1
@@ -31,6 +33,9 @@ proof_timeout(sec = PROOF_TIMEOUT)
 
 # sanitize errors - note that some actual errors will still happen
 options(shiny.sanitize.errors = SANITIZE_ERRORS)
+
+# get lastet commit
+git_sha <- gert::git_log(max = 1)$commit
 
 cromwell_url_display <- function(url) {
   paste0("Cromwell URL: ", url %||% "No Cromwell Server found")
@@ -182,6 +187,20 @@ logOutButton <-
 
 server <- function(input, output, session) {
   session$allowReconnect(TRUE)
+
+  output$gitShaShort <- renderText({
+    substring(git_sha, 1, 7)
+  })
+  output$gitCommitUrl <- renderText({
+    # glue("https://github.com/FredHutch/shiny-cromwell/tree/{git_sha}")
+    glue('<a href="https://github.com/FredHutch/shiny-cromwell/tree/{git_sha}" target="_blank">{substring(git_sha, 1, 7)}</a>')
+  })
+  output$outout <- renderText({
+    glue('<b>Code</b>: <a href="https://github.com/FredHutch/shiny-cromwell/tree/dev" target="_blank">FredHutch/shiny-cromwell</a>
+                    <br>
+                    <b>Built from</b>: <a href="https://github.com/FredHutch/shiny-cromwell/tree/{git_sha}" target="_blank">{substring(git_sha, 1, 7)}</a>
+          ')
+  })
 
   # shinyBS::createAlert(session,
   #   "alert_proof_only",
@@ -479,8 +498,8 @@ server <- function(input, output, session) {
   ## Abort a workflow
   abortWorkflowJob <- eventReactive(input$abortWorkflow,
     {
-      stop_safe_loggedin_serverup(rv$url, rv$token)
       validate_workflowid(input$abortWorkflowID)
+      stop_safe_loggedin_serverup(rv$url, rv$token)
       cromwell_abort(
         workflow_id = input$abortWorkflowID,
         url = rv$url,
@@ -502,8 +521,8 @@ server <- function(input, output, session) {
   ## Troubleshoot a workflow
   troubleWorkflowJob <- eventReactive(input$troubleWorkflow,
     {
-      stop_safe_loggedin_serverup(rv$url, rv$token)
       validate_workflowid(input$troubleWorkflowID)
+      stop_safe_loggedin_serverup(rv$url, rv$token)
       cromwell_glob(
         workflow_id = input$troubleWorkflowID,
         url = rv$url,

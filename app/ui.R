@@ -48,6 +48,12 @@ ui <- dashboardPage(
                 </p>
                 <p></p>
                 <p>'))
+    ),
+    dropdownMenu(
+      type = "notifications",
+      badgeStatus = NULL,
+      icon = icon("github", "fa-solid fa-lg"),
+      headerText = helpText(htmlOutput("outout"))
     )
   ),
   dashboardSidebar(
