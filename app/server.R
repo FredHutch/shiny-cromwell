@@ -24,6 +24,8 @@ library(memoise)
 library(proofr)
 library(rcromwell)
 
+library(rclipboard)
+
 SANITIZE_ERRORS <- FALSE
 PROOF_TIMEOUT <- 20
 FOCUS_ID <- 1
@@ -37,7 +39,8 @@ options(shiny.sanitize.errors = SANITIZE_ERRORS)
 # get lastet commit - memoised so after first call its cached
 git_sha <- memoise(
   function(fallback_ref = "dev") {
-    sha <- tryCatch({
+    sha <- tryCatch(
+      {
         resp <- httr::GET(
           url = "https://api.github.com",
           path = "repos/FredHutch/shiny-cromwell/commits/dev",
@@ -53,6 +56,10 @@ git_sha <- memoise(
 
 cromwell_url_display <- function(url) {
   paste0("Cromwell URL: ", url %||% "No Cromwell Server found")
+}
+
+as_pt <- function(x) {
+  stamp("Mar 1, 1999 1:00")(with_tz(ymd_hms(x, tz = "UTC"), "America/Los_Angeles"))
 }
 
 proof_wait_for_up <- function(token) {
@@ -582,11 +589,35 @@ server <- function(input, output, session) {
           end = character(0), workflowDuration = integer(0)
         )
       }
-      workflowDat
+      # add copy to clipboard buttons
+      workflowDat[["copyId"]] <- vapply(1L:nrow(workflowDat), function(i) {
+        as.character(
+          rclipButton(
+            paste0("clipbtn_", i),
+            label = "",
+            clipText = workflowDat[i, "workflow_id"],
+            icon = icon("copy"),
+            class = "btn-secondary btn-sm",
+            tooltip = "Click to copy the Workflow ID to the left",
+            options = list(delay = list(show = 800, hide = 100), trigger = "hover")
+          )
+        )
+      }, character(1L))
+
+      # change date formats
+      workflowDat <- dplyr::mutate(
+        workflowDat,
+        dplyr::across(
+          c(submission, start, end),
+          as_pt
+        )
+      )
+
+      # reorder columns
+      dplyr::relocate(workflowDat, copyId, .after = workflow_id)
     },
     ignoreNULL = TRUE
   )
-
 
   callDurationUpdate <- eventReactive(input$trackingUpdate,
     {
@@ -737,12 +768,16 @@ server <- function(input, output, session) {
     options = list(scrollX = TRUE), selection = "single", rownames = FALSE
   )
   ## Render a list of jobs in a table for a workflow
-  output$joblistCromwell <- renderDT(
-    data <- workflowUpdate(),
-    class = "compact",
-    filter = "top",
-    options = list(scrollX = TRUE), selection = "single", rownames = FALSE
-  )
+  output$joblistCromwell <- renderDT({
+    datatable(
+      workflowUpdate(),
+      escape = FALSE,
+      selection = "single",
+      rownames = FALSE,
+      filter = "top",
+      options = list(scrollX = TRUE)
+    )
+  })
 
 
   #### Call Data
