@@ -17,8 +17,9 @@ ui <- dashboardPage(
   skin = "black",
   dashboardHeader(
     title = tagList(
-        span(class = "logo-lg", h4(HTML("Fred Hutch<br>Cromwell Dashboard"))),
-        img(src = "fred-hutch.svg")),
+      span(class = "logo-lg", h4(HTML("Fred Hutch<br>Cromwell Dashboard"))),
+      img(src = "fred-hutch.svg")
+    ),
     tags$li(
       class = "dropdown",
       style = "padding: 12px;",
@@ -49,7 +50,8 @@ ui <- dashboardPage(
                     <b>Questions</b> about this app, Cromwell or WDL? <a href="https://fhdata.slack.com/archives/CJFP1NYSZ"><span class="badge bg-secondary"><i class="fa-brands fa-slack"></i> FH-Data Slack</span></a> channel for #workflow-managers.
                 </p>
                 <p></p>
-                <p>'))
+                <p>')
+        )
     ),
     dropdownMenu(
       type = "notifications",
@@ -109,7 +111,8 @@ ui <- dashboardPage(
       tabItem(
         tabName = "welcome",
         fluidRow(
-          column(width = 12,
+          column(
+            width = 12,
             h2("What is this app?"),
             shiny::includeMarkdown("about.md")
           )
@@ -240,7 +243,7 @@ ui <- dashboardPage(
             ),
             br(),
             br(),
-            actionButton('resetValidate', 'Reset'),
+            actionButton("resetValidate", "Reset"),
             verbatimTextOutput(outputId = "validationResult")
           )
         )
@@ -279,7 +282,7 @@ ui <- dashboardPage(
               ),
               verbatimTextOutput(outputId = "submissionResult"),
               br(),
-              actionButton('resetSubmission', 'Reset')
+              actionButton("resetSubmission", "Reset")
             ),
             column(
               width = 6,
@@ -477,7 +480,7 @@ ui <- dashboardPage(
               icon = icon("thumbs-down"),
               class = "btn-info"
             ),
-            actionButton('resetAbort', 'Reset'),
+            actionButton("resetAbort", "Reset"),
             verbatimTextOutput(outputId = "abortResult")
           )
         ),
@@ -502,7 +505,7 @@ ui <- dashboardPage(
               icon = icon("question-circle"),
               class = "btn-info"
             ),
-            actionButton('resetTrouble', 'Reset'),
+            actionButton("resetTrouble", "Reset"),
             verbatimTextOutput(outputId = "troubleResult")
           )
         )
