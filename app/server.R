@@ -428,7 +428,7 @@ server <- function(input, output, session) {
   output$proofStatusSlurmJobId <- proofStatusTextGenerator("Slurm job ID", "SLURM_JOB_ID")
   output$proofStatusCromwellDir <- proofStatusTextGenerator("Cromwell directory", "CROMWELL_DIR")
   output$proofStatusServerLogDir <- proofStatusTextGenerator("Server log directory", "SERVERLOGDIR")
-  output$proofStatusSingularityCacheDir <- proofStatusTextGenerator("Singlarity cache directory", "SINGULARITY_CACHEDIR")
+  output$proofStatusSingularityCacheDir <- proofStatusTextGenerator("Singlarity cache directory", "SINGULARITYCACHEDIR")
   output$proofStatusServerTime <- proofStatusTextGenerator("Server time", "SERVERTIME")
   output$proofStatusUseAWS <- proofStatusTextGenerator("Use AWS?", "USE_AWS")
   output$proofStatusSlurmJobAccount <- proofStatusTextGenerator("Slurm job account", "SLURM_JOB_ACCOUNT")
