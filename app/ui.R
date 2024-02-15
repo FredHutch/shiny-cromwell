@@ -89,6 +89,7 @@ ui <- dashboardPage(
   ),
   dashboardBody(
     shinyjs::useShinyjs(),
+    tags$script(src = "js/keyup.js"),
     # tags$style(HTML("
     #   .alert {
     #      width: 75%;

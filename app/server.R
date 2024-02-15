@@ -39,10 +39,10 @@ cromwell_url_display <- function(url) {
 proof_wait_for_up <- function(token) {
   not_up <- TRUE
   while (not_up) {
-    cromwell_url <- proof_status(token = token)$cromwellUrl
-    if (!is.null(cromwell_url)) not_up <- FALSE
+    out <- proof_status(token = token)
+    if (out$jobStatus == "RUNNING") not_up <- FALSE
   }
-  cromwell_url
+  out$cromwellUrl
 }
 
 proof_wait_for_down <- function(token) {
@@ -290,32 +290,32 @@ server <- function(input, output, session) {
       if (!proof_status(token = rv$token)$canJobStart) {
         # stop(safeError("Your Cromwell server is already running"))
         showModal(cromwellStartModal(failed = TRUE, error = "Your Cromwell server is already running"))
-      }
-
-      # start cromwell server
-      try_start <- tryCatch(
-        proof_start(slurm_account = input$slurmAccount, token = rv$token),
-        error = function(e) e
-      )
-
-      if (rlang::is_error(try_start)) {
-        showModal(cromwellStartModal(failed = TRUE, error = try_start$message))
       } else {
-        cromwell_config(verbose = FALSE)
-        rv$url <- proof_wait_for_up(rv$token)
-        shiny::validate(
-          shiny::need(
-            !proof_status(token = rv$token)$canJobStart,
-            "Your Cromwell server is not running. Go to  the Cromwell servers tab and click Start"
-          )
+        # start cromwell server
+        try_start <- tryCatch(
+          proof_start(slurm_account = input$slurmAccount, token = rv$token),
+          error = function(e) e
         )
 
-        # reset loading spinner
-        shinyFeedback::resetLoadingButton("beginCromwell")
+        if (rlang::is_error(try_start)) {
+          showModal(cromwellStartModal(failed = TRUE, error = try_start$message))
+        } else {
+          cromwell_config(verbose = FALSE)
+          rv$url <- proof_wait_for_up(rv$token)
+          shiny::validate(
+            shiny::need(
+              !proof_status(token = rv$token)$canJobStart,
+              "Your Cromwell server is not running. Go to  the Cromwell servers tab and click Start"
+            )
+          )
 
-        removeModal()
-        shinyjs::enable(id = "cromwellDelete")
-        shinyjs::disable(id = "cromwellStart")
+          # reset loading spinner
+          shinyFeedback::resetLoadingButton("beginCromwell")
+
+          removeModal()
+          shinyjs::enable(id = "cromwellDelete")
+          shinyjs::disable(id = "cromwellStart")
+        }
       }
     } else {
       showModal(cromwellStartModal(failed = TRUE, error = "You're not logged in"))
@@ -363,8 +363,7 @@ server <- function(input, output, session) {
 
 
   # Gather/show PROOF server status metadata when logged in
-  # OR when user clicks "Update Status" button
-  cromwellProofStatusData <- reactivePoll(1000, session,
+  cromwellProofStatusData <- reactivePoll(2000, session,
     checkFunc = function() {
       if (proof_loggedin(rv$token)) proof_status(token = rv$token)$jobStatus
     },
@@ -385,18 +384,19 @@ server <- function(input, output, session) {
   }
 
   output$proofStatusJobStatus <- proofStatusTextGenerator("Job status", "jobStatus", "Stopped")
-  output$proofStatusUrlStr <- renderText(
-    if (proof_loggedin(rv$token)) {
-      paste0(
-        strong("Cromwell URL: "),
-        a(
-          cromwellProofStatusData()$cromwellUrl,
-          target = "_blank",
-          href = cromwellProofStatusData()$cromwellUrl
-        )
-      )
-    }
-  )
+  # output$proofStatusUrlStr <- renderText(
+  #   if (proof_loggedin(rv$token)) {
+  #     paste0(
+  #       strong("Cromwell URL: "),
+  #       a(
+  #         cromwellProofStatusData()$cromwellUrl,
+  #         target = "_blank",
+  #         href = cromwellProofStatusData()$cromwellUrl
+  #       )
+  #     )
+  #   }
+  # )
+  output$proofStatusUrlStr <- proofStatusTextGenerator("Workflow log directory", "cromwellUrl")
   output$proofStatusWorkflowLogDir <- proofStatusTextGenerator("Workflow log directory", "WORKFLOWLOGDIR")
   output$proofStatusScratchDir <- proofStatusTextGenerator("Scratch directory", "SCRATCHDIR")
   output$proofStatusSlurmJobId <- proofStatusTextGenerator("Slurm job ID", "SLURM_JOB_ID")
