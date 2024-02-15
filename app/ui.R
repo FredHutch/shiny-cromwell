@@ -11,6 +11,8 @@ library(jsonlite)
 library(RColorBrewer)
 library(lubridate)
 
+library(rclipboard)
+
 ui <- dashboardPage(
   skin = "black",
   dashboardHeader(
@@ -95,6 +97,7 @@ ui <- dashboardPage(
   ),
   dashboardBody(
     shinyjs::useShinyjs(),
+    rclipboard::rclipboardSetup(),
     tags$script(src = "js/keyup.js"),
     # tags$style(HTML("
     #   .alert {
@@ -350,7 +353,9 @@ ui <- dashboardPage(
           box(
             width = 12,
             title = "Workflows Run",
-            collapsible = TRUE, solidHeader = TRUE,
+            collapsible = TRUE,
+            solidHeader = TRUE,
+            footer = "Dates are in Pacific time zone",
             DTOutput("joblistCromwell")
           )
         ),
