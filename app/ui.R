@@ -99,25 +99,6 @@ ui <- dashboardPage(
     tabItems(
       tabItem(
         tabName = "welcome",
-        # fluidRow(
-        #   align = "center",
-        #   box(
-        #     title = "Find Cromwell and WDL Resources at Fred Hutch's GitHub",
-        #     actionButton(
-        #       inputId = "githubLink", label = "What resources are available?",
-        #       icon = icon("retweet"),
-        #       onclick = "window.open('https://github.com/FredHutch?utf8=%E2%9C%93&q=wdl+OR+cromwell&type=&language=', '_blank')"
-        #     )
-        #   ),
-        #   box(
-        #     title = "Learn about Cromwell and WDL at SciWIki",
-        #     actionButton(
-        #       inputId = "sciwikiLink", label = "I want to go read!",
-        #       icon = icon("book-open"),
-        #       onclick = "window.open('https://sciwiki.fredhutch.org/compdemos/Cromwell/', '_blank')"
-        #     )
-        #   )
-        # ),
         fluidRow(
           column(width = 12,
             h2("What is this app?"),
