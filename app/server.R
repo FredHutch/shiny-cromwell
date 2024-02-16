@@ -281,21 +281,6 @@ server <- function(input, output, session) {
   })
 
   ###### Cromwell servers tab ######
-  ## Alert that need to login first
-  # observe({
-  #   if (!proof_loggedin(rv$token)) {
-  #     shinyBS::createAlert(session,
-  #       "alert_loggedin",
-  #       title = "Heads up",
-  #       content = HTML("You aren't logged in. Click the <strong>Proof Login</strong> button to the left"),
-  #       style = "warning",
-  #       append = FALSE
-  #     )
-  #   } else {
-  #     shinyBS::closeAlert(session, "alert_loggedin")
-  #   }
-  # })
-
   # Hide or show start and stop buttons
   # observe({
   #   if (!proof_loggedin(rv$token)) {
