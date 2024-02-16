@@ -107,6 +107,13 @@ ui <- dashboardPage(
     #      margin: auto;
     #   }
     # ")),
+    tags$style(
+      HTML("
+        .tooltip{
+           font-size: 1.5rem;
+        }
+      ")
+    ),
     tabItems(
       tabItem(
         tabName = "welcome",
@@ -195,22 +202,23 @@ ui <- dashboardPage(
             width = 12, solidHeader = FALSE, status = "info",
             collapsed = FALSE,
             title = "Status",
-            p("Cromwell server details will show below when your server is running"),
+            p("Hover over the ", icon("question-circle"), " icon to get more information about each item"),
+            # shinyBS::bsAlert("alert_loggedin"),
+            # shinyBS::bsAlert("alert_server_status"),
+            h4("Server information"),
+            uiOutput("proofStatusJobStatus"),
+            uiOutput("proofStatusWorkflowLogDir"),
+            uiOutput("proofStatusScratchDir"),
+            uiOutput("proofStatusServerTime"),
+            uiOutput("proofStatusSlurmJobAccount"),
             br(),
-            br(),
-            shinyBS::bsAlert("alert_loggedin"),
-            shinyBS::bsAlert("alert_server_status"),
-            htmlOutput("proofStatusJobStatus"),
-            htmlOutput("proofStatusUrlStr"),
-            htmlOutput("proofStatusWorkflowLogDir"),
-            htmlOutput("proofStatusScratchDir"),
-            htmlOutput("proofStatusSlurmJobId"),
-            htmlOutput("proofStatusCromwellDir"),
-            htmlOutput("proofStatusServerLogDir"),
-            htmlOutput("proofStatusSingularityCacheDir"),
-            htmlOutput("proofStatusServerTime"),
-            htmlOutput("proofStatusUseAWS"),
-            htmlOutput("proofStatusSlurmJobAccount")
+            h4("Troubleshooting"),
+            uiOutput("proofStatusSlurmJobId"),
+            uiOutput("proofStatusCromwellDir"),
+            uiOutput("proofStatusServerLogDir"),
+            uiOutput("proofStatusSingularityCacheDir"),
+            uiOutput("proofStatusUseAWS"),
+            uiOutput("proofStatusUrlStr")
           ),
         ),
       ),
