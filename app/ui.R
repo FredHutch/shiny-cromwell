@@ -203,7 +203,6 @@ ui <- dashboardPage(
             collapsed = FALSE,
             title = "Status",
             p("Hover over the ", icon("question-circle"), " icon to get more information about each item"),
-            # shinyBS::bsAlert("alert_loggedin"),
             # shinyBS::bsAlert("alert_server_status"),
             h4("Server information"),
             uiOutput("proofStatusJobStatus"),
