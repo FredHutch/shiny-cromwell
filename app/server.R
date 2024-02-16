@@ -398,25 +398,36 @@ server <- function(input, output, session) {
   # Gather/show PROOF server status metadata when logged in
   cromwellProofStatusData <- reactivePoll(2000, session,
     checkFunc = function() {
-      if (proof_loggedin(rv$token)) proof_status(token = rv$token)$jobStatus
+      if (proof_loggedin(rv$token)) {
+        proof_status(token = rv$token)$jobInfo$SCRATCHDIR
+      } else {
+        NULL
+      }
     },
     valueFunc = function() {
       proof_status(token = rv$token)
     }
   )
 
-  proofStatusTextGenerator <- function(name, list_index, value_if_null = NULL) {
-    renderText(
+  proofStatusTextGenerator <- function(name, list_index, tip = "", value_if_null = NULL) {
+    renderUI({
       if (proof_loggedin(rv$token)) {
-        paste0(
-          strong(glue("{name}: ")),
-          purrr::flatten(cromwellProofStatusData())[[list_index]] %||% value_if_null
+        tags$span(
+          shinyBS::tipify(
+            icon("question-circle"),
+            tip,
+            placement = "right"
+          ),
+          HTML(paste0(
+            strong(glue("{name}: ")),
+            purrr::flatten(cromwellProofStatusData())[[list_index]] %||% value_if_null
+          ))
         )
       }
-    )
+    })
   }
 
-  output$proofStatusJobStatus <- proofStatusTextGenerator("Job status", "jobStatus", "Stopped")
+  output$proofStatusJobStatus <- proofStatusTextGenerator("Job status", "jobStatus", "PROOF server job status", value_if_null = "Stopped")
   # output$proofStatusUrlStr <- renderText(
   #   if (proof_loggedin(rv$token)) {
   #     paste0(
@@ -429,16 +440,16 @@ server <- function(input, output, session) {
   #     )
   #   }
   # )
-  output$proofStatusUrlStr <- proofStatusTextGenerator("Workflow log directory", "cromwellUrl")
+  output$proofStatusUrlStr <- proofStatusTextGenerator("Cromwell URL", "cromwellUrl")
   output$proofStatusWorkflowLogDir <- proofStatusTextGenerator("Workflow log directory", "WORKFLOWLOGDIR")
-  output$proofStatusScratchDir <- proofStatusTextGenerator("Scratch directory", "SCRATCHDIR")
-  output$proofStatusSlurmJobId <- proofStatusTextGenerator("Slurm job ID", "SLURM_JOB_ID")
+  output$proofStatusScratchDir <- proofStatusTextGenerator("Scratch directory", "SCRATCHDIR", "Working directory on Scratch")
+  output$proofStatusSlurmJobId <- proofStatusTextGenerator("Slurm job ID", "SLURM_JOB_ID", "PROOF server SLURM job id")
   output$proofStatusCromwellDir <- proofStatusTextGenerator("Cromwell directory", "CROMWELL_DIR")
-  output$proofStatusServerLogDir <- proofStatusTextGenerator("Server log directory", "SERVERLOGDIR")
+  output$proofStatusServerLogDir <- proofStatusTextGenerator("Server log directory", "SERVERLOGDIR", "PROOF server log directory")
   output$proofStatusSingularityCacheDir <- proofStatusTextGenerator("Singlarity cache directory", "SINGULARITYCACHEDIR")
-  output$proofStatusServerTime <- proofStatusTextGenerator("Server time", "SERVERTIME")
-  output$proofStatusUseAWS <- proofStatusTextGenerator("Use AWS?", "USE_AWS")
-  output$proofStatusSlurmJobAccount <- proofStatusTextGenerator("Slurm job account", "SLURM_JOB_ACCOUNT")
+  output$proofStatusServerTime <- proofStatusTextGenerator("Server time", "SERVERTIME", "PROOF server job lifetime")
+  output$proofStatusUseAWS <- proofStatusTextGenerator("Use AWS?", "USE_AWS", "AWS credentials found?")
+  output$proofStatusSlurmJobAccount <- proofStatusTextGenerator("Slurm job account", "SLURM_JOB_ACCOUNT", "Designated Gizmo PI account")
 
   ###### Cromwell Validate tab ######
   ## Validate a possible workflow
