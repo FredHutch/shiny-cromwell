@@ -6,7 +6,6 @@ library(shinydashboardPlus)
 library(shinyFeedback)
 library(shinyWidgets)
 library(shinyvalidate)
-library(shinyalert)
 
 library(DT)
 library(glue)
