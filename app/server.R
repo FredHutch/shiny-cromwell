@@ -27,10 +27,6 @@ library(rcromwell)
 
 library(rclipboard)
 
-SANITIZE_ERRORS <- FALSE
-PROOF_TIMEOUT <- 20
-FOCUS_ID <- 1
-
 source("sidebar.R")
 source("modals.R")
 source("proof.R")
@@ -40,13 +36,17 @@ source("tab-servers.R")
 source("tab-welcome.R")
 source("validators.R")
 
+SANITIZE_ERRORS <- FALSE
+PROOF_TIMEOUT <- 20
+FOCUS_ID <- 1
+
 # FIXME: maybe remove later, was running into some timeouts during testing
 proof_timeout(sec = PROOF_TIMEOUT)
 
 # sanitize errors - note that some actual errors will still happen
 options(shiny.sanitize.errors = SANITIZE_ERRORS)
 
-my.cols <- brewer.pal(6, "RdYlBu")
+myCols <- brewer.pal(6, "RdYlBu")
 
 server <- function(input, output, session) {
   session$allowReconnect(TRUE)
@@ -302,18 +302,6 @@ server <- function(input, output, session) {
   }
 
   output$proofStatusJobStatus <- proofStatusTextGenerator("Job status", "jobStatus", "PROOF server job status", value_if_null = "Stopped")
-  # output$proofStatusUrlStr <- renderText(
-  #   if (proof_loggedin(rv$token)) {
-  #     paste0(
-  #       strong("Cromwell URL: "),
-  #       a(
-  #         cromwellProofStatusData()$cromwellUrl,
-  #         target = "_blank",
-  #         href = cromwellProofStatusData()$cromwellUrl
-  #       )
-  #     )
-  #   }
-  # )
   output$proofStatusUrlStr <- proofStatusTextGenerator("Cromwell URL", "cromwellUrl")
   output$proofStatusWorkflowLogDir <- proofStatusTextGenerator("Workflow log directory", "WORKFLOWLOGDIR")
   output$proofStatusScratchDir <- proofStatusTextGenerator("Scratch directory", "SCRATCHDIR", "Working directory on Scratch")
@@ -536,7 +524,7 @@ server <- function(input, output, session) {
         coord_flip() +
         theme_minimal() +
         theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-        scale_color_manual(values = my.cols) +
+        scale_color_manual(values = myCols) +
         ylab("Workflow Duration (mins)") +
         xlab("Workflow Name")
     } else {
@@ -701,7 +689,7 @@ server <- function(input, output, session) {
         geom_point(aes(color = executionStatus), size = 3) + # coord_flip() +
         theme_minimal() +
         theme(axis.text.x = element_text(hjust = 1, angle = 25)) +
-        scale_color_manual(values = my.cols) +
+        scale_color_manual(values = myCols) +
         ylab("Call Duration (mins)") +
         xlab("Call Name")
     } else {
