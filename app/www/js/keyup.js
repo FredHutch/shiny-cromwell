@@ -5,6 +5,12 @@ $(document).keyup(function(event) {
 });
 
 $(document).keyup(function(event) {
+  if ($("#ownCromwellURL").is(":focus") && (event.key == "Enter")) {
+    $("#submitOwnCromwell").click();
+  }
+});
+
+$(document).keyup(function(event) {
   if ($("#stopCromwell").is(":focus") && (event.key == "Enter")) {
     $("#deleteCromwell").click();
   }
