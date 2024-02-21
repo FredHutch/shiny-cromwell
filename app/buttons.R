@@ -12,9 +12,17 @@ logOutButton <-
     icon = icon("arrow-right-to-bracket")
   )
 
-ownCromwellButton <-
+logInCromwellButton <-
   actionButton(
     inputId = "ownCrom",
     label = "My Own Cromwell",
     icon = icon("plug-circle-xmark")
+  )
+logOutCromwellButton <-
+  actionButton(
+    inputId = "proofCromwellLogout",
+    label = " Exit",
+    class = "btn-danger",
+    style = "color: white;",
+    icon = icon("arrow-right-to-bracket")
   )
