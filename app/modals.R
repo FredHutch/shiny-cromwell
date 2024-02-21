@@ -25,6 +25,7 @@ myCromwellModal <- function(failed = FALSE, error = "Invalid host/port") {
       placeholder = "http://gizmot32:8000",
       width = "60%"
     ),
+    p("Do not use your PROOF based Cromwell server here", style = "color: #B5ABAB;"),
     if (failed) {
       div(tags$b(error, style = "color: red;"))
     },
