@@ -51,6 +51,7 @@ myCols <- brewer.pal(6, "RdYlBu")
 server <- function(input, output, session) {
   session$allowReconnect(TRUE)
 
+  # Upper right github icon for source code
   output$gitHtml <- renderText({
     glue('<b>Code</b>: <a href="https://github.com/FredHutch/shiny-cromwell/tree/dev" target="_blank">FredHutch/shiny-cromwell</a>
                     <br>
@@ -60,12 +61,9 @@ server <- function(input, output, session) {
 
   rv <- reactiveValues(token = "", url = "", own = FALSE)
 
+  # Login and UI component handling
   observeEvent(input$proofAuth, {
     showModal(loginModal())
-  })
-
-  observeEvent(input$proofAuthLogout, {
-    session$reload()
   })
 
   output$userName <- renderText({
@@ -87,7 +85,6 @@ server <- function(input, output, session) {
     if (nzchar(rv$token)) {
       proofSidebar()
     } else {
-      # proofSidebar()
       nonProofSidebar()
     }
   })
@@ -136,17 +133,17 @@ server <- function(input, output, session) {
     }
   })
 
-  # Bring your own Cromwell Server toggle
+  # Render bring your own Cromwell Server button
   output$ownCromwell <- renderUI({
-    ownCromwellButton
+    if (rv$own) {
+      logOutCromwellButton
+    } else {
+      logInCromwellButton
+    }
   })
+
   observeEvent(input$ownCrom, {
     if (proof_loggedin(rv$token)) session$reload()
-  })
-  observe({
-    if (proof_loggedin(rv$token)) {
-      shinyjs::hide("ownCrom")
-    }
   })
 
   observeEvent(input$ownCrom, {
@@ -166,30 +163,30 @@ server <- function(input, output, session) {
     }
   })
 
-  ## Separate observer here to update button once server is verified as acessible
+  # Hiding login buttons
   observe({
-    req(check_url(input$ownCromwellURL))
-
-    updateActionButton(inputId = "ownCrom", icon = icon("plug"))
+    if (proof_loggedin(rv$token)) {
+      shinyjs::hide("ownCrom")
+    }
   })
 
-  ###### Cromwell servers tab ######
-  # Hide or show start and stop buttons
-  # observe({
-  #   if (!proof_loggedin(rv$token)) {
-  #     shinyjs::disable(id = "cromwellStart")
-  #     shinyjs::disable(id = "cromwellDelete")
-  #   }
-  #   if (!proof_serverup(rv$url, rv$token)) shinyjs::disable(id = "cromwellDelete")
-  #   if (proof_loggedin_serverup(rv$url, rv$token)) {
-  #     if (proof_status(token = rv$token)$canJobStart) {
-  #       shinyjs::disable(id = "cromwellDelete")
-  #     } else {
-  #       shinyjs::disable(id = "cromwellStart")
-  #     }
-  #   }
-  # })
+  observe({
+    if (rv$own) {
+      shinyjs::hide("loggedInOut")
+    }
+  })
 
+  # Handle logout for both buttons
+  observeEvent(input$proofAuthLogout, {
+    session$reload()
+  })
+
+  observeEvent(input$proofCromwellLogout, {
+    session$reload()
+  })
+
+
+  ###### Cromwell servers tab ######
   # Start button handling
   observeEvent(input$cromwellStart, {
     showModal(cromwellStartModal())
