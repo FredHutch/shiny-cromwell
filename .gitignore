@@ -6,3 +6,5 @@ app/app.Rproj
 the.R
 .my.cnf
 deps.txt
+app/logs
+logs
