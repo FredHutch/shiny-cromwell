@@ -1,5 +1,6 @@
 library(memoise)
 
+# coerce dates to PT from UTC
 as_pt <- function(x) {
   stamp("Mar 1, 1999 1:00")(with_tz(ymd_hms(x, tz = "UTC"), "America/Los_Angeles"))
 }

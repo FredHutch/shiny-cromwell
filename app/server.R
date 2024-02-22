@@ -600,6 +600,15 @@ server <- function(input, output, session) {
           inputs = make_copybtn(inputs, "clipbtn_inputs_", "Copy inputs text")
         ) %>%
         ungroup()
+
+      # change date formats
+      workflowDat <- dplyr::mutate(
+        workflowDat,
+        dplyr::across(
+          c(submission, start, end),
+          as_pt
+        )
+      )
     }
 
     suppressWarnings(
@@ -744,7 +753,7 @@ server <- function(input, output, session) {
   })
   ## Jobs Lists
   output$tasklistBatch <- renderDT(
-    data <- callsUpdate(),
+    dplyr::mutate(callsUpdate(), dplyr::across(c(start, end), as_pt)),
     class = "compact",
     filter = "top",
     options = list(scrollX = TRUE),
