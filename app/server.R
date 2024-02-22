@@ -817,7 +817,13 @@ server <- function(input, output, session) {
   )
 
   output$cachingListBatch <- renderDT(
-    data <- cacheUpdate() %>% select(workflow_name, workflow_id, callName, shardIndex, executionStatus, everything()) %>% unique(),
+    data <- cacheUpdate() %>%
+      select(
+        any_of(
+          c("workflow_name", "workflow_id", "callName", "shardIndex", "executionStatus")),
+        everything()
+      ) %>%
+      unique(),
     class = "compact",
     filter = "top",
     options = list(scrollX = TRUE),
@@ -838,7 +844,7 @@ server <- function(input, output, session) {
     infoBox(
       "Cache Hits",
       value = if ("callCaching.hit" %in% colnames(cacheUpdate())) {
-        nrow(cacheUpdate() %>% filter(callCaching.hit))
+        nrow(cacheUpdate() %>% filter(as.logical(callCaching.hit)))
       } else {
         0
       },
@@ -850,7 +856,7 @@ server <- function(input, output, session) {
     infoBox(
       "Cache Misses",
       value = if ("callCaching.hit" %in% colnames(cacheUpdate())) {
-        nrow(cacheUpdate() %>% filter(!callCaching.hit))
+        nrow(cacheUpdate() %>% filter(!as.logical(callCaching.hit)))
       } else {
         0
       },
