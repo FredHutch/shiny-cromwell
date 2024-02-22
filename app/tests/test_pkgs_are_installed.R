@@ -59,8 +59,11 @@ library(testthat)
 test_that("packages are installed", {
   pkgs_used_in_code <- readRFilesAndListPackagesAST("..")
   installed_pkgnames <- names(installed.packages()[, "Package"])
-  print("The following packages are used in the code but not installed:")
-  print(pkgs_used_in_code[!pkgs_used_in_code %in% installed_pkgnames])
-  expect_true(all(pkgs_used_in_code %in% installed_pkgnames))
+  passed <- all(pkgs_used_in_code %in% installed_pkgnames)
+  if (!passed) {
+    print("The following packages are used in the code but not installed:")
+    print(pkgs_used_in_code[!pkgs_used_in_code %in% installed_pkgnames])
+  }
+  expect_true(passed)
 })
 
