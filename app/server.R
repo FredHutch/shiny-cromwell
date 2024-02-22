@@ -6,6 +6,7 @@ library(shinydashboardPlus)
 library(shinyFeedback)
 library(shinyWidgets)
 library(shinyvalidate)
+library(shinylogs)
 
 library(DT)
 library(glue)
@@ -39,6 +40,7 @@ source("validators.R")
 SANITIZE_ERRORS <- FALSE
 PROOF_TIMEOUT <- 20
 FOCUS_ID <- 1
+SHINY_LOGGING <- as.logical(Sys.getenv("SHINY_LOG", FALSE))
 
 # FIXME: maybe remove later, was running into some timeouts during testing
 proof_timeout(sec = PROOF_TIMEOUT)
@@ -49,6 +51,8 @@ options(shiny.sanitize.errors = SANITIZE_ERRORS)
 myCols <- brewer.pal(6, "RdYlBu")
 
 server <- function(input, output, session) {
+  if (SHINY_LOGGING) track_usage(storage_mode = store_null())
+
   session$allowReconnect(TRUE)
 
   # Upper right github icon for source code
