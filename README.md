@@ -37,3 +37,11 @@ The make command `make run_docker` will attempt to run the app with Docker. You'
 Note that CTRL+C doesn't work to kill the container after running `make run_docker`. Yo have to use a separate terminal window or Docker Desktop to kill the container (basically the docker process doesn't receive the signal to kill its process).
 
 Also note that docker commands can be specific to the host operating system, so if you run into errors you may need to modify the docker commands.
+
+### Debugging
+
+- Use print statements as needed ...
+- Instead of just `make run`, one can run the app with `SHINY_LOG=true make run` which activates the package [shinylogs][]
+
+
+[shinylogs]:https://dreamrs.github.io/shinylogs/
