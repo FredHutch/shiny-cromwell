@@ -1,3 +1,5 @@
+source("ui_components.R")
+
 tab_tracking <- tabItem(
   tabName = "tracking",
   fluidRow(h2("Cromwell Workflow Tracking"), align = "center"),
@@ -52,7 +54,7 @@ tab_tracking <- tabItem(
       title = "Workflows Run",
       collapsible = TRUE,
       solidHeader = TRUE,
-      footer = "Dates are in Pacific time zone",
+      footer = table_footer(),
       DTOutput("joblistCromwell")
     )
   ),
@@ -68,6 +70,7 @@ tab_tracking <- tabItem(
     box(
       width = 12,
       title = "Workflow Description",
+      footer = table_footer(),
       DTOutput("workflowDescribe")
     )
   ),
@@ -96,7 +99,10 @@ tab_tracking <- tabItem(
     box(
       width = 12,
       title = "Job List",
-      collapsible = TRUE, solidHeader = TRUE, collapsed = FALSE,
+      collapsible = TRUE,
+      solidHeader = TRUE,
+      collapsed = FALSE,
+      footer = table_footer(copy = FALSE),
       downloadButton("downloadJobs", "Download Workflow Jobs Data"),
       DTOutput("tasklistBatch")
     )
