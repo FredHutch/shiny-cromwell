@@ -462,20 +462,12 @@ server <- function(input, output, session) {
         ), everything())
 
         if (NCOL(workflowDat) > 1) {
-          # add copy to clipboard buttons
-          workflowDat[["copyId"]] <- vapply(1L:nrow(workflowDat), function(i) {
-            as.character(
-              rclipButton(
-                paste0("clipbtn_", i),
-                label = "",
-                clipText = workflowDat[i, "workflow_id"],
-                icon = icon("copy"),
-                class = "btn-secondary btn-sm",
-                tooltip = "Click to copy the Workflow ID to the left",
-                options = list(delay = list(show = 800, hide = 100), trigger = "hover")
-              )
-            )
-          }, character(1L))
+          workflowDat <- workflowDat %>%
+            rowwise() %>%
+            mutate(
+              copyId = make_copybtn(workflow_id, "clipbtn_", "Copy Workflow ID")
+            ) %>%
+            ungroup()
 
           # change date formats
           workflowDat <- dplyr::mutate(
@@ -598,16 +590,39 @@ server <- function(input, output, session) {
     if ("workflow_name" %in% colnames(workflow)) {
       workflowDat <- workflow %>% select(-one_of("options", "workflow", "metadataSource", "inputs"))
     } else {
-      workflowDat <<- workflow %>% mutate(workflow_name = "NA")
+      workflowDat <- workflow %>% mutate(workflow_name = "NA")
     }
-    suppressWarnings(workflowDat %>% select(one_of("workflow_name", "workflowRoot", "submission", "start", "end", "status", "workflowDuration"), everything()))
+    if (NROW(workflowDat) > 0) {
+      workflowDat <- workflowDat %>%
+        rowwise() %>%
+        mutate(
+          workflow = make_copybtn(workflow, "clipbtn_wflow_", "Copy workflow text"),
+          inputs = make_copybtn(inputs, "clipbtn_inputs_", "Copy inputs text")
+        ) %>%
+        ungroup()
+    }
+
+    suppressWarnings(
+      workflowDat %>%
+        select(
+          one_of(
+            "workflow_name", "workflowRoot", "submission", "start",
+            "end", "status", "workflowDuration"
+          ),
+          everything()
+        )
+      )
   })
-  output$workflowDescribe <- renderDT(
-    data <- workflowLabels(),
-    class = "compact",
-    filter = "top",
-    options = list(scrollX = TRUE), selection = "single", rownames = FALSE
-  )
+  output$workflowDescribe <- renderDT({
+    datatable(
+      workflowLabels(),
+      escape = FALSE,
+      selection = "single",
+      rownames = FALSE,
+      filter = "top",
+      options = list(scrollX = TRUE)
+    )
+  })
   ## Get a table of workflow options
   workflowOptions <- eventReactive(input$joblistCromwell_rows_selected, {
     print("find options")
