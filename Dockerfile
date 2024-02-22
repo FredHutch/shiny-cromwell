@@ -18,7 +18,7 @@ ADD check.R /tmp/
 RUN R -f /tmp/check.R --args ellipsis shiny shinyWidgets shinydashboard shinydashboardPlus ssh remotes markdown lubridate jsonlite rcromwell DT tidyverse RColorBrewer glue shinyBS shinyjs shinyFeedback rmarkdown proofr httr dplyr purrr rlang uuid memoise rclipboard shinyvalidate shinylogs testthat
 
 RUN rm -rf /srv/shiny-server/
-ADD app/. /srv/shiny-server/
+COPY app/ /srv/shiny-server/
 
 ENV APPLICATION_LOGS_TO_STDOUT=true
 ENV SHINY_LOG_STDERR=1
