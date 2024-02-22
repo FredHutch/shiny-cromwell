@@ -20,4 +20,9 @@ RUN R -f /tmp/check.R --args ellipsis shiny shinyWidgets shinydashboard shinydas
 RUN rm -rf /srv/shiny-server/
 ADD app/. /srv/shiny-server/
 
+ENV APPLICATION_LOGS_TO_STDOUT=true
+ENV SHINY_LOG_STDERR=1
+
 CMD /usr/bin/shiny-server
+
+
