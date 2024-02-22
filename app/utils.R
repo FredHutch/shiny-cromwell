@@ -30,3 +30,18 @@ git_sha <- memoise(
     if (rlang::is_error(sha)) fallback_ref else sha
   }
 )
+
+make_copybtn <- function(x, clip_prefix, tooltip) {
+  i <- sample.int(1e4, 1)
+  as.character(
+    rclipButton(
+      paste0(clip_prefix, i),
+      label = "",
+      clipText = x,
+      tooltip = tooltip,
+      icon = icon("copy"),
+      class = "btn-secondary btn-sm",
+      options = list(delay = list(show = 800, hide = 100), trigger = "hover")
+    )
+  )
+}
