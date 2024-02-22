@@ -548,13 +548,6 @@ server <- function(input, output, session) {
   })
   output$successBox <- renderInfoBox({
     infoBox(
-      "Success Rate", paste0(round(nrow(workflowUpdate()[workflowUpdate()$status == "Succeeded", ]) / nrow(workflowUpdate()) * 100, 0), " %"),
-      icon = icon("grin"),
-      color = "yellow", width = 3
-    )
-  })
-  output$successBox <- renderInfoBox({
-    infoBox(
       "Successful", if (is.na(workflowUpdate()$workflow_id[1])) {
         0
       } else {
@@ -592,6 +585,7 @@ server <- function(input, output, session) {
       color = "green", width = 3
     )
   })
+
   ## Get a table of workflow labels
   workflowLabels <- eventReactive(input$joblistCromwell_rows_selected, {
     print("find Labels")
