@@ -7,9 +7,8 @@ run:
 		-e "shiny::runApp(\"app\", launch.browser = TRUE)"
 
 run_docker:
-	@echo "NOTE: CTRL+C doesn't work to kill the container - use separate terminal window or Docker Desktop\n\n"
 	docker build --platform linux/amd64 -t shiny-cromwell:app .
-	docker run -p 3838:3838 shiny-cromwell:app
+	docker run --rm -it -p 3838:3838 shiny-cromwell:app
 
 # use: `make style_file FILE=stuff.R`
 # accepts 1 file only
