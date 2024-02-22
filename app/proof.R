@@ -2,7 +2,9 @@ proof_wait_for_up <- function(token) {
   not_up <- TRUE
   while (not_up) {
     out <- proof_status(token = token)
-    if (out$jobStatus == "RUNNING") not_up <- FALSE
+    if (out$jobStatus == "RUNNING" && !is.null(out$cromwellUrl)) {
+      not_up <- FALSE
+    }
   }
   out$cromwellUrl
 }

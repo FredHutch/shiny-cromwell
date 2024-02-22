@@ -213,7 +213,7 @@ server <- function(input, output, session) {
           shiny::validate(
             shiny::need(
               !proof_status(token = rv$token)$canJobStart,
-              "Your Cromwell server is not running. Go to  the Cromwell servers tab and click Start"
+              "Your Cromwell server is not running. Go to the Cromwell servers tab and click Start"
             )
           )
 
@@ -270,7 +270,8 @@ server <- function(input, output, session) {
   cromwellProofStatusData <- reactivePoll(2000, session,
     checkFunc = function() {
       if (proof_loggedin(rv$token)) {
-        proof_status(token = rv$token)$jobInfo$SCRATCHDIR
+        tmp <- proof_status(token = rv$token)
+        paste0(tmp$jobStatus, tmp$jobInfo$SCRATCHDIR)
       } else {
         NULL
       }
