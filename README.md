@@ -45,3 +45,38 @@ Also note that docker commands can be specific to the host operating system, so 
 
 
 [shinylogs]:https://dreamrs.github.io/shinylogs/
+
+## App structure
+
+```
+├── app
+│   ├── about.md
+│   ├── buttons.R
+│   ├── modals.R
+│   ├── proof.R
+│   ├── server.R
+│   ├── sidebar.R
+│   ├── tab-servers.R
+│   ├── tab-submission.R
+│   ├── tab-tracking.R
+│   ├── tab-troubleshoot.R
+│   ├── tab-validate.R
+│   ├── tab-welcome.R
+│   ├── ui.R
+│   ├── ui_components.R
+│   ├── utils.R
+│   ├── validators.R
+│   └── www
+│       ├── favicon.ico
+│       ├── fred-hutch.svg
+│       └── js
+│           └── keyup.js
+```
+
+Notes about the structure:
+
+- the main app files are at `app/server.R` and `app/ui.R`
+- files in `www/` are automatically sourced 
+- code in other files in `app/` - e.g., `app/proof.R` - are only available if pulled in with `source()`
+
+We will continue to give the app more structure, possibly including Shiny modules and maybe as an R package.
