@@ -5,7 +5,7 @@ readRFilesAndListPackagesAST <- function(directory) {
         stop("Directory does not exist or cannot be accessed: ", directory)
     }
 
-    r_files <- list.files(directory, pattern = "\\.R$", full.names = TRUE)
+    r_files <- list.files(directory, pattern = "\\.R$", full.names = TRUE, ignore.case = TRUE)
     if (length(r_files) == 0) {
         stop("No .R files found in directory: ", directory)
     }
