@@ -10,13 +10,6 @@ RUN R -q -e "remotes::install_github('getwilds/proofr@v0.2')"
 
 RUN R -q -e "remotes::install_github('getwilds/rcromwell@v3.2.0')"
 
-
-
-
-ADD check.R /tmp/
-
-RUN R -f /tmp/check.R --args ellipsis shiny shinyWidgets shinydashboard shinydashboardPlus ssh remotes markdown lubridate jsonlite rcromwell DT tidyverse RColorBrewer glue shinyBS shinyjs shinyFeedback rmarkdown proofr httr dplyr purrr rlang uuid memoise rclipboard shinyvalidate shinylogs testthat
-
 RUN rm -rf /srv/shiny-server/
 COPY app/ /srv/shiny-server/
 
