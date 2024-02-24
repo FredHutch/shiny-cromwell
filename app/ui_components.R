@@ -2,15 +2,14 @@ help_html <- helpText(
   HTML('<u>Need Help?:</u>
         <p>
             <br>
-            <b>Email:</b> <a href="mailto:sachamber@fredhutch.org"><span class="badge bg-secondary">sachamber@fredhutch.org</span></a>
+            <b>Problem? Bug? Send an email to</b> <a href="mailto:scicomp@fredhutch.org"><span class="badge bg-secondary">scicomp@fredhutch.org</span></a>
         </p>
         <br>
-        <b>
-            Bug? Feature request? <a href="https://github.com/FredHutch/shiny-cromwell/issues" , target="_blank"><span class="badge bg-secondary">Open a ticket</span></a>
-        </b>
-        <br><br>
         <p>
-            <b>Questions</b> about this app, Cromwell or WDL? <a href="https://fhdata.slack.com/archives/CJFP1NYSZ"><span class="badge bg-secondary"><i class="fa-brands fa-slack"></i> FH-Data Slack</span></a> channel for #workflow-managers.
+            <b>Discussion/Questions</b><br>
+            <a href="https://fhdata.slack.com/archives/CJFP1NYSZ"><span class="badge bg-secondary"><i class="fa-brands fa-slack"></i> Slack</span></a> #question-and-answer channel
+            <br>
+            Email <a href="mailto:wilds@fredhutch.org"><span class="badge bg-secondary">wilds@fredhutch.org</span></a>
         </p>
         <p></p>
         <p>')
