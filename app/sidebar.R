@@ -4,8 +4,8 @@ menu_item_welcome <- menuItem("Welcome",
   selected = TRUE, startExpanded = TRUE
 )
 menu_item_servers <- menuItem("PROOF Server",
-  tabName = "cromwell", icon = icon("server"),
-  badgeLabel = "PROOF", badgeColor = "yellow"
+  tabName = "cromwell", icon = icon("truck-fast"),
+  badgeLabel = "proof", badgeColor = "yellow"
 )
 menu_item_validate <- menuItem("Validate",
   tabName = "validate", icon = icon("stethoscope"),

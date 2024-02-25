@@ -1,6 +1,5 @@
 tab_validate <- tabItem(
   tabName = "validate",
-  #fluidRow(h2("Validate a Workflow"), align = "center"),
   fluidRow(
     align = "left",
     ## Validate a Workflow

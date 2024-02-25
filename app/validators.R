@@ -9,7 +9,7 @@ validatorOwnCromwell <- function(x) {
   iv$add_rule("ownCromwellURL", sv_required())
   # If URL contains "fhcrc.org" throw message redirecting them
   iv$add_rule("ownCromwellURL",
-    sv_regex("fhcrc\\.org", "That appears to be a URL for a PROOF based Cromwell server. Please click the PROOF Login button", invert = TRUE)
+    sv_regex("fhcrc\\.org", "That appears to be a URL for a PROOF server. Please click the PROOF Login button", invert = TRUE)
   )
   # https://gizmoj16.fhcrc.org:60963/
   # URL must match this regex
@@ -18,6 +18,6 @@ validatorOwnCromwell <- function(x) {
   )
   # URL must be a valid URL via rcromwell::cromwell_version
   iv$add_rule("ownCromwellURL",
-    ~ if (!check_url(.)) "Not a valid Cromwell URL")
+    ~ if (!check_url(.)) "Not a valid URL")
   return(iv)
 }

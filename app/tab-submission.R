@@ -1,13 +1,12 @@
 tab_submission <- tabItem(
   tabName = "submission",
-  #fluidRow(h2("Run Workflows via Cromwell"), align = "center"),
   fluidRow(
     box(
         title = "Submit a Workflow",
       width = 12, solidHeader = FALSE, status = "success",
       collapsible = FALSE, collapsed = FALSE,
       #title = "Submit a Workflow",
-      p("Submit your validated workflow to your Cromwell server for execution by uploading your files and clicking `Submit Workflow`. 
+      p("Submit your validated workflow to your PROOF server for execution by uploading your files and clicking `Submit Workflow`. 
                                         Only a WDL is required, and up to two optional input JSONs
                                            can be uploaded (if identical variables are specified in both, the second input's variable value will overwrite the first). A json describing workflow options
                                            can be provided if desired.  Workflow labels are user-defined values you'd like to use to describe your workflows in the job tracking tab of this app. 

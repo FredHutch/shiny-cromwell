@@ -2,15 +2,13 @@ source("ui_components.R")
 
 tab_tracking <- tabItem(
   tabName = "tracking",
-  #fluidRow(h2("Cromwell Workflow Tracking"), align = "center"),
-
   fluidRow(
     box(
         title = "Track your Workflows",
         width = 12, solidHeader = FALSE, status = "info",
         collapsible = FALSE, collapsed = FALSE,
         p("Once you've submitted workflows, you can track the status of all the workflows you've submitted
-    in the specified time range by clicking `Update View`.  If you use Cromwell a lot, 
+    in the specified time range by clicking `Update View`.  If you use PROOF a lot, 
     this and the filtering tools below can help you return only the workflows you're interested in monitoring,
     making tracking and the application itself much faster. "),
      

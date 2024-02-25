@@ -12,7 +12,7 @@ At Fred Hutch, we offer a service for supporting the use of our on-premise HPC c
 
 
 ## Users Elsewhere
-This Shiny app and the R packages it relies on are all open source.  Thus, if you are at a different institution and want to use this application to support your work or your users, we encourage you to look through our resources and fork our repositories.  Feel free to contact DaSL developers by filing issues or emailing `wilds@fredhutch.org`. For this use case, we have provided the more general "My Own Cromwell" login button at the top. 
+This Shiny app and the R packages it relies on are all open source.  Thus, if you are at a different institution and want to use this application to support your work or your users, we encourage you to look through our resources and fork our repositories.  Feel free to contact DaSL developers by filing issues or emailing `wilds@fredhutch.org`. For this use case, we have provided the more general "DIY Cromwell" login button at the top. 
 
 ### Resources
   - DIY: Get a Cromwell server running by yourself (does not require logging in). To learn more about how to get your Cromwell server running, read through the instructions in the GitHub repo [FredHutch/diy-cromwell-server](https://github.com/FredHutch/diy-cromwell-server)

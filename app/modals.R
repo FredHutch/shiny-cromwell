@@ -39,11 +39,11 @@ myCromwellModal <- function(failed = FALSE, error = "Invalid host/port") {
 
 cromwellStartModal <- function(failed = FALSE, error = "An error occurred") {
   modalDialog(
-    title = "Start your PROOF Cromwell server",
+    title = "Start your PROOF server",
     br(),
     textInput(
       inputId = "slurmAccount",
-      label = div(HTML("Slurm account (optional)")),
+      label = div(HTML("Specify a non-default Slurm account (optional)")),
       value = NULL
     ),
     if (failed) {
@@ -61,15 +61,15 @@ cromwellStartModal <- function(failed = FALSE, error = "An error occurred") {
   )
 }
 
-verifyCromwellDeleteModal <- function(failed = FALSE, error = "Woops, an error! Contact DaSL") {
+verifyCromwellDeleteModal <- function(failed = FALSE, error = "Woops, an error! Contact DaSL at wilds@fredhutch.org.") {
   modalDialog(
-    title = "Delete your PROOF Cromwell server",
-    "Permanently delete your PROOF Cromwell server. Although you can't undo this action, you can start up another one anytime!",
+    title = "Stop your PROOF server",
+    "Permanently stop your PROOF server. Although you can't undo this action, you can start up another one anytime!",
     br(),
     br(),
     textInput(
       inputId = "stopCromwell",
-      label = div(HTML("To confirm deletion, type <em>delete me</em> into the field."))
+      label = div(HTML("To stop your server, confirm deletion by typing the text '<em>delete me</em>' into the field."))
     ),
     if (failed) {
       div(tags$b(error, style = "color: red;"))
@@ -79,7 +79,7 @@ verifyCromwellDeleteModal <- function(failed = FALSE, error = "Woops, an error! 
       shinyjs::disabled(
         shinyFeedback::loadingButton(
           inputId = "deleteCromwell",
-          label = "Delete",
+          label = "Stop Server",
           class = "btn btn-warning"
         )
       )
