@@ -2,21 +2,21 @@ source("ui_components.R")
 
 tab_tracking <- tabItem(
   tabName = "tracking",
-  fluidRow(h2("Cromwell Workflow Tracking"), align = "center"),
+  #fluidRow(h2("Cromwell Workflow Tracking"), align = "center"),
+
   fluidRow(
     box(
-      width = 6,
+        title = "Track your Workflows",
+        width = 12, solidHeader = FALSE, status = "info",
+        collapsible = FALSE, collapsed = FALSE,
+        p("Once you've submitted workflows, you can track the status of all the workflows you've submitted
+    in the specified time range by clicking `Update View`.  If you use Cromwell a lot, 
+    this and the filtering tools below can help you return only the workflows you're interested in monitoring,
+    making tracking and the application itself much faster. "),
+     
       numericInput("daysToShow", "Days of History to Display:",
-        min = 1, max = 21, value = 1, step = 1
-      ),
-      actionButton(
-        inputId = "trackingUpdate",
-        label = "Update View",
-        icon = icon("refresh")
-      )
-    ),
-    box(
-      width = 6,
+        min = 1, max = 21, value = 1, step = 1),
+     
       textInput("workName", "Filter for workflows with name:",
         value = "",
         placeholder = "myCustomWorkflow"
@@ -28,6 +28,11 @@ tab_tracking <- tabItem(
           "Succeeded", "Failed", "Aborting",
           "Aborted"
         ), multiple = TRUE
+      ),
+      actionButton(
+          inputId = "trackingUpdate",
+          label = "Update View",
+          icon = icon("refresh")
       )
     )
   ),

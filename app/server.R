@@ -63,7 +63,7 @@ server <- function(input, output, session) {
           ')
   })
 
-  rv <- reactiveValues(token = "", url = "", own = FALSE)
+  rv <- reactiveValues(token = "", url = "", validateFilepath="", own = FALSE)
 
   # Login and UI component handling
   observeEvent(input$proofAuth, {
@@ -317,6 +317,8 @@ server <- function(input, output, session) {
 
   ###### Cromwell Validate tab ######
   ## Validate a possible workflow
+ 
+  
   validateWorkflow <- eventReactive(input$validateWorkflow,
     {
       stop_safe_loggedin_serverup(rv$url, rv$token, rv$own)
@@ -332,12 +334,16 @@ server <- function(input, output, session) {
   ## Show the validation result in a box
   output$validationResult <- renderPrint(validateWorkflow())
 
+  
+  
   # reset validate
   observeEvent(input$resetValidate, {
-    purrr::map(
-      c("validatewdlFile", "validateinputFile"),
-      shinyjs::reset
-    )
+    #purrr::map(
+    #  c("validatewdlFile", "validateinputFile"),
+    #  shinyjs::reset
+    #)
+      rv$validatePath <- NULL
+      reset(validatewdlFile)
     output$validationResult <- renderText({})
   })
 
@@ -366,7 +372,7 @@ server <- function(input, output, session) {
     ignoreNULL = TRUE
   )
   ## Show the workflow submission result in a box
-  output$submissionResult <- renderPrint(submitWorkflowJob())
+  output$submissionResult <- renderPrint(paste("Your workflow id is: ", submitWorkflowJob()$id, " and it's status is: ", submitWorkflowJob()$status))
 
   # reset
   observeEvent(input$resetSubmission, {
