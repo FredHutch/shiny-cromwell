@@ -58,9 +58,11 @@ server <- function(input, output, session) {
 
   # Upper right github icon for source code
   output$gitHtml <- renderText({
-    glue('<b>Code</b>: <a href="https://github.com/FredHutch/shiny-cromwell/tree/dev" target="_blank">FredHutch/shiny-cromwell</a>
+    glue('<b>Code</b>: <a href="https://github.com/FredHutch/shiny-cromwell/tree/{COMMIT_BRANCH}" target="_blank">FredHutch/shiny-cromwell</a>
                     <br>
-                    <b>Built from</b>: <a href="https://github.com/FredHutch/shiny-cromwell/tree/{git_sha()}" target="_blank">{substring(git_sha(), 1, 7)}</a>
+                    <b>Built from</b>: <a href="https://github.com/FredHutch/shiny-cromwell/tree/{COMMIT_SHA}" target="_blank">{substring(COMMIT_SHORT_SHA, 1, 7)}</a>
+                    <br>
+                    <b>Last built on</b>: {stamp("Mar 1, 1999", quiet = TRUE)(ymd_hms(COMMIT_TIMESTAMP))}
           ')
   })
 

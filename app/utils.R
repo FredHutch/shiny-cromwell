@@ -15,22 +15,27 @@ validate_workflowid <- function(x) {
 }
 
 # get lastet commit - memoised so after first call its cached
-git_sha <- memoise(
-  function(fallback_ref = "dev") {
-    sha <- tryCatch(
+git_last <- memoise(
+  function(branch = "dev", fallback = "") {
+    last <- tryCatch(
       {
         resp <- httr::GET(
           url = "https://api.github.com",
-          path = "repos/FredHutch/shiny-cromwell/commits/dev",
+          path = glue("repos/FredHutch/shiny-cromwell/commits/{branch}"),
           query = list(per_page = 1)
         )
-        httr::content(resp)$sha
+        httr::content(resp)
       },
       error = function(e) e
     )
-    if (rlang::is_error(sha)) fallback_ref else sha
+    if (rlang::is_error(last)) fallback else last
   }
 )
+
+COMMIT_BRANCH <- Sys.getenv("CI_COMMIT_BRANCH", "dev")
+COMMIT_SHA <- Sys.getenv("CI_COMMIT_SHA", "dev")
+COMMIT_SHORT_SHA <- Sys.getenv("CI_COMMIT_SHORT_SHA", git_last(COMMIT_BRANCH)$sha)
+COMMIT_TIMESTAMP <- Sys.getenv("CI_COMMIT_TIMESTAMP", git_last(COMMIT_BRANCH)$commit$committer$date)
 
 make_copybtn <- function(x, clip_prefix, tooltip) {
   i <- sample.int(1e4, 1)
