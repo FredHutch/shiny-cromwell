@@ -129,7 +129,6 @@ server <- function(input, output, session) {
           proof_status(token = rv$token)$jobStatus,
           error = function(e) e
         )
-        print(glue("cromwell_status {cromwell_up}"))
         if (!rlang::is_error(cromwell_up)) {
           if (!is.null(cromwell_up)) {
             cromwell_config(verbose = FALSE)
@@ -171,7 +170,6 @@ server <- function(input, output, session) {
   iv <- validatorOwnCromwell()
   observeEvent(input$submitOwnCromwell, {
     if (iv$is_valid()) {
-      print(input$ownCromwellURL)
       cromwell_config(verbose = FALSE)
       rv$url <- input$ownCromwellURL
       rv$own <- TRUE
@@ -496,10 +494,7 @@ server <- function(input, output, session) {
 
   ############ CROMWELL Tracking Tab  ############
 
-  workflowUpdate <- eventReactive(input$trackingUpdate,
-    {
-      print(rv$url)
-      print(rv$own)
+  workflowUpdate <- eventReactive(input$trackingUpdate, {
       stop_safe_loggedin_serverup(rv$url, rv$token, rv$own)
       if (input$workName == "") {
         cromTable <- cromwell_jobs(
