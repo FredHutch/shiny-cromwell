@@ -25,7 +25,7 @@ stages:
 build:
   stage: build
   script: |
-    python3 build_helper.py docker-compose.yml > /dev/null
+    python3 build_helper.py docker-compose.yml --fluentd-logging > /dev/null
     echo $DB_CONFIG | base64 -d > .my.cnf
     docker build -t sc-registry.fredhutch.org/shiny-cromwell:test .
     rm .my.cnf
@@ -60,7 +60,7 @@ deploy_preview:
     - sleep 15
     - echo $SC_SWARM_CICD_SSH_KEY | base64 -d > ./sc_swarm_cicd_ssh_key
     - chmod 0400 ./sc_swarm_cicd_ssh_key
-    - python3 build_helper.py docker-compose-preview.yml | ssh -i ./sc_swarm_cicd_ssh_key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@sc-swarm-mgr.fhcrc.org docker stack deploy --prune --with-registry-auth -c - shiny-cromwell-preview
+    - python3 build_helper.py --fluentd-logging docker-compose-preview.yml | ssh -i ./sc_swarm_cicd_ssh_key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@sc-swarm-mgr.fhcrc.org docker stack deploy --prune --with-registry-auth -c - shiny-cromwell-preview
     - rm -f ./sc_swarm_cicd_ssh_key
 
 
@@ -79,7 +79,7 @@ deploy:
     - sleep 15
     - echo $SC_SWARM_CICD_SSH_KEY | base64 -d > ./sc_swarm_cicd_ssh_key
     - chmod 0400 ./sc_swarm_cicd_ssh_key
-    - python3 build_helper.py docker-compose.yml | ssh -i ./sc_swarm_cicd_ssh_key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@sc-swarm-mgr.fhcrc.org docker stack deploy --prune --with-registry-auth -c - shiny-cromwell
+    - python3 build_helper.py  --fluentd-logging docker-compose.yml | ssh -i ./sc_swarm_cicd_ssh_key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@sc-swarm-mgr.fhcrc.org docker stack deploy --prune --with-registry-auth -c - shiny-cromwell
     - rm -f ./sc_swarm_cicd_ssh_key
 
 
