@@ -36,6 +36,7 @@ source("utils.R")
 source("tab-servers.R")
 source("tab-welcome.R")
 source("validators.R")
+source("inputs_utils.R")
 
 SANITIZE_ERRORS <- FALSE
 PROOF_TIMEOUT <- 20
@@ -64,6 +65,17 @@ server <- function(input, output, session) {
   })
 
   rv <- reactiveValues(token = "", url = "", validateFilepath="", own = FALSE)
+
+  rv_file <- reactiveValues(
+    validatewdlFile_state = NULL,
+    validateinputFile_state = NULL,
+    wdlFile_state = NULL,
+    inputJSON_state = NULL,
+    input2JSON_state = NULL,
+    workOptions_state = NULL,
+    abortWorkflowID_state = NULL,
+    troubleWorkflowID_state = NULL
+  )
 
   # Login and UI component handling
   observeEvent(input$proofAuth, {
@@ -317,33 +329,43 @@ server <- function(input, output, session) {
 
   ###### Cromwell Validate tab ######
   ## Validate a possible workflow
- 
-  
-  validateWorkflow <- eventReactive(input$validateWorkflow,
-    {
+  file_validatewdlFile <- reactive({
+    reactiveInput(
+      rv_file$validatewdlFile_state,
+      input$validatewdlFile$datapath
+    )
+  })
+  file_validateinputFile <- reactive({
+    reactiveInput(
+      rv_file$validateinputFile_state,
+      input$validateinputFile$datapath
+    )
+  })
+
+  observeEvent(input$validatewdlFile, {
+    rv_file$validatewdlFile_state <- 'loaded'
+  })
+  observeEvent(input$validateinputFile, {
+    rv_file$validateinputFile_state <- 'loaded'
+  })
+
+  observeEvent(input$validateWorkflow, {
+    output$validationResult <- renderPrint({
       stop_safe_loggedin_serverup(rv$url, rv$token, rv$own)
       cromwell_validate(
-        wdl = input$validatewdlFile$datapath,
-        all_inputs = input$validateinputFile$datapath,
+        wdl = isolate(file_validatewdlFile()),
+        all_inputs = isolate(file_validateinputFile()),
         url = rv$url,
         token = rv$token
       )
-    },
-    ignoreNULL = TRUE
-  )
-  ## Show the validation result in a box
-  output$validationResult <- renderPrint(validateWorkflow())
-
-  
-  
-  # reset validate
+    })
+  })
+      
+  # reset
   observeEvent(input$resetValidate, {
-    #purrr::map(
-    #  c("validatewdlFile", "validateinputFile"),
-    #  shinyjs::reset
-    #)
-      rv$validatePath <- NULL
-      reset(validatewdlFile)
+    reset_inputs(c("validatewdlFile", "validateinputFile"))
+    rv_file$validatewdlFile_state <- 'reset'
+    rv_file$validateinputFile_state <- 'reset'
     output$validationResult <- renderText({})
   })
 
@@ -352,86 +374,119 @@ server <- function(input, output, session) {
 
   ###### Cromwell Submit tab ######
   ## Submit a workflow
-  submitWorkflowJob <- eventReactive(input$submitWorkflow,
-    {
+  file_wdlFile <- reactive({
+    reactiveInput(rv_file$wdlFile_state, input$wdlFile$datapath)
+  })
+  file_inputJSON <- reactive({
+    reactiveInput(rv_file$inputJSON_state, input$inputJSON$datapath)
+  })
+  file_input2JSON <- reactive({
+    reactiveInput(rv_file$input2JSON_state, input$input2JSON$datapath)
+  })
+  file_workOptions <- reactive({
+    reactiveInput(rv_file$workOptions_state, input$workOptions$datapath)
+  })
+
+  observeEvent(input$wdlFile, {
+    rv_file$wdlFile_state <- 'loaded'
+  })
+  observeEvent(input$inputJSON, {
+    rv_file$inputJSON_state <- 'loaded'
+  })
+  observeEvent(input$input2JSON, {
+    rv_file$input2JSON_state <- 'loaded'
+  })
+  observeEvent(input$workOptions, {
+    rv_file$workOptions_state <- 'loaded'
+  })
+
+  observeEvent(input$submitWorkflow, {
+    output$submissionResult <- renderPrint({
       stop_safe_loggedin_serverup(rv$url, rv$token, rv$own)
       cromwell_submit_batch(
-        wdl = input$wdlFile$datapath,
-        params = input$inputJSON$datapath,
-        batch = input$input2JSON$datapath,
-        options = input$workOptions$datapath,
+        wdl = isolate(file_wdlFile()),
+        params = isolate(file_inputJSON()),
+        batch = isolate(file_input2JSON()),
+        options = isolate(file_workOptions()),
         labels = data.frame(
           "workflowType" = "AppSubmission",
-          "Label" = input$labelValue,
-          "secondaryLabel" = input$seclabelValue
+          "Label" = isolate(input$labelValue),
+          "secondaryLabel" = isolate(input$seclabelValue)
         ),
         url = rv$url,
         token = rv$token
       )
-    },
-    ignoreNULL = TRUE
-  )
-  ## Show the workflow submission result in a box
-  output$submissionResult <- renderPrint(paste("Your workflow id is: ", submitWorkflowJob()$id, " and it's status is: ", submitWorkflowJob()$status))
+    })
+  })
 
   # reset
   observeEvent(input$resetSubmission, {
-    purrr::map(
-      c(
-        "wdlFile", "inputJSON", "input2JSON",
-        "workOptions", "labelValue", "seclabelValue"
-      ),
-      shinyjs::reset
-    )
+    reset_inputs(c(
+      "wdlFile", "inputJSON", "input2JSON",
+      "workOptions", "labelValue", "seclabelValue"
+    ))
+    rv_file$wdlFile_state <- 'reset'
+    rv_file$inputJSON_state <- 'reset'
+    rv_file$input2JSON_state <- 'reset'
+    rv_file$workOptions_state <- 'reset'
     output$submissionResult <- renderText({})
-    print(input$wdlFile)
   })
 
 
 
   ###### Troubleshoot tab ######
   ## Abort a workflow
-  abortWorkflowJob <- eventReactive(input$abortWorkflow,
-    {
-      validate_workflowid(input$abortWorkflowID)
+  input_abortWorkflowID <- reactive({
+    reactiveInput(rv_file$abortWorkflowID_state, input$abortWorkflowID)
+  })
+  observeEvent(input$abortWorkflowID, {
+    rv_file$abortWorkflowID_state <- 'loaded'
+  })
+
+  observeEvent(input$abortWorkflow, {
+    output$abortResult <- renderPrint({
+      validate_workflowid(isolate(input$abortWorkflowID))
       stop_safe_loggedin_serverup(rv$url, rv$token, rv$own)
       cromwell_abort(
-        workflow_id = input$abortWorkflowID,
+        workflow_id = isolate(input_abortWorkflowID()),
         url = rv$url,
         token = rv$token
       )
-    },
-    ignoreNULL = TRUE
-  )
-  ## Show the abort workflow result in a box
-  output$abortResult <- renderPrint(abortWorkflowJob())
+    })
+  })
 
   ## reset abort
   observeEvent(input$resetAbort, {
-    shinyjs::reset("abortWorkflowID")
+    reset_inputs("abortWorkflowID")
+    rv_file$abortWorkflowID_state <- 'reset'
     output$abortResult <- renderText({})
   })
 
 
   ## Troubleshoot a workflow
-  troubleWorkflowJob <- eventReactive(input$troubleWorkflow,
-    {
-      validate_workflowid(input$troubleWorkflowID)
+  input_troubleWorkflowID <- reactive({
+    reactiveInput(rv_file$troubleWorkflowID_state, input$troubleWorkflowID)
+  })
+  observeEvent(input$troubleWorkflowID, {
+    rv_file$troubleWorkflowID_state <- 'loaded'
+  })
+
+  observeEvent(input$troubleWorkflow, {
+    output$troubleResult <- renderPrint({
+      validate_workflowid(isolate(input$troubleWorkflowID))
       stop_safe_loggedin_serverup(rv$url, rv$token, rv$own)
       cromwell_glob(
-        workflow_id = input$troubleWorkflowID,
+        workflow_id = isolate(input_troubleWorkflowID()),
         url = rv$url,
         token = rv$token
       )
-    },
-    ignoreNULL = TRUE
-  )
-  ## Show the troubleshoot workflow result in a box
-  output$troubleResult <- renderPrint(troubleWorkflowJob())
+    })
+  })
 
   ## reset trouble
   observeEvent(input$resetTrouble, {
-    shinyjs::reset("troubleWorkflowID")
+    reset_inputs("troubleWorkflowID")
+    rv_file$troubleWorkflowID_state <- 'reset'
     output$troubleResult <- renderText({})
   })
 
@@ -479,7 +534,7 @@ server <- function(input, output, session) {
           workflowDat <- dplyr::mutate(
             workflowDat,
             dplyr::across(
-              c(submission, start, end),
+              matches(c("submission", "start", "end")),
               as_pt
             )
           )
@@ -611,7 +666,7 @@ server <- function(input, output, session) {
       workflowDat <- dplyr::mutate(
         workflowDat,
         dplyr::across(
-          c(submission, start, end),
+          matches(c("submission", "start", "end")),
           as_pt
         )
       )
@@ -759,7 +814,7 @@ server <- function(input, output, session) {
   })
   ## Jobs Lists
   output$tasklistBatch <- renderDT(
-    dplyr::mutate(callsUpdate(), dplyr::across(c(start, end), as_pt)),
+    dplyr::mutate(callsUpdate(), dplyr::across(matches(c("start", "end")), as_pt)),
     class = "compact",
     filter = "top",
     options = list(scrollX = TRUE),
