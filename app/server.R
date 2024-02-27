@@ -673,7 +673,7 @@ server <- function(input, output, session) {
       workflowDat %>%
         select(
           one_of(
-            "workflow_name", "workflowRoot", "submission", "start",
+            "workflowName", "workflowRoot", "submission", "start",
             "end", "status", "workflowDuration"
           ),
           everything()
