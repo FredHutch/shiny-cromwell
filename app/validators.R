@@ -18,6 +18,6 @@ validatorOwnCromwell <- function(x) {
   )
   # URL must be a valid URL via rcromwell::cromwell_version
   iv$add_rule("ownCromwellURL",
-    ~ if (!check_url(.)) "Not a valid URL")
+    ~ if (!check_url(.)) "Not a valid server URL")
   return(iv)
 }
