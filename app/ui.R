@@ -26,7 +26,7 @@ ui <- dashboardPage(
   skin = "black",
   dashboardHeader(
     title = tagList(
-      span(class = "logo-lg", h4(HTML("Fred Hutch<br>Cromwell Dashboard"))),
+      span(class = "logo-lg", h4(HTML("Fred Hutch<br> PROOF Dashboard"))),
       img(src = "fred-hutch.svg")
     ),
     dropdown_user_name,

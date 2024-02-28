@@ -1,15 +1,16 @@
 tab_submission <- tabItem(
   tabName = "submission",
-  fluidRow(h2("Run Workflows on Cromwell"), align = "center"),
   fluidRow(
     box(
+        title = "Submit a Workflow",
       width = 12, solidHeader = FALSE, status = "success",
-      collapsible = TRUE, collapsed = FALSE,
-      title = "Submit a Workflow",
-      p("Here you can submit your workflow to your Cromwell server for execution.  Only a WDL is required. Up to two different input JSONs
-                                           can be uploaded (if variables are specified in both, the second input's variable value will overwrite the first). Workflow options
-                                           can be provided if desired.  Workflow labels are user-defined values you'd like to use to describe your workflows for your own
-                                           future reference. "),
+      collapsible = FALSE, collapsed = FALSE,
+      #title = "Submit a Workflow",
+      p("Submit your validated workflow to your PROOF server for execution by uploading your files and clicking `Submit Workflow`. 
+                                        Only a WDL is required, and up to two optional input JSONs
+                                           can be uploaded (if identical variables are specified in both, the second input's variable value will overwrite the first). A json describing workflow options
+                                           can be provided if desired.  Workflow labels are user-defined values you'd like to use to describe your workflows in the job tracking tab of this app. 
+                                            Note: to submit new workflows, simply upload your new files and hit `Submit Workflow` again.  You can use the `Reset Form` button if you need to clear files before uploading new ones. "),
       column(
         width = 6,
         fileInput(
@@ -27,12 +28,11 @@ tab_submission <- tabItem(
         actionButton(
           inputId = "submitWorkflow",
           label = "Submit Workflow",
-          icon = icon("paper-plane"),
-          class = "btn-info"
+          icon = icon("paper-plane")
         ),
-        verbatimTextOutput(outputId = "submissionResult"),
-        br(),
-        actionButton("resetSubmission", "Reset")
+        actionButton("resetSubmission", "Reset Form"),
+        verbatimTextOutput(outputId = "submissionResult")
+        
       ),
       column(
         width = 6,

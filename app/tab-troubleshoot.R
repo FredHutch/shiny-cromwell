@@ -17,8 +17,7 @@ tab_troublehsoot <- tabItem(
       actionButton(
         inputId = "abortWorkflow",
         label = "Abort Workflow",
-        icon = icon("thumbs-down"),
-        class = "btn-info"
+        icon = icon("thumbs-down")
       ),
       actionButton("resetAbort", "Reset"),
       verbatimTextOutput(outputId = "abortResult")
@@ -28,13 +27,13 @@ tab_troublehsoot <- tabItem(
     align = "left",
     ## Troubleshoot a workflow via Glob
     box(
-      width = 12, solidHeader = FALSE, status = "info",
+      width = 12, solidHeader = FALSE, status = "danger",
       collapsible = TRUE, collapsed = FALSE,
       title = "Troubleshoot a Workflow",
       p("When a workflow fails but no jobs were started, or there appears to be no clear reason for a workflow to have failed, this tool can provide you the entire set of workflow metadata Cromwell has for your workflow in it's raw and unprocessed (json) form. For complex workflows, this can be rather large (and ugly!)."),
       textInput(
         inputId = "troubleWorkflowID",
-        label = "Cromwell workflow id to get metadata for:",
+        label = "Workflow id to get metadata for:",
         value = "",
         placeholder = "577b9aa4-b26b-4fd6-9f17-7fb33780bbd0",
         width = "30%"
@@ -42,8 +41,7 @@ tab_troublehsoot <- tabItem(
       actionButton(
         inputId = "troubleWorkflow",
         label = "Get Complete Workflow Metadata",
-        icon = icon("question-circle"),
-        class = "btn-info"
+        icon = icon("wrench")
       ),
       actionButton("resetTrouble", "Reset"),
       verbatimTextOutput(outputId = "troubleResult")

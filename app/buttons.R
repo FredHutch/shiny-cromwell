@@ -1,12 +1,14 @@
 logInButton <-
   actionButton(
     inputId = "proofAuth",
-    label = "PROOF Login"
+    label = "PROOF Login",
+    icon = icon("truck-fast")
+    
   )
 logOutButton <-
   actionButton(
     inputId = "proofAuthLogout",
-    label = " Log out",
+    label = "PROOF Logout",
     class = "btn-danger",
     style = "color: white;",
     icon = icon("arrow-right-to-bracket")
@@ -15,7 +17,7 @@ logOutButton <-
 logInCromwellButton <-
   actionButton(
     inputId = "ownCrom",
-    label = "My Own Cromwell",
+    label = "DIY Cromwell",
     icon = icon("plug-circle-xmark")
   )
 logOutCromwellButton <-
