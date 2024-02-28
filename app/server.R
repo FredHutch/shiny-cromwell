@@ -66,7 +66,7 @@ server <- function(input, output, session) {
           ')
   })
 
-  rv <- reactiveValues(token = "", url = "", own = FALSE)
+  rv <- reactiveValues(token = "", url = "", validateFilepath="", own = FALSE)
 
   rv_file <- reactiveValues(
     validatewdlFile_state = NULL,
@@ -360,7 +360,7 @@ server <- function(input, output, session) {
       )
     })
   })
-
+      
   # reset
   observeEvent(input$resetValidate, {
     reset_inputs(c("validatewdlFile", "validateinputFile"))

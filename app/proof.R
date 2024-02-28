@@ -49,5 +49,5 @@ stop_safe_loggedin_serverup <- function(url, token, own) {
   stop_safe(proof_serverup,
     url = url,
     token = token,
-    message = "Your Cromwell server is not up!")
+    message = "Your server is not up!")
 }

@@ -1,8 +1,8 @@
 welcome_servers_box <- box(
-  id = "boxServers", title = "Cromwell Servers", width = 4, solidHeader = TRUE, status = "warning", icon = icon("server"),
+  id = "boxServers", title = "PROOF Server", width = 4, solidHeader = TRUE, status = "warning", icon = icon("truck-fast"),
   shiny::markdown("This tab allows you to:
-  - Start or delete your PROOF based Cromwell server
-  - Get metadata for your PROOF based Cromwell server"),
+  - Start or delete your PROOF server
+  - Get metadata for your PROOF server"),
   align = "left"
 )
 
@@ -16,7 +16,7 @@ tab_welcome <- tabItem(
     )
   ),
   fluidRow(
-    align = "center",
+    align = "left",
     h2("Dashboard Tabs"),
     uiOutput("toggleServersBox"),
     box(
@@ -37,7 +37,7 @@ tab_welcome <- tabItem(
     box(
       id = "boxTrack", title = "Track Jobs", width = 6, solidHeader = TRUE, status = "info", icon = icon("binoculars"),
       shiny::markdown("This tab allows you to:
-      - Query your Cromwell database for the jobs run the most recent days (your choice how far back to go)
+      - Query your server database for the jobs run the most recent days (your choice how far back to go)
       - See statuses of all your workflows
       - Look within a workflow at the individual calls, failures and call caching results
       - Download a list of the final workflow outputs for further processing"),

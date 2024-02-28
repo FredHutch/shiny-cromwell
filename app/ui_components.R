@@ -7,7 +7,7 @@ help_html <- helpText(
         <br>
         <p>
             <b>Discussion/Questions</b><br>
-            <a href="https://fhdata.slack.com/archives/CJFP1NYSZ"><span class="badge bg-secondary"><i class="fa-brands fa-slack"></i> Slack</span></a> #question-and-answer channel
+            <a href="https://fhdata.slack.com/archives/CJFP1NYSZ"><span class="badge bg-secondary"><i class="fa-brands fa-slack"></i> Slack</span></a> #workflow-managers channel
             <br>
             Email <a href="mailto:wilds@fredhutch.org"><span class="badge bg-secondary">wilds@fredhutch.org</span></a>
         </p>
