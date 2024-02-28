@@ -9,8 +9,8 @@ services:
         condition: on-failure
       labels:
         - "traefik.enable=true"
-        - "traefik.http.routers.shiny-cromwell-preview.rule=Host(`cromwellapp-dev.fredhutch.org`)"
-        - "traefik.http.routers.shiny-cromwell-preview-secured.rule=Host(`cromwellapp-dev.fredhutch.org`)"
+        - "traefik.http.routers.shiny-cromwell-preview.rule=Host(`proof-dev.fredhutch.org`)"
+        - "traefik.http.routers.shiny-cromwell-preview-secured.rule=Host(`proof-dev.fredhutch.org`)"
         - "traefik.http.routers.shiny-cromwell-preview.entrypoints=web,web-secured"
         - "traefik.http.services.shiny-cromwell-preview.loadbalancer.server.port=3838" # it seems you always need to give traefik a port so it 'notices' the service
         - "traefik.http.routers.shiny-cromwell-preview.tls=true"
