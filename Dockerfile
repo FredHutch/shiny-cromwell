@@ -23,6 +23,13 @@ ENV CI_COMMIT_SHA=$CI_COMMIT_SHA
 ENV CI_COMMIT_SHORT_SHA=$CI_COMMIT_SHORT_SHA
 ENV CI_COMMIT_TIMESTAMP=$CI_COMMIT_TIMESTAMP
 
+RUN echo "export CI_COMMIT_BRANCH=$CI_COMMIT_BRANCH" >> /home/shiny/.bashrc
+RUN echo "export CI_COMMIT_SHA=$CI_COMMIT_SHA" >> /home/shiny/.bashrc
+RUN echo "export CI_COMMIT_SHORT_SHA=$CI_COMMIT_SHORT_SHA" >> /home/shiny/.bashrc
+RUN echo "export CI_COMMIT_TIMESTAMP=$CI_COMMIT_TIMESTAMP" >> /home/shiny/.bashrc
+
+RUN chown shiny:shiny /home/shiny/.bashrc
+
 ENV APPLICATION_LOGS_TO_STDOUT=true
 ENV SHINY_LOG_STDERR=1
 
