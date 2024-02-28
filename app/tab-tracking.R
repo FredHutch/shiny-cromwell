@@ -13,11 +13,12 @@ tab_tracking <- tabItem(
     making tracking and the application itself much faster. "),
      
       numericInput("daysToShow", "Days of History to Display:",
-        min = 1, max = 21, value = 1, step = 1),
+        min = 1, max = 21, value = 1, step = 1, width = "35%"),
      
       textInput("workName", "Filter for workflows with name:",
         value = "",
-        placeholder = "myCustomWorkflow"
+        placeholder = "myCustomWorkflow",
+        width = "35%"
       ),
       selectInput("workStatus",
         label = "Filter for Workflows with Status(es):",
@@ -25,7 +26,9 @@ tab_tracking <- tabItem(
           "Submitted", "Running",
           "Succeeded", "Failed", "Aborting",
           "Aborted"
-        ), multiple = TRUE
+        ),
+        multiple = TRUE,
+        width = "35%"
       ),
       actionButton(
           inputId = "trackingUpdate",
