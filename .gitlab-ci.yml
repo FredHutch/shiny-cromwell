@@ -27,7 +27,13 @@ build:
   script: |
     python3 build_helper.py docker-compose.yml --fluentd-logging > /dev/null
     echo $DB_CONFIG | base64 -d > .my.cnf
-    docker build -t sc-registry.fredhutch.org/shiny-cromwell:test .
+    docker build \
+      -t sc-registry.fredhutch.org/shiny-cromwell:test \
+      --build-arg CI_COMMIT_BRANCH=${CI_COMMIT_BRANCH} \
+      --build-arg CI_COMMIT_SHA=${CI_COMMIT_SHA} \
+      --build-arg CI_COMMIT_SHORT_SHA=${CI_COMMIT_SHORT_SHA} \
+      --build-arg CI_COMMIT_TIMESTAMP=${CI_COMMIT_TIMESTAMP} \
+      .
     rm .my.cnf
     docker push sc-registry.fredhutch.org/shiny-cromwell:test
     sleep 5
