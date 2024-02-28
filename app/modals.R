@@ -64,12 +64,12 @@ cromwellStartModal <- function(failed = FALSE, error = "An error occurred") {
 verifyCromwellDeleteModal <- function(failed = FALSE, error = "Woops, an error! Contact DaSL at wilds@fredhutch.org.") {
   modalDialog(
     title = "Stop your PROOF server",
-    "Permanently stop your PROOF server. Although you can't undo this action, you can start up another one anytime!",
+    "Stop your PROOF server. Although you can't undo this action, you can start up another one anytime!",
     br(),
     br(),
     textInput(
       inputId = "stopCromwell",
-      label = div(HTML("To stop your server, confirm deletion by typing the text '<em>delete me</em>' into the field."))
+      label = div(HTML("To stop your server, confirm by typing<br> <em>delete me</em> into the field."))
     ),
     if (failed) {
       div(tags$b(error, style = "color: red;"))
