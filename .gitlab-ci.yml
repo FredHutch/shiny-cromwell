@@ -34,6 +34,7 @@ build:
     python3 build_helper.py docker-compose.yml > /dev/null
     docker build -t sc-registry.fredhutch.org/shiny-cromwell:test .
     docker push sc-registry.fredhutch.org/shiny-cromwell:test
+    docker build -t sc-registry.fredhutch.org/shiny-cromwell-redirect:latest -f redirect/Dockerfile redirect/
     sleep 5
 
 test:
@@ -59,6 +60,7 @@ deploy:
   script:
     - docker tag sc-registry.fredhutch.org/shiny-cromwell:test sc-registry.fredhutch.org/shiny-cromwell:latest
     - docker push sc-registry.fredhutch.org/shiny-cromwell:latest
+    - docker push sc-registry.fredhutch.org/shiny-cromwell-redirect:latest
     - sleep 15
     - echo $SC_SWARM_CICD_SSH_KEY | base64 -d > ./sc_swarm_cicd_ssh_key
     - chmod 0400 ./sc_swarm_cicd_ssh_key

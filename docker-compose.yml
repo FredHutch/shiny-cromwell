@@ -9,11 +9,28 @@ services:
         condition: on-failure
       labels:
         - "traefik.enable=true"
-        - "traefik.http.routers.shiny-cromwell.rule=Host(`cromwellapp.fredhutch.org`)"
-        - "traefik.http.routers.shiny-cromwell-secured.rule=Host(`cromwellapp.fredhutch.org`)"
+        - "traefik.http.routers.shiny-cromwell.rule=Host(`proof.fredhutch.org`)"
+        - "traefik.http.routers.shiny-cromwell-secured.rule=Host(`proof.fredhutch.org`)"
         - "traefik.http.routers.shiny-cromwell.entrypoints=web,web-secured"
         - "traefik.http.services.shiny-cromwell.loadbalancer.server.port=3838" # it seems you always need to give traefik a port so it 'notices' the service
         - "traefik.http.routers.shiny-cromwell.tls=true"
+
+
+  shiny-cromwell-redirect:
+    networks:
+      - proxy
+    image: sc-registry.fredhutch.org/shiny-cromwell-redirect:latest
+    deploy:
+      restart_policy:
+        condition: on-failure
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.shiny-cromwell.rule=Host(`cromwellapp.fredhutch.org`)"
+        - "traefik.http.routers.shiny-cromwell-secured.rule=Host(`cromwellapp.fredhutch.org`)"
+        - "traefik.http.routers.shiny-cromwell.entrypoints=web,web-secured"
+        - "traefik.http.services.shiny-cromwell.loadbalancer.server.port=80" # it seems you always need to give traefik a port so it 'notices' the service
+        - "traefik.http.routers.shiny-cromwell.tls=true"
+
 
 
 networks:
