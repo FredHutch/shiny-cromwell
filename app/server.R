@@ -285,6 +285,9 @@ server <- function(input, output, session) {
   # Gather/show PROOF server status metadata when logged in
   cromwellProofStatusData <- reactivePoll(2000, session,
     checkFunc = function() {
+      if (!is.null(input$tabs)) {
+        if (input$tabs != "cromwell") return(NULL)
+      }
       if (proof_loggedin(rv$token)) {
         tmp <- proof_status(token = rv$token)
         paste0(tmp$jobStatus, tmp$jobInfo$SCRATCHDIR)
