@@ -12,6 +12,7 @@ RUN R -q -e "remotes::install_github('getwilds/rcromwell@v3.2.0')"
 
 RUN rm -rf /srv/shiny-server/
 COPY app/ /srv/shiny-server/
+# COPY ./shiny-server.conf /etc/shiny-server/
 
 ARG CI_COMMIT_BRANCH
 ARG CI_COMMIT_SHA
@@ -33,6 +34,8 @@ RUN chown shiny:shiny /home/shiny/.bashrc
 ENV APPLICATION_LOGS_TO_STDOUT=true
 ENV SHINY_LOG_STDERR=1
 
-CMD /usr/bin/shiny-server
+WORKDIR /srv/shiny-server/
+CMD R -f start.R
+# CMD /usr/bin/shiny-server
 
 
