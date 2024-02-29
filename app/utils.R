@@ -32,10 +32,24 @@ git_last <- memoise(
   }
 )
 
-COMMIT_BRANCH <- Sys.getenv("CI_COMMIT_BRANCH", "dev")
-COMMIT_SHA <- Sys.getenv("CI_COMMIT_SHA", "dev")
-COMMIT_SHORT_SHA <- Sys.getenv("CI_COMMIT_SHORT_SHA", git_last(COMMIT_BRANCH)$sha)
-COMMIT_TIMESTAMP <- Sys.getenv("CI_COMMIT_TIMESTAMP", git_last(COMMIT_BRANCH)$commit$committer$date)
+try_env <- function(x, default) {
+  tmp <- tryCatch(Sys.getenv(x), error = function(e) e)
+  if (rlang::is_error(tmp)) {
+    return(default)
+  }
+  if (nzchar(tmp)) tmp else default
+}
+
+COMMIT_BRANCH <- try_env("CI_COMMIT_BRANCH", "dev")
+COMMIT_SHA <- try_env("CI_COMMIT_SHA", "dev")
+COMMIT_SHORT_SHA <- try_env(
+  "CI_COMMIT_SHORT_SHA",
+  git_last(COMMIT_BRANCH)$sha
+)
+COMMIT_TIMESTAMP <- try_env(
+  "CI_COMMIT_TIMESTAMP",
+  git_last(COMMIT_BRANCH)$commit$committer$date
+)
 
 make_copybtn <- function(x, clip_prefix, tooltip) {
   i <- sample.int(1e4, 1)
