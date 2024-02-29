@@ -26,6 +26,7 @@ menu_item_trouble <- menuItem("Troubleshoot",
 
 proofSidebar <- function() {
   sidebarMenu(
+    id = "tabs",
     menu_item_welcome,
     menu_item_servers,
     menu_item_validate,
@@ -37,6 +38,7 @@ proofSidebar <- function() {
 
 nonProofSidebar <- function() {
   sidebarMenu(
+    id = "tabs",
     menu_item_welcome,
     menu_item_validate,
     menu_item_submit,
