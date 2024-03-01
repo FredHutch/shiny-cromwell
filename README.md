@@ -81,3 +81,7 @@ Notes about the structure:
 - code in other files in `app/` - e.g., `app/proof.R` - are only available if pulled in with `source()`
 
 We will continue to give the app more structure, possibly including Shiny modules and maybe as an R package.
+
+## License
+
+[MIT](LICENSE.md)
