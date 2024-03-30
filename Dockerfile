@@ -35,7 +35,7 @@ ENV APPLICATION_LOGS_TO_STDOUT=true
 ENV SHINY_LOG_STDERR=1
 
 WORKDIR /srv/shiny-server/
-CMD R -f start.R
-# CMD /usr/bin/shiny-server
+# CMD R -f start.R
+CMD /usr/bin/shiny-server
 
 
