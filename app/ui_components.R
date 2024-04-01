@@ -53,6 +53,8 @@ tooltip_style <- tags$style(
 
 enter_to_click <- tags$script(src = "js/keyup.js")
 
+google_analytics <- tags$head(includeHTML(path = "www/google-analytics.html"))
+
 table_footer <- function(timezone = TRUE, copy = TRUE) {
   tz <- if (timezone) "Dates are in Pacific time zone" else ""
   cp <- ""

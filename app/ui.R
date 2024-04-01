@@ -43,6 +43,7 @@ ui <- dashboardPage(
     rclipboard::rclipboardSetup(),
     enter_to_click,
     tooltip_style,
+    google_analytics,
     tabItems(
       tab_welcome,
       tab_servers,
