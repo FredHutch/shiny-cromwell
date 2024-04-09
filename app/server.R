@@ -833,8 +833,8 @@ server <- function(input, output, session) {
                 "if (data === null) {",
                 "return data;",
                 "} else {",
-                "return type === 'display' && data.length > 36 ?",
-                "'<span title=\"' + data + '\">' + data.substr(0, 36) + '...</span>' : data;",
+                "return type === 'display' && data.length > 150 ?",
+                "'<span title=\"' + data + '\">' + data.substr(0, 150) + '...</span>' : data;",
                 "}",
               "}"
             )
