@@ -830,8 +830,12 @@ server <- function(input, output, session) {
             targets = "_all",
             render = JS(
               "function(data, type, row, meta) {",
-              "return type === 'display' && data.length > 36 ?",
-              "'<span title=\"' + data + '\">' + data.substr(0, 36) + '...</span>' : data;",
+                "if (data === null) {",
+                "return data;",
+                "} else {",
+                "return type === 'display' && data.length > 36 ?",
+                "'<span title=\"' + data + '\">' + data.substr(0, 36) + '...</span>' : data;",
+                "}",
               "}"
             )
           )
