@@ -813,13 +813,32 @@ server <- function(input, output, session) {
     )
   })
   ## Jobs Lists
-  output$tasklistBatch <- renderDT(
-    dplyr::mutate(callsUpdate(), dplyr::across(matches(c("start", "end")), as_pt)),
-    class = "compact",
-    filter = "top",
-    options = list(scrollX = TRUE),
-    rownames = FALSE
-  )
+  output$tasklistBatch <- renderDT({
+    datatable(
+      {
+        callsUpdate() %>%
+          dplyr::mutate(dplyr::across(matches(c("start", "end")), as_pt))
+      },
+      escape = FALSE,
+      selection = "single",
+      rownames = FALSE,
+      filter = "top",
+      options = list(
+        scrollX = TRUE,
+        columnDefs = list(
+          list(
+            targets = "_all",
+            render = JS(
+              "function(data, type, row, meta) {",
+              "return type === 'display' && data.length > 36 ?",
+              "'<span title=\"' + data + '\">' + data.substr(0, 36) + '...</span>' : data;",
+              "}"
+            )
+          )
+        )
+      )
+    )
+  })
 
   output$downloadJobs <- downloadHandler(
     filename = function() {
