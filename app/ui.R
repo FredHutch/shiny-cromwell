@@ -40,6 +40,7 @@ ui <- dashboardPage(
   ),
   dashboardBody(
     tags$head(tags$title("PROOF")),
+    tags$script("document.title = 'PROOF';"),
     shinyjs::useShinyjs(),
     rclipboard::rclipboardSetup(),
     enter_to_click,
