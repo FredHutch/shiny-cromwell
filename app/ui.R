@@ -39,6 +39,7 @@ ui <- dashboardPage(
     sidebarMenuOutput("uiSideBar")
   ),
   dashboardBody(
+    tags$head(tags$title("PROOF")),
     shinyjs::useShinyjs(),
     rclipboard::rclipboardSetup(),
     enter_to_click,
