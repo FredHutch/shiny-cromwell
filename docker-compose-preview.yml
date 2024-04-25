@@ -3,6 +3,8 @@ services:
   shiny-cromwell-preview:
     networks:
       - proxy
+    environment:
+      - PROOF_API_BASE_URL=https://proof-api-dev.fredhutch.org
     image: sc-registry.fredhutch.org/shiny-cromwell-preview:latest
     deploy:
       restart_policy:
