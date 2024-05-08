@@ -21,6 +21,7 @@ tab_servers <- tabItem(
       br(),
       br(),
       h5("Current PROOF server information (if live)"),
+      uiOutput("proofStatusServerStartTime"),
       uiOutput("proofStatusWorkflowLogDir"),
       uiOutput("proofStatusScratchDir"),
       uiOutput("proofStatusServerTime"),
