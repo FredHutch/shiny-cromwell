@@ -4,6 +4,7 @@ This is a [Shiny](https://shiny.posit.co/) app being developed by the [Fred Hutc
 At Fred Hutch, we offer a service for supporting the use of our on-premise HPC cluster to run WDL workflows called PROOF.  To use this app at Fred Hutch, choose the "PROOF Login" button at the top of the page and enter your Fred Hutch credentials to get started. 
 
 ### Resources
+- Get started with PROOF [How-To documentation](https://sciwiki.fredhutch.org/dasldemos/proof-how-to/) and [troubleshooting tips](https://sciwiki.fredhutch.org/dasldemos/proof-troubleshooting/)
 - Find curated WDL workflow repositories and containers in Fred Hutch [DaSL's getWILDS GitHub organization](https://github.com/orgs/getwilds/repositories?q=wdl).
 - Find Cromwell and WDL Resources in [Fred Hutch's GitHub organization](https://github.com/FredHutch?utf8=%E2%9C%93&q=wdl+OR+cromwell&type=&language=).
 - Learn about Cromwell and WDL on the [Fred Hutch Biomedical Data Science Wiki](https://sciwiki.fredhutch.org/compdemos/Cromwell/).
