@@ -329,6 +329,7 @@ server <- function(input, output, session) {
   output$proofStatusServerTime <- proofStatusTextGenerator("Server time", "SERVERTIME", "PROOF server job lifetime")
   output$proofStatusUseAWS <- proofStatusTextGenerator("Use AWS?", "USE_AWS", "AWS credentials found?")
   output$proofStatusSlurmJobAccount <- proofStatusTextGenerator("Slurm job account", "SLURM_JOB_ACCOUNT", "Designated Gizmo PI account")
+  output$proofStatusServerStartTime <- proofStatusTextGenerator("PROOF Server Start Time", "jobStartTime")
 
   ###### Cromwell Validate tab ######
   ## Validate a possible workflow
