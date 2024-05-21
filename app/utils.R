@@ -65,3 +65,8 @@ make_copybtn <- function(x, clip_prefix, tooltip) {
     )
   )
 }
+
+abbreviate <- function(x, last = 100) {
+  if (nchar(x) < 100) return(x)
+  paste0(substring(x, 1, last), " ...")
+}

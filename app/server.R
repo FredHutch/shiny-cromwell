@@ -329,6 +329,7 @@ server <- function(input, output, session) {
   output$proofStatusServerTime <- proofStatusTextGenerator("Server time", "SERVERTIME", "PROOF server job lifetime")
   output$proofStatusUseAWS <- proofStatusTextGenerator("Use AWS?", "USE_AWS", "AWS credentials found?")
   output$proofStatusSlurmJobAccount <- proofStatusTextGenerator("Slurm job account", "SLURM_JOB_ACCOUNT", "Designated Gizmo PI account")
+  output$proofStatusServerStartTime <- proofStatusTextGenerator("PROOF Server Start Time", "jobStartTime")
 
   ###### Cromwell Validate tab ######
   ## Validate a possible workflow
@@ -813,13 +814,36 @@ server <- function(input, output, session) {
     )
   })
   ## Jobs Lists
-  output$tasklistBatch <- renderDT(
-    dplyr::mutate(callsUpdate(), dplyr::across(matches(c("start", "end")), as_pt)),
-    class = "compact",
-    filter = "top",
-    options = list(scrollX = TRUE),
-    rownames = FALSE
-  )
+  output$tasklistBatch <- renderDT({
+    datatable(
+      {
+        callsUpdate() %>%
+          dplyr::mutate(dplyr::across(matches(c("start", "end")), as_pt))
+      },
+      escape = FALSE,
+      selection = "single",
+      rownames = FALSE,
+      filter = "top",
+      options = list(
+        scrollX = TRUE,
+        columnDefs = list(
+          list(
+            targets = "_all",
+            render = JS(
+              "function(data, type, row, meta) {",
+                "if (data === null) {",
+                "return data;",
+                "} else {",
+                "return type === 'display' && data.length > 150 ?",
+                "'<span title=\"' + data + '\">' + data.substr(0, 150) + '...</span>' : data;",
+                "}",
+              "}"
+            )
+          )
+        )
+      )
+    )
+  })
 
   output$downloadJobs <- downloadHandler(
     filename = function() {
