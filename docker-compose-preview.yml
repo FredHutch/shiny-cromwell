@@ -5,6 +5,7 @@ services:
       - proxy
     image: sc-registry.fredhutch.org/shiny-cromwell-preview:latest
     deploy:
+      replicas: 4
       restart_policy:
         condition: on-failure
       labels:
@@ -14,6 +15,8 @@ services:
         - "traefik.http.routers.shiny-cromwell-preview.entrypoints=web,web-secured"
         - "traefik.http.services.shiny-cromwell-preview.loadbalancer.server.port=3838" # it seems you always need to give traefik a port so it 'notices' the service
         - "traefik.http.routers.shiny-cromwell-preview.tls=true"
+        - "traefik.http.services.shiny-cromwell-preview.loadbalancer.sticky.cookie=true"
+        - "traefik.http.services.shiny-cromwell-preview.loadbalancer.sticky.cookie.name=my_sticky_cookie"
 
 
 networks:
