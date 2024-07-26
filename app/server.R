@@ -545,7 +545,8 @@ server <- function(input, output, session) {
           labels_df <- lapply(workflowDat$workflow_id, \(x) {
             as_tibble_row(cromwell_labels(x, url = rv$url, token = rv$token)) %>%
               mutate(workflow_id = sub("cromwell-", "", workflow_id))
-          }) %>% bind_rows()
+          }) %>%
+            bind_rows()
           workflowDat <- left_join(workflowDat, labels_df, by = "workflow_id")
           ## Then reorder columns
           workflowDat <- dplyr::relocate(workflowDat, copyId, .after = workflow_id)
