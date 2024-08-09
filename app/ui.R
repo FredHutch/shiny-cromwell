@@ -20,6 +20,7 @@ source("tab-validate.R")
 source("tab-submission.R")
 source("tab-tracking.R")
 source("tab-troubleshoot.R")
+source("tab-viewer.R")
 source("sidebar.R")
 
 ui <- dashboardPage(
@@ -52,7 +53,8 @@ ui <- dashboardPage(
       tab_validate,
       tab_submission,
       tab_tracking,
-      tab_troublehsoot
+      tab_troublehsoot,
+      tab_viewer
     )
   )
 )
