@@ -17,18 +17,20 @@ validate_workflowid <- function(x) {
 # get lastet commit - memoised so after first call its cached
 git_last <- memoise(
   function(branch = "dev", fallback = "") {
-    last <- tryCatch(
-      {
-        resp <- httr::GET(
-          url = "https://api.github.com",
-          path = glue("repos/FredHutch/shiny-cromwell/commits/{branch}"),
-          query = list(per_page = 1)
-        )
-        httr::content(resp)
-      },
-      error = function(e) e
-    )
-    if (rlang::is_error(last)) fallback else last
+    ## FIXME: remove below comments and dummy list when internet back
+    # last <- tryCatch(
+    #   {
+    #     resp <- httr::GET(
+    #       url = "https://api.github.com",
+    #       path = glue("repos/FredHutch/shiny-cromwell/commits/{branch}"),
+    #       query = list(per_page = 1)
+    #     )
+    #     httr::content(resp)
+    #   },
+    #   error = function(e) e
+    # )
+    # if (rlang::is_error(last)) fallback else last
+    list(sha = "adsfadf", commit = list(commmitter = list(date = "asdafd")))
   }
 )
 

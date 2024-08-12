@@ -1,9 +1,4 @@
-This is a [Shiny](https://shiny.posit.co/) app being developed by the [Fred Hutch Data Science Lab, DaSL](https://hutchdatascience.org/) that simplifies user interactions with a [Cromwell](https://cromwell.readthedocs.io/en/stable/) server, an open source [WDL](https://openwdl.org/) workflow engine that can be used with a range of HPC backends. We are developing this application alongside Fred Hutch oriented infrastructure with the intention to develop open source resources to enable others to do the same. 
-
-## Fred Hutch Users
-At Fred Hutch, we offer a service for supporting the use of our on-premise HPC cluster to run WDL workflows called PROOF.  To use this app at Fred Hutch, choose the "PROOF Login" button at the top of the page and enter your Fred Hutch credentials to get started. 
-
-<!-- ### Resources
+### Resources
 - Get started with PROOF [How-To documentation](https://sciwiki.fredhutch.org/dasldemos/proof-how-to/) and [troubleshooting tips](https://sciwiki.fredhutch.org/dasldemos/proof-troubleshooting/)
 - Find curated WDL workflow repositories and containers in Fred Hutch [DaSL's getWILDS GitHub organization](https://github.com/orgs/getwilds/repositories?q=wdl).
 - Find Cromwell and WDL Resources in [Fred Hutch's GitHub organization](https://github.com/FredHutch?utf8=%E2%9C%93&q=wdl+OR+cromwell&type=&language=).
@@ -21,4 +16,3 @@ This Shiny app and the R packages it relies on are all open source.  Thus, if yo
 - `shiny-cromwell`:  This app's [GitHub repo](https://github.com/FredHutch/shiny-cromwell) contains information on how to set started with this application.  
 
 
- -->
