@@ -55,6 +55,16 @@ test:
     docker run -w /srv/shiny-server --rm sc-registry.fredhutch.org/shiny-cromwell:test R -q -e 'testthat::test_dir("tests")'
 
 
+deploy_review_image:
+  stage: deploy
+  except:
+    refs:
+      - main
+      - dev
+  script:
+    - docker tag sc-registry.fredhutch.org/shiny-cromwell:test nexus-registry.fredhutch.org/scicomp-nexus/${CI_PROJECT_NAME}:${CI_COMMIT_BRANCH}
+    - docker push nexus-registry.fredhutch.org/scicomp-nexus/${CI_PROJECT_NAME}:${CI_COMMIT_BRANCH}
+
 deploy_preview:
   stage: deploy
   only:
