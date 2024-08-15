@@ -10,6 +10,8 @@ RUN R -q -e "remotes::install_github('getwilds/proofr@v0.2')"
 
 RUN R -q -e "remotes::install_github('getwilds/rcromwell@v3.2.1')"
 
+RUN R -q -e "remotes::install_github('timelyportfolio/reactR')"
+
 RUN rm -rf /srv/shiny-server/
 COPY app/ /srv/shiny-server/
 # COPY ./shiny-server.conf /etc/shiny-server/
