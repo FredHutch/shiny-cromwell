@@ -10,6 +10,11 @@ run_docker:
 	docker build --platform linux/amd64 -t shiny-cromwell:app .
 	docker run --rm -it -p 3838:3838 shiny-cromwell:app
 
+# use: `make branch=inputs-viewer run_branch`
+run_branch:
+	docker pull nexus-registry.fredhutch.org/scicomp-nexus/shiny-cromwell:$(branch)
+	docker run --rm -it -p 3838:3838 nexus-registry.fredhutch.org/scicomp-nexus/shiny-cromwell:$(branch)
+
 # use: `make style_file FILE=stuff.R`
 # accepts 1 file only
 style_file:
