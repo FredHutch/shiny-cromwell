@@ -1,6 +1,6 @@
 FROM fredhutch/r-shiny-server-base:4.3.2
 
-RUN apt-get update -y && apt-get install -y libssh-dev
+RUN apt-get update -y && apt-get install -y libssh-dev python3-pip git
 
 RUN R -q -e 'install.packages(c("ellipsis"), repos="https://cran.rstudio.com/")'
 RUN R -q -e 'install.packages(c("shiny"), repos="https://cran.rstudio.com/")'
@@ -9,6 +9,9 @@ RUN R -q -e 'install.packages(c("shinyFeedback", "shinyWidgets", "shinydashboard
 RUN R -q -e "remotes::install_github('getwilds/proofr@v0.2')"
 
 RUN R -q -e "remotes::install_github('getwilds/rcromwell@v3.2.5')"
+
+# python wdl2mermaid setup:
+RUN pip install git+https://github.com/chanzuckerberg/miniwdl-viz.git
 
 RUN rm -rf /srv/shiny-server/
 COPY app/ /srv/shiny-server/

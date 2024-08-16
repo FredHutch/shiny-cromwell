@@ -70,3 +70,15 @@ abbreviate <- function(x, last = 100) {
   if (nchar(x) < 100) return(x)
   paste0(substring(x, 1, last), " ...")
 }
+
+wdl2mermaid <- function(wdlFileName) {
+  outfile <- tempfile(pattern = "wdl2mermaid", fileext = ".mermaid")
+  system2(
+    "wdl_to_mermaid",
+    args = c(shQuote(wdlFileName), "--print-flowchart"),
+    stdout = outfile
+  )
+  ret <- readLines(outfile)
+  unlink(outfile)
+  paste(ret, collapse = "\n")
+}
