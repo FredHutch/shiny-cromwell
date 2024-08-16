@@ -43,6 +43,7 @@ Also note that docker commands can be specific to the host operating system, so 
 The make command `make run_branch` will run a remote branch locally on your machine. Whereas `make run_docker` runs the current branch you're on, `make run_branch` pulls down a docker image of the remote branch specified and runs that. 
 
 Make sure to run `docker login nexus-registry.fredhutch.org` before you try this make command. You only need to run this once.
+Contact `scicomp` to get the username and password for this step.
 
 A full example: `make branch=inputs-viewer run_branch`
 
