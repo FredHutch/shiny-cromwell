@@ -4,7 +4,7 @@ DEPS := $(shell ${RSCRIPT} -e 'invisible(lapply(c("glue", "cli"), require, chara
 
 run:
 	${RSCRIPT} -e "options(shiny.autoreload = TRUE)" \
-		-e "shiny::runApp(\"app\", launch.browser = TRUE)"
+		-e "shiny::runApp(\"app\", launch.browser = TRUE, port = 4026)"
 
 run_docker:
 	docker build --platform linux/amd64 -t shiny-cromwell:app .
