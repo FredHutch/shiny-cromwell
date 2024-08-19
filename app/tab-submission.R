@@ -28,8 +28,7 @@ tab_submission <- card(
         icon = icon("paper-plane")
       ),
       actionButton("resetSubmission", "Reset Form"),
-      verbatimTextOutput(outputId = "submissionResult")
-
+      uiOutput(outputId = "submissionResult")
     ),
     column(
       width = 6,

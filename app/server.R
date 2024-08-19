@@ -405,9 +405,9 @@ server <- function(input, output, session) {
   })
 
   observeEvent(input$submitWorkflow, {
-    output$submissionResult <- renderPrint({
+    output$submissionResult <- renderUI({
       stop_safe_loggedin_serverup(rv$url, rv$token, rv$own)
-      cromwell_submit_batch(
+      df <- cromwell_submit_batch(
         wdl = isolate(file_wdlFile()),
         params = isolate(file_inputJSON()),
         batch = isolate(file_input2JSON()),
@@ -420,6 +420,13 @@ server <- function(input, output, session) {
         url = rv$url,
         token = rv$token
       )
+      HTML(glue('
+        <br>
+        <ul>
+          <li><strong>Workflow ID:</strong> {df$id}</li>
+          <li><strong>Status:</strong> {df$status}</li>
+        </ul>
+      '))
     })
   })
 
