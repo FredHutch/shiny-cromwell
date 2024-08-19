@@ -1,4 +1,5 @@
 source("ui_components.R")
+library(bsicons)
 
 tab_tracking <- tabItem(
   tabName = "tracking",

@@ -1,4 +1,5 @@
 library(memoise)
+library(bsicons)
 
 # coerce dates to PT from UTC
 as_pt <- function(x) {
