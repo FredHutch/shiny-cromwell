@@ -23,6 +23,10 @@ menu_item_trouble <- menuItem("Troubleshoot",
   tabName = "troubleshoot", icon = icon("wrench"),
   badgeLabel = "troubleshoot", badgeColor = "red"
 )
+menu_item_wdl <- menuItem("WDL",
+  tabName = "wdl", icon = icon("wrench"),
+  badgeLabel = "wdl", badgeColor = "light-blue"
+)
 
 proofSidebar <- function() {
   sidebarMenu(
@@ -32,7 +36,8 @@ proofSidebar <- function() {
     menu_item_validate,
     menu_item_submit,
     menu_item_track,
-    menu_item_trouble
+    menu_item_trouble,
+    menu_item_wdl
   )
 }
 
@@ -43,6 +48,7 @@ nonProofSidebar <- function() {
     menu_item_validate,
     menu_item_submit,
     menu_item_track,
-    menu_item_trouble
+    menu_item_trouble,
+    menu_item_wdl
   )
 }
