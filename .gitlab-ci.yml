@@ -29,7 +29,7 @@ build:
   script: |
     python3 build_helper.py docker-compose.yml --fluentd-logging > /dev/null
     echo $DB_CONFIG | base64 -d > .my.cnf
-    docker build --no-cache \
+    docker build \
       -t sc-registry.fredhutch.org/shiny-cromwell:test \
       --build-arg CI_COMMIT_BRANCH=${CI_COMMIT_BRANCH} \
       --build-arg CI_COMMIT_SHA=${CI_COMMIT_SHA} \
