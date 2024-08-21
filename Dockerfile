@@ -8,7 +8,7 @@ RUN R -q -e 'install.packages(c("shinyFeedback", "shinyWidgets", "shinydashboard
 
 RUN R -q -e "remotes::install_github('getwilds/proofr@v0.2')"
 
-RUN R -q -e "remotes::install_github('getwilds/rcromwell@v3.2.1')"
+RUN R -q -e "remotes::install_github('getwilds/rcromwell@v3.2.5')"
 
 RUN rm -rf /srv/shiny-server/
 COPY app/ /srv/shiny-server/
