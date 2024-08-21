@@ -16,11 +16,6 @@ stages:
   - build
   - test
   - deploy
-
-stages:
-  - build
-  - test
-  - deploy
   
 build:
   stage: build
