@@ -26,7 +26,7 @@ dropdown_own_cromwell <- tags$li(
   uiOutput("ownCromwell")
 )
 dropdown_loginout <- tags$li(
-  class = "dropdown",
+  # class = "dropdown",
   style = "padding: 8px;",
   uiOutput("loggedInOut")
 )

@@ -597,54 +597,29 @@ server <- function(input, output, session) {
   })
 
   ## Render some info boxes
-  output$submittedBox <- renderInfoBox({
-    infoBox(
-      "Total \nSubmitted",
-      workflowUpdate() %>%
-        filter(!is.na(workflow_id)) %>%
-        summarize(n_distinct(workflow_id)),
-      icon = icon("list"),
-      color = "purple", width = 3
-    )
+  output$submittedBoxValue <- renderText({
+    workflowUpdate() %>%
+      filter(!is.na(workflow_id)) %>%
+      summarize(n_distinct(workflow_id)) %>%
+      pull(1)
   })
-  output$successBox <- renderInfoBox({
-    infoBox(
-      "Successful", if (is.na(workflowUpdate()$workflow_id[1])) {
-        0
-      } else {
-        workflowUpdate() %>%
-          filter(status == "Succeeded") %>%
-          summarise(n_distinct(workflow_id))
-      },
-      icon = icon("grin"),
-      color = "yellow", width = 3
-    )
+  output$successBoxValue <- renderText({
+    workflowUpdate() %>%
+      filter(status == "Succeeded") %>%
+      summarise(n_distinct(workflow_id)) %>%
+      pull(1)
   })
-  output$failBox <- renderInfoBox({
-    infoBox(
-      "Failed", if (is.na(workflowUpdate()$workflow_id[1])) {
-        0
-      } else {
-        workflowUpdate() %>%
-          filter(status == "Failed") %>%
-          summarise(n_distinct(workflow_id))
-      },
-      icon = icon("sad-tear"),
-      color = "red", width = 3
-    )
+  output$failBoxValue <- renderText({
+    workflowUpdate() %>%
+      filter(status == "Failed") %>%
+      summarise(n_distinct(workflow_id)) %>%
+      pull(1)
   })
-  output$inprogressBox <- renderInfoBox({
-    infoBox(
-      "In Progress", if (is.na(workflowUpdate()$workflow_id[1])) {
-        0
-      } else {
-        workflowUpdate() %>%
-          filter(status == "Running") %>%
-          summarise(n_distinct(workflow_id))
-      },
-      icon = icon("sync"),
-      color = "green", width = 3
-    )
+  output$inprogressBoxValue <- renderText({
+    workflowUpdate() %>%
+      filter(status == "Running") %>%
+      summarise(n_distinct(workflow_id)) %>%
+      pull(1)
   })
 
   ## Get a table of workflow labels

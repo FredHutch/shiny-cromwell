@@ -18,10 +18,9 @@ tab_validate <- card(
   actionButton(
     inputId = "validateWorkflow",
     label = "Validate Workflow",
-    icon = icon("stethoscope")
+    icon = icon("stethoscope"),
+    width = "250px"
   ),
-  #br(),
-  #br(),
-  actionButton("resetValidate", "Reset"),
+  actionButton("resetValidate", "Reset", width = "250px"),
   verbatimTextOutput(outputId = "validationResult")
 )
