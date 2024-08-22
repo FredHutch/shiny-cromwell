@@ -1,6 +1,6 @@
 FROM fredhutch/r-shiny-server-base:4.3.2
 
-RUN apt-get update -y && apt-get install -y libssh-dev
+RUN apt-get update -y && apt-get install -y libssh-dev libmariadb-dev
 
 RUN R -q -e 'install.packages(c("ellipsis"), repos="https://cran.rstudio.com/")'
 RUN R -q -e 'install.packages(c("shiny"), repos="https://cran.rstudio.com/")'
