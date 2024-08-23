@@ -1,15 +1,15 @@
 help_html <- helpText(
-  HTML('<u>Need Help?:</u>
+  HTML('<u>Need Help?</u>
         <p>
             <br>
-            <b>Problem? Bug? Send an email to</b> <a href="mailto:scicomp@fredhutch.org"><span class="badge bg-secondary">scicomp@fredhutch.org</span></a>
+            <b>Problem? Bug?</b> <a href="https://github.com/getwilds/proof/issues/new" target="_blank"><span class="badge bg-secondary">Open an issue</span></a>
         </p>
         <br>
         <p>
             <b>Discussion/Questions</b><br>
-            <a href="https://fhdata.slack.com/archives/CJFP1NYSZ"><span class="badge bg-secondary"><i class="fa-brands fa-slack"></i> Slack</span></a> #workflow-managers channel
+            <a href="https://fhdata.slack.com/archives/CJFP1NYSZ" target="_blank"><span class="badge bg-secondary"><i class="fa-brands fa-slack"></i> Slack</span></a> #workflow-managers channel
             <br>
-            Email <a href="mailto:wilds@fredhutch.org"><span class="badge bg-secondary">wilds@fredhutch.org</span></a>
+            Email <a href="mailto:wilds@fredhutch.org" target="_blank"><span class="badge bg-secondary">wilds@fredhutch.org</span></a>
         </p>
         <p></p>
         <p>')
