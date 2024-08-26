@@ -588,6 +588,11 @@ server <- function(input, output, session) {
     updateTabItems(session, "tabs", "wdl")
   })
 
+  ### go back to tracking tab from wdl tab
+  observeEvent(input$linkToTrackingTab, {
+    updateTabsetPanel(session, "tabs", "tracking")
+  })
+
   callDurationUpdate <- eventReactive(input$trackingUpdate,
     {
       stop_safe_loggedin_serverup(rv$url, rv$token, rv$own)
