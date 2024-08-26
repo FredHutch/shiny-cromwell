@@ -27,6 +27,10 @@ menu_item_viewer <- menuItem("Viewer",
   tabName = "viewer", icon = icon("wrench"),
   badgeLabel = "viewer", badgeColor = "purple"
 )
+menu_item_wdl <- menuItem("WDL",
+  tabName = "wdl", icon = icon("wrench"),
+  badgeLabel = "wdl", badgeColor = "light-blue"
+)
 
 proofSidebar <- function() {
   sidebarMenu(
@@ -37,7 +41,8 @@ proofSidebar <- function() {
     menu_item_submit,
     menu_item_track,
     menu_item_trouble,
-    menu_item_viewer
+    menu_item_viewer,
+    menu_item_wdl
   )
 }
 
@@ -49,6 +54,7 @@ nonProofSidebar <- function() {
     menu_item_submit,
     menu_item_track,
     menu_item_trouble,
-    menu_item_viewer
+    menu_item_viewer,
+    menu_item_wdl
   )
 }

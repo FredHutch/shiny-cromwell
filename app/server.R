@@ -542,8 +542,27 @@ server <- function(input, output, session) {
             )
           )
 
-          # reorder columns
-          workflowDat <- dplyr::relocate(workflowDat, copyId, .after = workflow_id)
+          # Add go to WDL viewer button
+          workflowDat <- workflowDat %>%
+            rowwise() %>%
+            mutate(
+              wdl = make_wdlbtn(workflow_id)
+            ) %>%
+            ungroup()
+
+          # Add workflow labels
+          ## Get labels data
+          labels_df <- lapply(workflowDat$workflow_id, \(x) {
+            as_tibble_row(cromwell_labels(x, url = rv$url, token = rv$token)) %>%
+              mutate(workflow_id = sub("cromwell-", "", workflow_id))
+          }) %>%
+            bind_rows()
+          workflowDat <- left_join(workflowDat, labels_df, by = "workflow_id")
+          ## Then reorder columns
+          workflowDat <- dplyr::relocate(workflowDat, wdl, .after = workflow_id)
+          workflowDat <- dplyr::relocate(workflowDat, copyId, .after = wdl)
+          workflowDat <- dplyr::relocate(workflowDat, Label, .after = copyId)
+          workflowDat <- dplyr::relocate(workflowDat, secondaryLabel, .after = Label)
         }
       } else {
         workflowDat <- data.frame(
@@ -557,6 +576,24 @@ server <- function(input, output, session) {
     },
     ignoreNULL = TRUE
   )
+
+  observeEvent(input$wdlview_btn, {
+    mermaid_file <- wdl_to_file(
+      workflow_id = strsplit(input$wdlview_btn, "_")[[1]][2],
+      url = rv$url,
+      token = rv$token
+    )
+    mermaid_str <- wdl2mermaid(mermaid_file)
+    output$mermaid_diagram <- renderUI({
+      mermaid_container(mermaid_str)
+    })
+    updateTabItems(session, "tabs", "wdl")
+  })
+
+  ### go back to tracking tab from wdl tab
+  observeEvent(input$linkToTrackingTab, {
+    updateTabsetPanel(session, "tabs", "tracking")
+  })
 
   callDurationUpdate <- eventReactive(input$trackingUpdate,
     {

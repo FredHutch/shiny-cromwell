@@ -1,4 +1,5 @@
 source("ui_components.R")
+library(bsicons)
 
 tab_tracking <- tabItem(
   tabName = "tracking",
@@ -84,6 +85,9 @@ tab_tracking <- tabItem(
     box(
       width = 6,
       title = "Workflow Options",
+      actionButton(inputId = "wdlview",
+        label = bsicons::bs_icon("search"),
+        class = "btn-sm"),
       DTOutput("workflowOpt")
     ),
     box(

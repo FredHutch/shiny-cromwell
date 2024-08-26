@@ -21,6 +21,7 @@ source("tab-submission.R")
 source("tab-tracking.R")
 source("tab-troubleshoot.R")
 source("tab-viewer.R")
+source("tab-wdl.R")
 source("sidebar.R")
 
 ui <- dashboardPage(
@@ -44,6 +45,9 @@ ui <- dashboardPage(
     tags$script("document.title = 'PROOF';"),
     shinyjs::useShinyjs(),
     rclipboard::rclipboardSetup(),
+    tags$head(
+      tags$script(src = "https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js")
+    ),
     enter_to_click,
     tooltip_style,
     google_analytics,
@@ -54,7 +58,8 @@ ui <- dashboardPage(
       tab_submission,
       tab_tracking,
       tab_troublehsoot,
-      tab_viewer
+      tab_viewer,
+      tab_wdl
     )
   )
 )
