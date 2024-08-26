@@ -28,6 +28,8 @@ library(rcromwell)
 
 library(rclipboard)
 
+library(listviewer)
+
 source("sidebar.R")
 source("modals.R")
 source("proof.R")
@@ -753,20 +755,39 @@ server <- function(input, output, session) {
   workflowInputs <- eventReactive(input$joblistCromwell_rows_selected, {
     print("find inputs")
     data <- workflowUpdate()
+
     FOCUS_ID <- data[input$joblistCromwell_rows_selected, ]$workflow_id
-    as.data.frame(jsonlite::fromJSON(
-      cromwell_workflow(FOCUS_ID,
-        url = rv$url,
-        token = rv$token
-      )$inputs
-    ))
+    output$currentWorkflowId <- renderText({
+      paste("Workflow ID: ", FOCUS_ID)
+    })
+
+    cromwell_workflow(FOCUS_ID,
+      url = rv$url,
+      token = rv$token
+    )$inputs
   })
-  output$workflowInp <- renderDT(
-    data <- workflowInputs(),
-    class = "compact",
-    filter = "top",
-    options = list(scrollX = TRUE), selection = "single", rownames = FALSE
-  )
+  ### inputs json javascript viewer
+  output$workflowInp <- renderReactjson({
+    reactjson(workflowInputs())
+  })
+  ### edit json viewer
+  observeEvent(input$workflowInp_edit, {
+    str(input$workflowInp_edit, max.level=2)
+  })
+  ### go to viewer tab when clicked from Tracking tab
+  observeEvent(input$linkToViewerTab, {
+    updateTabItems(session, "tabs", "viewer")
+  })
+  ### go back to tracking tab from viewer tab
+  observeEvent(input$linkToTrackingTab, {
+    updateTabsetPanel(session, "tabs", "tracking")
+  })
+  ### set workflow id display in viewer tab back to none
+  ### when nothing selected in the Workflows Run table
+  observeEvent(input$joblistCromwell_rows_selected, {
+    output$currentWorkflowId <- renderText({"Workflow ID: "})
+  }, ignoreNULL = FALSE)
+
   ## Render a list of jobs in a table for a workflow
   output$joblistCromwell <- renderDT({
     datatable(

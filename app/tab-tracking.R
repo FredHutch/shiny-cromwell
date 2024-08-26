@@ -93,7 +93,7 @@ tab_tracking <- tabItem(
     box(
       width = 6,
       title = "Workflow Inputs",
-      DTOutput("workflowInp")
+      actionButton("linkToViewerTab", "View list")
     )
   ),
   fluidRow(
