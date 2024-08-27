@@ -1,7 +1,7 @@
 library(RMariaDB)
 library(DBI)
 
-COOKIE_EXPIRY_DAYS <- 1
+COOKIE_EXPIRY_DAYS <- 14
 
 to_base64 <- function(x) {
   base64enc::base64encode(charToRaw(x))
