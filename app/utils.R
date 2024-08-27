@@ -1,4 +1,5 @@
 library(memoise)
+library(bsicons)
 
 # coerce dates to PT from UTC
 as_pt <- function(x) {
@@ -68,7 +69,49 @@ make_copybtn <- function(x, clip_prefix, tooltip) {
   )
 }
 
+make_wdlbtn <- function(workflow_id) {
+  as.character(
+    actionButton(
+      inputId = glue("wdlview_{workflow_id}"),
+      label = bsicons::bs_icon("search"),
+      class = "btn-sm",
+      onclick = 'Shiny.setInputValue(\"wdlview_btn\", this.id, {priority: \"event\"})'
+    )
+  )
+}
+
 abbreviate <- function(x, last = 100) {
   if (nchar(x) < 100) return(x)
   paste0(substring(x, 1, last), " ...")
+}
+
+wdl_to_file <- function(workflow_id, url, token) {
+  glob <- cromwell_glob(workflow_id, url = url, token = token)
+  wdl_str <- glob$submittedFiles$workflow
+  tfile <- tempfile(pattern = "wdlize_wdl", fileext = ".wdl")
+  cat(wdl_str, "\n", file = tfile)
+  return(tfile)
+}
+
+wdl2mermaid <- function(wdlFileName) {
+  outfile <- tempfile(pattern = "wdl2mermaid", fileext = ".mermaid")
+  system2(
+    "wdl_to_mermaid",
+    args = c(shQuote(wdlFileName), "--print-flowchart"),
+    stdout = outfile
+  )
+  ret <- readLines(outfile)
+  unlink(outfile)
+  paste(ret, collapse = "\n")
+}
+
+mermaid_container <- function(code) {
+  tags$div(
+    id = "mermaid-container",
+    tags$div(id = "mermaid-diagram", `class` = "mermaid", width = "auto", height = "auto", HTML(code)),
+    tags$script(HTML("
+      mermaid.initialize({ startOnLoad: true });
+      mermaid.init(undefined, '#mermaid-diagram');
+    "))
+  )
 }
