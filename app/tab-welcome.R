@@ -52,7 +52,7 @@ tab_welcome <- nav_panel(title = "Welcome",
         card(
           id = "boxServers",
           class="border border-warning",
-          card_header(h2(shiny::icon("truck-fast"), "Troubleshoot"), class="bg-warning"),
+          card_header(h2(shiny::icon("truck-fast"), "Servers"), class="bg-warning"),
           shiny::markdown("- Start or delete your PROOF server
             - Get metadata for your PROOF server"),
         )
