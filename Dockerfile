@@ -10,6 +10,8 @@ RUN R -q -e "remotes::install_github('getwilds/proofr@v0.2')"
 
 RUN R -q -e "remotes::install_github('getwilds/rcromwell@v3.2.5')"
 
+RUN R -q -e "remotes::install_github('rstudio/bslib')"
+
 # python wdl2mermaid setup:
 RUN pip install git+https://github.com/chanzuckerberg/miniwdl-viz.git
 
