@@ -29,6 +29,7 @@ library(rcromwell)
 library(rclipboard)
 
 library(cookies)
+library(listviewer)
 
 source("sidebar.R")
 source("modals.R")
@@ -569,6 +570,14 @@ server <- function(input, output, session) {
             )
           )
 
+          # Add go to WDL viewer button
+          workflowDat <- workflowDat %>%
+            rowwise() %>%
+            mutate(
+              wdl = make_wdlbtn(workflow_id)
+            ) %>%
+            ungroup()
+
           # Add workflow labels
           ## Get labels data
           labels_df <- lapply(workflowDat$workflow_id, \(x) {
@@ -578,7 +587,8 @@ server <- function(input, output, session) {
             bind_rows()
           workflowDat <- left_join(workflowDat, labels_df, by = "workflow_id")
           ## Then reorder columns
-          workflowDat <- dplyr::relocate(workflowDat, copyId, .after = workflow_id)
+          workflowDat <- dplyr::relocate(workflowDat, wdl, .after = workflow_id)
+          workflowDat <- dplyr::relocate(workflowDat, copyId, .after = wdl)
           workflowDat <- dplyr::relocate(workflowDat, Label, .after = copyId)
           workflowDat <- dplyr::relocate(workflowDat, secondaryLabel, .after = Label)
         }
@@ -594,6 +604,24 @@ server <- function(input, output, session) {
     },
     ignoreNULL = TRUE
   )
+
+  observeEvent(input$wdlview_btn, {
+    mermaid_file <- wdl_to_file(
+      workflow_id = strsplit(input$wdlview_btn, "_")[[1]][2],
+      url = rv$url,
+      token = rv$token
+    )
+    mermaid_str <- wdl2mermaid(mermaid_file)
+    output$mermaid_diagram <- renderUI({
+      mermaid_container(mermaid_str)
+    })
+    updateTabItems(session, "tabs", "wdl")
+  })
+
+  ### go back to tracking tab from wdl tab
+  observeEvent(input$linkToTrackingTab, {
+    updateTabsetPanel(session, "tabs", "tracking")
+  })
 
   callDurationUpdate <- eventReactive(input$trackingUpdate,
     {
@@ -755,20 +783,39 @@ server <- function(input, output, session) {
   workflowInputs <- eventReactive(input$joblistCromwell_rows_selected, {
     print("find inputs")
     data <- workflowUpdate()
+
     FOCUS_ID <- data[input$joblistCromwell_rows_selected, ]$workflow_id
-    as.data.frame(jsonlite::fromJSON(
-      cromwell_workflow(FOCUS_ID,
-        url = rv$url,
-        token = rv$token
-      )$inputs
-    ))
+    output$currentWorkflowId <- renderText({
+      paste("Workflow ID: ", FOCUS_ID)
+    })
+
+    cromwell_workflow(FOCUS_ID,
+      url = rv$url,
+      token = rv$token
+    )$inputs
   })
-  output$workflowInp <- renderDT(
-    data <- workflowInputs(),
-    class = "compact",
-    filter = "top",
-    options = list(scrollX = TRUE), selection = "single", rownames = FALSE
-  )
+  ### inputs json javascript viewer
+  output$workflowInp <- renderReactjson({
+    reactjson(workflowInputs())
+  })
+  ### edit json viewer
+  observeEvent(input$workflowInp_edit, {
+    str(input$workflowInp_edit, max.level=2)
+  })
+  ### go to viewer tab when clicked from Tracking tab
+  observeEvent(input$linkToViewerTab, {
+    updateTabItems(session, "tabs", "viewer")
+  })
+  ### go back to tracking tab from viewer tab
+  observeEvent(input$linkToTrackingTab, {
+    updateTabsetPanel(session, "tabs", "tracking")
+  })
+  ### set workflow id display in viewer tab back to none
+  ### when nothing selected in the Workflows Run table
+  observeEvent(input$joblistCromwell_rows_selected, {
+    output$currentWorkflowId <- renderText({"Workflow ID: "})
+  }, ignoreNULL = FALSE)
+
   ## Render a list of jobs in a table for a workflow
   output$joblistCromwell <- renderDT({
     datatable(
