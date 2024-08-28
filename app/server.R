@@ -624,7 +624,7 @@ server <- function(input, output, session) {
       ggplot(workflowUpdate(), aes(x = as.factor(workflow_name), y = as.numeric(workflowDuration))) +
         geom_point(aes(color = status), width = 0.05, size = 4) +
         coord_flip() +
-        theme_minimal() +
+        theme_minimal(base_size=16) +
         theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
         scale_color_manual(values = myCols) +
         ylab("Workflow Duration (mins)") +
@@ -636,29 +636,48 @@ server <- function(input, output, session) {
   })
 
   ## Render some info boxes
+  is_workflow_empty <- function() {
+    NROW(workflowUpdate()) == 0 || NCOL(workflowUpdate()) == 1
+  }
   output$submittedBoxValue <- renderText({
-    workflowUpdate() %>%
-      filter(!is.na(workflow_id)) %>%
-      summarize(n_distinct(workflow_id)) %>%
-      pull(1)
+    if (is_workflow_empty()) {
+      return(0)
+    } else {
+      workflowUpdate() %>%
+        filter(!is.na(workflow_id)) %>%
+        summarize(n_distinct(workflow_id)) %>%
+        pull(1)
+    }
   })
   output$successBoxValue <- renderText({
-    workflowUpdate() %>%
-      filter(status == "Succeeded") %>%
-      summarise(n_distinct(workflow_id)) %>%
-      pull(1)
+    if (is_workflow_empty()) {
+      return(0)
+    } else {
+      workflowUpdate() %>%
+        filter(status == "Succeeded") %>%
+        summarise(n_distinct(workflow_id)) %>%
+        pull(1)
+    }
   })
   output$failBoxValue <- renderText({
-    workflowUpdate() %>%
-      filter(status == "Failed") %>%
-      summarise(n_distinct(workflow_id)) %>%
-      pull(1)
+    if (is_workflow_empty()) {
+      return(0)
+    } else {
+      workflowUpdate() %>%
+        filter(status == "Failed") %>%
+        summarise(n_distinct(workflow_id)) %>%
+        pull(1)
+    }
   })
   output$inprogressBoxValue <- renderText({
-    workflowUpdate() %>%
-      filter(status == "Running") %>%
-      summarise(n_distinct(workflow_id)) %>%
-      pull(1)
+    if (is_workflow_empty()) {
+      return(0)
+    } else {
+      workflowUpdate() %>%
+        filter(status == "Running") %>%
+        summarise(n_distinct(workflow_id)) %>%
+        pull(1)
+    }
   })
 
   ## Get a table of workflow labels
