@@ -30,6 +30,7 @@ tab_tracking <- page_sidebar(
     )
   ),
   card(
+    id = "tracking",
     card_header(h3("Track your Workflows")),
     card_body(
       fillable = FALSE,

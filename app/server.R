@@ -597,9 +597,9 @@ server <- function(input, output, session) {
     updateTabItems(session, "tabs", "wdl")
   })
 
-  ### go back to tracking tab from wdl tab
+  ### go back to tracking tab from details tab
   observeEvent(input$linkToTrackingTab, {
-    updateTabsetPanel(session, "tabs", "tracking")
+    nav_select("proof", "Track")
   })
 
   callDurationUpdate <- eventReactive(input$trackingUpdate,

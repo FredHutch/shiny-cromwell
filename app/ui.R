@@ -22,9 +22,11 @@ source("tab-validate.R")
 source("tab-submission.R")
 source("tab-tracking.R")
 source("tab-troubleshoot.R")
+source("tab-details.R")
 source("sidebar.R")
 
 ui <- page_navbar(
+  id = "proof",
   title = "PROOF",
   bg = "#0062cc",
   underline = TRUE,
@@ -39,6 +41,7 @@ ui <- page_navbar(
   nav_panel(title = "Submit", tab_submission),
   nav_panel(title = "Track", tab_tracking),
   nav_panel(title = "Troubleshoot", tab_troublehsoot),
+  nav_panel(title = "Job Details", tab_details),
   nav_spacer(),
   nav_item(
     textOutput("userName")
