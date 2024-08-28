@@ -90,14 +90,15 @@ server <- function(input, output, session) {
 
   observeEvent(cookies::get_cookie("user"), {
     rv$user <- cookies::get_cookie("user")
-    print(rv$user)
-    user_df <- user_from_db(rv$user) %>% top_n(1)
-    if (nrow(user_df)) {
-      rv$url <- from_base64(user_df$cromwell_url)
-      rv$token <- from_base64(user_df$proof_token)
-    }
-    if (is.null(input$username)) {
-      output$userName <- renderText({ rv$user })
+    # print(rv$user)
+    # print(nchar(rv$user))
+    if (!is.null(rv$user)) {
+      user_df <- user_from_db(rv$user) %>% top_n(1)
+      if (nrow(user_df)) {
+        #print(user_df)
+        rv$url <- from_base64(user_df$cromwell_url)
+        rv$token <- from_base64(user_df$proof_token)
+      }
     }
   })
 
