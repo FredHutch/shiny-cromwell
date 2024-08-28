@@ -52,5 +52,5 @@ user_drop_from_db <- function(user, conn = make_db_con()) {
     DELETE from users
     WHERE user = {user}
   ", .con = conn)
-  dbSendQuery(conn, sql_delete)
+  dbGetQuery(conn, sql_delete)
 }
