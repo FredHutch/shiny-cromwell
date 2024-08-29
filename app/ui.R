@@ -37,11 +37,15 @@ ui <- page_navbar(
     )
   ),
   nav_panel(title = "PROOF", tab_servers),
-  nav_panel(title = "Validate", tab_validate),
-  nav_panel(title = "Submit", tab_submission),
-  nav_panel(title = "Track", tab_tracking),
-  nav_panel(title = "Troubleshoot", tab_troublehsoot),
-  nav_panel(title = "Job Details", tab_details),
+  nav_panel(title = "Validate", tab_validate, shinyjs::useShinyjs()),
+  nav_panel(title = "Submit", tab_submission, shinyjs::useShinyjs()),
+  nav_panel(title = "Track", tab_tracking, rclipboard::rclipboardSetup()),
+  nav_panel(title = "Troubleshoot", tab_troublehsoot, shinyjs::useShinyjs()),
+  nav_panel(title = "Job Details", tab_details,
+    tags$head(
+      tags$script(src = "https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js")
+    )
+  ),
   nav_spacer(),
   nav_item(
     textOutput("userName")
