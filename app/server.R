@@ -90,20 +90,27 @@ server <- function(input, output, session) {
 
   observeEvent(cookies::get_cookie("user"), {
     rv$user <- cookies::get_cookie("user")
-    # print(rv$user)
-    # print(nchar(rv$user))
+    # print(glue("in observeEvent(cookies::get_cookie(user) -----> {rv$user}"))
     if (!is.null(rv$user)) {
       user_df <- user_from_db(rv$user) %>% top_n(1)
       if (nrow(user_df)) {
-        #print(user_df)
+        # print(user_df)
         rv$url <- from_base64(user_df$cromwell_url)
         rv$token <- from_base64(user_df$proof_token)
+      } else {
+        # force reload b/c no data from the user in the DB, so need to re-login
+        # cookies::remove_cookie("user")
+        # session$reload()
       }
     }
   })
 
   output$userName <- renderText({
-    input$username
+    if (is.null(input$username)) {
+      rv$user
+    } else {
+      input$username
+    }
   })
 
   observe({
@@ -144,13 +151,7 @@ server <- function(input, output, session) {
       } else {
         rv$token <- try_auth
         rv$user <- input$username
-        cookies::set_cookie(
-          cookie_name = "user",
-          cookie_value = rv$user,
-          expiration = COOKIE_EXPIRY_DAYS,
-          secure_only = TRUE,
-          same_site = "strict"
-        )
+
         cromwell_up <- tryCatch(
           proof_status(token = rv$token)$jobStatus,
           error = function(e) e
@@ -162,7 +163,20 @@ server <- function(input, output, session) {
           }
         }
 
-        user_to_db(rv$user, to_base64(rv$token), to_base64(rv$url))
+        user_to_db(
+          user = rv$user,
+          token = to_base64(rv$token),
+          url = to_base64(rv$url),
+          drop_existing = TRUE
+        )
+
+        cookies::set_cookie(
+          cookie_name = "user",
+          cookie_value = rv$user,
+          expiration = COOKIE_EXPIRY_DAYS,
+          secure_only = TRUE,
+          same_site = "strict"
+        )
 
         removeModal()
       }
