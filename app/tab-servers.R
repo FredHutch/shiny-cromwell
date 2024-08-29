@@ -1,5 +1,5 @@
-tab_servers <- card(
-  id = "cromwell",
+card1 <- card(
+  id = "cromwell_start_stop",
   class = "border border-warning",
   card_header(h2("Manage your PROOF Server")),
   p("Note: Hover over the ", icon("question-circle"), " icons to get more information about each item."),
@@ -13,16 +13,12 @@ tab_servers <- card(
     class = "btn-success",
     width = "250px"
   ),
-  br(),
-  br(),
   h5("Current PROOF server information (if live)"),
   uiOutput("proofStatusServerStartTime"),
   uiOutput("proofStatusWorkflowLogDir"),
   uiOutput("proofStatusScratchDir"),
   uiOutput("proofStatusServerTime"),
   uiOutput("proofStatusSlurmJobAccount"),
-  br(),
-  br(),
   h4("Stop your PROOF Server"),
   p(strong("Note"), " stopping your server cannot be undone, but you can always make another one!"),
   actionButton(
@@ -31,10 +27,13 @@ tab_servers <- card(
     icon = icon("stop"),
     class = "btn-danger",
     width = "250px"
-  ),
-  br(),
-  br(),
-  h4("Troubleshoot Your PROOF Server"),
+  )
+)
+
+card2 <- card(
+  id = "cromwell_troubleshoot",
+  class = "border border-warning",
+  card_header(h2("Troubleshoot Your PROOF Server")),
   p(strong("Note"), "If you're having trouble using your PROOF server, this information can be useful in getting help."),
   uiOutput("proofStatusSlurmJobId"),
   uiOutput("proofStatusCromwellDir"),
@@ -42,4 +41,10 @@ tab_servers <- card(
   uiOutput("proofStatusSingularityCacheDir"),
   uiOutput("proofStatusUseAWS"),
   uiOutput("proofStatusUrlStr")
+)
+
+tab_servers <- layout_column_wrap(
+  width = 1/2,
+  card1,
+  card2
 )

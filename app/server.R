@@ -305,17 +305,27 @@ server <- function(input, output, session) {
   proofStatusTextGenerator <- function(name, list_index, tip = "", value_if_null = NULL) {
     renderUI({
       if (proof_loggedin(rv$token)) {
-        tags$span(
-          shinyBS::tipify(
+        if (nzchar(tip)) {
+          tags$span(
+            bslib::tooltip(
+              icon("question-circle"),
+              tip,
+              placement = "right"
+            ),
+            HTML(paste0(
+              strong(glue("{name}: ")),
+              purrr::flatten(cromwellProofStatusData())[[list_index]] %||% value_if_null
+            ))
+          )
+        } else {
+          tags$span(
             icon("question-circle"),
-            tip,
-            placement = "right"
-          ),
-          HTML(paste0(
-            strong(glue("{name}: ")),
-            purrr::flatten(cromwellProofStatusData())[[list_index]] %||% value_if_null
-          ))
-        )
+            HTML(paste0(
+              strong(glue("{name}: ")),
+              purrr::flatten(cromwellProofStatusData())[[list_index]] %||% value_if_null
+            ))
+          )
+        }
       }
     })
   }
