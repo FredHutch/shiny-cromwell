@@ -604,11 +604,14 @@ server <- function(input, output, session) {
     output$mermaid_diagram <- renderUI({
       mermaid_container(mermaid_str)
     })
-    updateTabItems(session, "tabs", "wdl")
+    nav_select("proof", "Job Details")
   })
 
   ### go back to tracking tab from details tab
-  observeEvent(input$linkToTrackingTab, {
+  observeEvent(input$linkToTrackingTab_from_workflow_inputs, {
+    nav_select("proof", "Track")
+  })
+  observeEvent(input$linkToTrackingTab_from_mermaid, {
     nav_select("proof", "Track")
   })
 
@@ -784,14 +787,6 @@ server <- function(input, output, session) {
   ### edit json viewer
   observeEvent(input$workflowInp_edit, {
     str(input$workflowInp_edit, max.level=2)
-  })
-  ### go to viewer tab when clicked from Tracking tab
-  observeEvent(input$linkToViewerTab, {
-    updateTabItems(session, "tabs", "viewer")
-  })
-  ### go back to tracking tab from viewer tab
-  observeEvent(input$linkToTrackingTab, {
-    updateTabsetPanel(session, "tabs", "tracking")
   })
   ### set workflow id display in viewer tab back to none
   ### when nothing selected in the Workflows Run table
