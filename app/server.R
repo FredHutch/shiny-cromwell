@@ -28,6 +28,7 @@ library(rcromwell)
 
 library(rclipboard)
 
+library(cookies)
 library(listviewer)
 
 source("sidebar.R")
@@ -39,6 +40,7 @@ source("tab-servers.R")
 source("tab-welcome.R")
 source("validators.R")
 source("inputs_utils.R")
+source("cookies-db.R")
 
 SANITIZE_ERRORS <- FALSE
 PROOF_TIMEOUT <- 20
@@ -68,7 +70,7 @@ server <- function(input, output, session) {
           ')
   })
 
-  rv <- reactiveValues(token = "", url = "", validateFilepath="", own = FALSE)
+  rv <- reactiveValues(token = "", url = "", validateFilepath="", own = FALSE, user = "")
 
   rv_file <- reactiveValues(
     validatewdlFile_state = NULL,
@@ -86,8 +88,29 @@ server <- function(input, output, session) {
     showModal(loginModal())
   })
 
+  observeEvent(cookies::get_cookie("user"), {
+    rv$user <- cookies::get_cookie("user")
+    # print(glue("in observeEvent(cookies::get_cookie(user) -----> {rv$user}"))
+    if (!is.null(rv$user)) {
+      user_df <- user_from_db(rv$user) %>% top_n(1)
+      if (nrow(user_df)) {
+        # print(user_df)
+        rv$url <- from_base64(user_df$cromwell_url)
+        rv$token <- from_base64(user_df$proof_token)
+      } else {
+        # force reload b/c no data from the user in the DB, so need to re-login
+        # cookies::remove_cookie("user")
+        # session$reload()
+      }
+    }
+  })
+
   output$userName <- renderText({
-    input$username
+    if (is.null(input$username)) {
+      rv$user
+    } else {
+      input$username
+    }
   })
 
   observe({
@@ -127,6 +150,8 @@ server <- function(input, output, session) {
         showModal(loginModal(failed = TRUE, error = try_auth$message))
       } else {
         rv$token <- try_auth
+        rv$user <- input$username
+
         cromwell_up <- tryCatch(
           proof_status(token = rv$token)$jobStatus,
           error = function(e) e
@@ -137,6 +162,22 @@ server <- function(input, output, session) {
             rv$url <- proof_wait_for_up(rv$token)
           }
         }
+
+        user_to_db(
+          user = rv$user,
+          token = to_base64(rv$token),
+          url = to_base64(rv$url),
+          drop_existing = TRUE
+        )
+
+        cookies::set_cookie(
+          cookie_name = "user",
+          cookie_value = rv$user,
+          expiration = COOKIE_EXPIRY_DAYS,
+          secure_only = TRUE,
+          same_site = "strict"
+        )
+
         removeModal()
       }
     } else {
@@ -196,6 +237,8 @@ server <- function(input, output, session) {
 
   # Handle logout for both buttons
   observeEvent(input$proofAuthLogout, {
+    user_drop_from_db(rv$user)
+    cookies::remove_cookie("user")
     session$reload()
   })
 
