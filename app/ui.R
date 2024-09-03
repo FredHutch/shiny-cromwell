@@ -23,6 +23,7 @@ source("tab-servers.R")
 source("tab-validate.R")
 source("tab-submission.R")
 source("tab-tracking.R")
+source("tab-workflow_details.R")
 source("tab-troubleshoot.R")
 source("tab-details.R")
 source("sidebar.R")
@@ -43,12 +44,17 @@ ui <- cookies::add_cookie_handlers(
     nav_panel(title = "Validate", tab_validate, shinyjs::useShinyjs()),
     nav_panel(title = "Submit", tab_submission, shinyjs::useShinyjs()),
     nav_panel(title = "Track", tab_tracking, rclipboard::rclipboardSetup()),
-    nav_panel(title = "Troubleshoot", tab_troublehsoot, shinyjs::useShinyjs()),
-    nav_panel(title = "Job Details", tab_details,
+    nav_panel(title = "Workflow Details", tab_workflow_details,
       tags$head(
         tags$script(src = "https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js")
       )
     ),
+    nav_panel(title = "Troubleshoot", tab_troublehsoot, shinyjs::useShinyjs()),
+    # nav_panel(title = "Visualize", tab_details,
+    #   tags$head(
+    #     tags$script(src = "https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js")
+    #   )
+    # ),
     nav_spacer(),
     nav_item(
       textOutput("userName")

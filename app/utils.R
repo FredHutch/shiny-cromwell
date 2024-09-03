@@ -115,3 +115,13 @@ mermaid_container <- function(code) {
     "))
   )
 }
+
+card_header_color <- function(status) {
+  switch(status, 
+    Failed = "danger",
+    Succeeded = "success",
+    Running = "warning",
+    Pending = "info",
+    "secondary"
+  )
+}
