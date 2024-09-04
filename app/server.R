@@ -821,7 +821,9 @@ server <- function(input, output, session) {
   })
 
   output$selectedWorkflowUI <- renderUI({
-    h4(bsicons::bs_icon("caret-right"), input$selectedWorkflowId)
+    if (!is.null(input$selectedWorkflowId)) {
+      h4(bsicons::bs_icon("caret-right"), input$selectedWorkflowId)
+    }
   })
 
   ## Get a table of workflow labels
