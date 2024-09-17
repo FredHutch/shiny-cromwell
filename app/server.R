@@ -28,6 +28,9 @@ library(rcromwell)
 
 library(rclipboard)
 
+library(cookies)
+library(listviewer)
+
 source("sidebar.R")
 source("modals.R")
 source("proof.R")
@@ -37,6 +40,7 @@ source("tab-servers.R")
 source("tab-welcome.R")
 source("validators.R")
 source("inputs_utils.R")
+source("cookies-db.R")
 
 SANITIZE_ERRORS <- FALSE
 PROOF_TIMEOUT <- 20
@@ -66,7 +70,7 @@ server <- function(input, output, session) {
           ')
   })
 
-  rv <- reactiveValues(token = "", url = "", validateFilepath="", own = FALSE)
+  rv <- reactiveValues(token = "", url = "", validateFilepath="", own = FALSE, user = "")
 
   rv_file <- reactiveValues(
     validatewdlFile_state = NULL,
@@ -84,8 +88,29 @@ server <- function(input, output, session) {
     showModal(loginModal())
   })
 
+  observeEvent(cookies::get_cookie("user"), {
+    rv$user <- cookies::get_cookie("user")
+    # print(glue("in observeEvent(cookies::get_cookie(user) -----> {rv$user}"))
+    if (!is.null(rv$user)) {
+      user_df <- user_from_db(rv$user) %>% top_n(1)
+      if (nrow(user_df)) {
+        # print(user_df)
+        rv$url <- from_base64(user_df$cromwell_url)
+        rv$token <- from_base64(user_df$proof_token)
+      } else {
+        # force reload b/c no data from the user in the DB, so need to re-login
+        # cookies::remove_cookie("user")
+        # session$reload()
+      }
+    }
+  })
+
   output$userName <- renderText({
-    input$username
+    if (is.null(input$username)) {
+      rv$user
+    } else {
+      input$username
+    }
   })
 
   observe({
@@ -125,6 +150,8 @@ server <- function(input, output, session) {
         showModal(loginModal(failed = TRUE, error = try_auth$message))
       } else {
         rv$token <- try_auth
+        rv$user <- input$username
+
         cromwell_up <- tryCatch(
           proof_status(token = rv$token)$jobStatus,
           error = function(e) e
@@ -135,6 +162,22 @@ server <- function(input, output, session) {
             rv$url <- proof_wait_for_up(rv$token)
           }
         }
+
+        user_to_db(
+          user = rv$user,
+          token = to_base64(rv$token),
+          url = to_base64(rv$url),
+          drop_existing = TRUE
+        )
+
+        cookies::set_cookie(
+          cookie_name = "user",
+          cookie_value = rv$user,
+          expiration = COOKIE_EXPIRY_DAYS,
+          secure_only = TRUE,
+          same_site = "strict"
+        )
+
         removeModal()
       }
     } else {
@@ -194,6 +237,8 @@ server <- function(input, output, session) {
 
   # Handle logout for both buttons
   observeEvent(input$proofAuthLogout, {
+    user_drop_from_db(rv$user)
+    cookies::remove_cookie("user")
     session$reload()
   })
 
@@ -540,8 +585,27 @@ server <- function(input, output, session) {
             )
           )
 
-          # reorder columns
-          workflowDat <- dplyr::relocate(workflowDat, copyId, .after = workflow_id)
+          # Add go to WDL viewer button
+          workflowDat <- workflowDat %>%
+            rowwise() %>%
+            mutate(
+              wdl = make_wdlbtn(workflow_id)
+            ) %>%
+            ungroup()
+
+          # Add workflow labels
+          ## Get labels data
+          labels_df <- lapply(workflowDat$workflow_id, \(x) {
+            as_tibble_row(cromwell_labels(x, url = rv$url, token = rv$token)) %>%
+              mutate(workflow_id = sub("cromwell-", "", workflow_id))
+          }) %>%
+            bind_rows()
+          workflowDat <- left_join(workflowDat, labels_df, by = "workflow_id")
+          ## Then reorder columns
+          workflowDat <- dplyr::relocate(workflowDat, wdl, .after = workflow_id)
+          workflowDat <- dplyr::relocate(workflowDat, copyId, .after = wdl)
+          workflowDat <- dplyr::relocate(workflowDat, Label, .after = copyId)
+          workflowDat <- dplyr::relocate(workflowDat, secondaryLabel, .after = Label)
         }
       } else {
         workflowDat <- data.frame(
@@ -555,6 +619,24 @@ server <- function(input, output, session) {
     },
     ignoreNULL = TRUE
   )
+
+  observeEvent(input$wdlview_btn, {
+    mermaid_file <- wdl_to_file(
+      workflow_id = strsplit(input$wdlview_btn, "_")[[1]][2],
+      url = rv$url,
+      token = rv$token
+    )
+    mermaid_str <- wdl2mermaid(mermaid_file)
+    output$mermaid_diagram <- renderUI({
+      mermaid_container(mermaid_str)
+    })
+    updateTabItems(session, "tabs", "wdl")
+  })
+
+  ### go back to tracking tab from wdl tab
+  observeEvent(input$linkToTrackingTab, {
+    updateTabsetPanel(session, "tabs", "tracking")
+  })
 
   callDurationUpdate <- eventReactive(input$trackingUpdate,
     {
@@ -716,20 +798,39 @@ server <- function(input, output, session) {
   workflowInputs <- eventReactive(input$joblistCromwell_rows_selected, {
     print("find inputs")
     data <- workflowUpdate()
+
     FOCUS_ID <- data[input$joblistCromwell_rows_selected, ]$workflow_id
-    as.data.frame(jsonlite::fromJSON(
-      cromwell_workflow(FOCUS_ID,
-        url = rv$url,
-        token = rv$token
-      )$inputs
-    ))
+    output$currentWorkflowId <- renderText({
+      paste("Workflow ID: ", FOCUS_ID)
+    })
+
+    cromwell_workflow(FOCUS_ID,
+      url = rv$url,
+      token = rv$token
+    )$inputs
   })
-  output$workflowInp <- renderDT(
-    data <- workflowInputs(),
-    class = "compact",
-    filter = "top",
-    options = list(scrollX = TRUE), selection = "single", rownames = FALSE
-  )
+  ### inputs json javascript viewer
+  output$workflowInp <- renderReactjson({
+    reactjson(workflowInputs())
+  })
+  ### edit json viewer
+  observeEvent(input$workflowInp_edit, {
+    str(input$workflowInp_edit, max.level=2)
+  })
+  ### go to viewer tab when clicked from Tracking tab
+  observeEvent(input$linkToViewerTab, {
+    updateTabItems(session, "tabs", "viewer")
+  })
+  ### go back to tracking tab from viewer tab
+  observeEvent(input$linkToTrackingTab, {
+    updateTabsetPanel(session, "tabs", "tracking")
+  })
+  ### set workflow id display in viewer tab back to none
+  ### when nothing selected in the Workflows Run table
+  observeEvent(input$joblistCromwell_rows_selected, {
+    output$currentWorkflowId <- renderText({"Workflow ID: "})
+  }, ignoreNULL = FALSE)
+
   ## Render a list of jobs in a table for a workflow
   output$joblistCromwell <- renderDT({
     datatable(

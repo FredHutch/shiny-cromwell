@@ -1,6 +1,6 @@
 RSCRIPT = Rscript --no-init-file
 FILE_TARGET := "${FILE}"
-DEPS := $(shell ${RSCRIPT} -e 'invisible(lapply(c("glue", "cli"), require, character.only = TRUE, quiet = TRUE))' -e 'deps = renv::dependencies(quiet = TRUE)' -e 'uniq_pkgs = sort(unique(deps$$Package))' -e 'uniq_pkgs = uniq_pkgs[!grepl("^proofr$$|^rcromwell$$", uniq_pkgs)]' -e 'cat(c("getwilds/proofr@v0.2", "getwilds/rcromwell@v3.2.1", uniq_pkgs), file="deps.txt", sep="\n")')
+DEPS := $(shell ${RSCRIPT} -e 'invisible(lapply(c("glue", "cli"), require, character.only = TRUE, quiet = TRUE))' -e 'deps = renv::dependencies(quiet = TRUE)' -e 'uniq_pkgs = sort(unique(deps$$Package))' -e 'uniq_pkgs = uniq_pkgs[!grepl("^proofr$$|^rcromwell$$", uniq_pkgs)]' -e 'cat(c("getwilds/proofr@v0.3.0", "getwilds/rcromwell@v3.3.0", uniq_pkgs), file="deps.txt", sep="\n")')
 
 run:
 	${RSCRIPT} -e "options(shiny.autoreload = TRUE)" \
@@ -9,6 +9,11 @@ run:
 run_docker:
 	docker build --platform linux/amd64 -t shiny-cromwell:app .
 	docker run --rm -it -p 3838:3838 shiny-cromwell:app
+
+# use: `make branch=inputs-viewer run_branch`
+run_branch:
+	docker pull nexus-registry.fredhutch.org/scicomp-nexus/shiny-cromwell:$(branch)
+	docker run --rm -it -p 3838:3838 nexus-registry.fredhutch.org/scicomp-nexus/shiny-cromwell:$(branch)
 
 # use: `make style_file FILE=stuff.R`
 # accepts 1 file only
