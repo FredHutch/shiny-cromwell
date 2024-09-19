@@ -134,18 +134,18 @@ tab_tracking <- page_sidebar(
   card_tracking_intro,
   navset_card_underline(
     nav_panel(
-      title = "Workflow Timing",
-      card_timing
-    ),
-    nav_panel(
       title = "Workflow Runs",
-      # dateRangeInput("runs_date", 
+      # dateRangeInput("runs_date",
       #   label = "Date Range",
       #   start = "2024-01-01",
       #   end = "2024-08-30"
       # ),
       workflow_cards
       # card_workflow_runs
+    ),
+    nav_panel(
+      title = "Workflow Timing",
+      card_timing
     )
   )
 )

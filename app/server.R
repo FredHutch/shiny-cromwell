@@ -661,12 +661,17 @@ server <- function(input, output, session) {
     })
   })
 
+  ### Go to resources page from welcome page
+  observeEvent(input$linkToResourcesTab, {
+    nav_select("proof", "Resources")
+  })
+
   ### go back to tracking tab from details tab
   observeEvent(input$linkToTrackingTab_from_workflow_inputs, {
-    nav_select("proof", "Track")
+    nav_select("proof", "Track workflows")
   })
   observeEvent(input$linkToTrackingTab_from_mermaid, {
-    nav_select("proof", "Track")
+    nav_select("proof", "Track workflows")
   })
 
   callDurationUpdate <- eventReactive(input$trackingUpdate,
@@ -760,7 +765,7 @@ server <- function(input, output, session) {
             w$workflow_id,
             actionButton(
               "goToWorkflowDetails",
-              label = "Details", 
+              label = "Workflow Details",
               icon = icon("rectangle-list"),
               class = "btn-secondary btn-sm",
               onclick = glue('Shiny.setInputValue(\"selectedWorkflowId\", \"{w$workflow_id}\")')
