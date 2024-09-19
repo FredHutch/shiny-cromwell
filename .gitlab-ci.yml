@@ -49,8 +49,8 @@ test:
     # env
     # curl -si http://shiny-cromwell:3838/
     # docker logs $CONTAINER_ID
-    curl -sI http://shiny-cromwell:3838 | head -1 | grep -q "200 OK"
     docker run -w /srv/shiny-server --rm sc-registry.fredhutch.org/shiny-cromwell:test R -q -e 'testthat::test_dir("tests")'
+    curl -sI http://shiny-cromwell:3838 | head -1 | grep -q "200 OK"
 
 deploy_review_image:
   stage: deploy
