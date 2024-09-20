@@ -3,11 +3,15 @@ library(listviewer)
 tab_workflow_details <- card(
   id = "workflow_details",
   card_header(
-    h3("Workflow Specific Job Information"),
     uiOutput("selectedWorkflowUI"),
-    class = "d-flex gap-1"
+    class = "d-flex gap-1 justify-content-between"
   ),
   navset_underline(
+    nav_panel(
+      title = "Job List",
+      downloadButton("downloadJobs", "Download Workflow Jobs Data", style = "width:20%"),
+      DTOutput("tasklistBatch")
+    ),
     nav_panel(
       title = "Workflow Description",
       DTOutput("workflowDescribe")
@@ -25,11 +29,6 @@ tab_workflow_details <- card(
       title = "Mermaid",
       uiOutput("mermaid_diagram")
       # actionButton("linkToViewerTab", "View list")
-    ),
-    nav_panel(
-      title = "Job List",
-      downloadButton("downloadJobs", "Download Workflow Jobs Data", style = "width:20%"),
-      DTOutput("tasklistBatch")
     ),
     nav_panel(
       title = "Job Failures",

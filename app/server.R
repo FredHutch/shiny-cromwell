@@ -32,6 +32,7 @@ library(cookies)
 library(listviewer)
 
 library(parsedate)
+library(ids)
 
 source("sidebar.R")
 source("modals.R")
@@ -471,8 +472,8 @@ server <- function(input, output, session) {
         options = isolate(file_workOptions()),
         labels = data.frame(
           "workflowType" = "AppSubmission",
-          "Label" = isolate(input$labelValue),
-          "secondaryLabel" = isolate(input$seclabelValue)
+          "Label" = ifelse(nzchar(isolate(input$labelValue)), isolate(input$labelValue), ids::adjective_animal(style = "Pascal")),
+          "secondaryLabel" = ifelse(nzchar(isolate(input$seclabelValue)), isolate(input$seclabelValue), ids::adjective_animal(style = "Pascal"))
         ),
         url = rv$url,
         token = rv$token
@@ -768,7 +769,9 @@ server <- function(input, output, session) {
               label = "Workflow Details",
               icon = icon("rectangle-list"),
               class = "btn-secondary btn-sm",
-              onclick = glue('Shiny.setInputValue(\"selectedWorkflowId\", \"{w$workflow_id}\")')
+              onclick = glue('Shiny.setInputValue(\"selectedWorkflowId\", \"{w$workflow_id}\");
+                Shiny.setInputValue(\"selectedWorkflowLabel\", \"{w$Label}\");
+                Shiny.setInputValue(\"selectedWorkflowSecLabel\", \"{w$secondaryLabel}\")')
             ),
             class = "d-flex justify-content-between gap-1",
             # class = "bg-secondary"
@@ -827,7 +830,15 @@ server <- function(input, output, session) {
 
   output$selectedWorkflowUI <- renderUI({
     if (!is.null(input$selectedWorkflowId)) {
-      h4(bsicons::bs_icon("caret-right"), input$selectedWorkflowId)
+      htmltools::tagList(
+        htmltools::tags$span(
+          h3("Workflow Specific Job Information", bsicons::bs_icon("caret-right"), paste(substring(input$selectedWorkflowId, 1, 13), " ...")),
+        ),
+        htmltools::tags$div(
+          span(bsicons::bs_icon("tag-fill"), input$selectedWorkflowLabel),
+          span(bsicons::bs_icon("tag"), input$selectedWorkflowSecLabel)
+        )
+      )
     }
   })
 

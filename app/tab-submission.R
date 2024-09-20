@@ -4,7 +4,7 @@ tab_submission <- card(
   class = "border border-success",
   tags$ul(
     tags$li("Only a WDL is required for submission (requires v1.0)"),
-    tags$li("Label your WDL workflow to aid in tracking it after submission"),
+    tags$li("Label your WDL workflow to aid in tracking it after submission (we use random strings if these are missing)"),
     tags$li("If two input JSON files are uploaded with identical variables, the second input's variable value will overwrite the first")
   ),
   layout_columns(
