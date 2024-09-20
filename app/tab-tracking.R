@@ -108,7 +108,7 @@ card_tracking_intro <- card(
         textOutput("inprogressBoxValue"),
         class = "badge text-bg-dark"
       ),
-      class = "btn btn-info btn-sm"
+      class = "btn btn-warning btn-sm"
     )
   )
 )
