@@ -794,8 +794,8 @@ server <- function(input, output, session) {
     })
     # Filter by date
     dat <- Filter(\(w) {
-      parse_date(w$data$submission) >= parse_date(input$runs_date[1]) && 
-        parse_date(w$data$submission) <= parse_date(input$runs_date[2])
+      parse_date_tz(w$data$submission) >= parse_date_tz(paste(input$runs_date[1], "00:00:00")) &&
+      parse_date_tz(w$data$submission) <= parse_date_tz(paste(input$runs_date[2], "23:59:00"))
     }, dat)
     # Filter by status
     if (!is.null(input$workStatus)) {
