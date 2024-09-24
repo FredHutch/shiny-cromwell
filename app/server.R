@@ -422,7 +422,7 @@ server <- function(input, output, session) {
       )
     })
   })
-      
+
   # reset
   observeEvent(input$resetValidate, {
     reset_inputs(c("validatewdlFile", "validateinputFile"))
@@ -588,7 +588,7 @@ server <- function(input, output, session) {
         url = rv$url,
         token = rv$token
       )
-    
+
       if ("workflow_id" %in% colnames(cromTable)) {
         workflowDat <- cromTable %>% select(one_of(
           "workflow_name", "workflow_id", "status", "submission", "start",
@@ -886,14 +886,20 @@ server <- function(input, output, session) {
         )
       )
     })
-  output$workflowDescribe <- renderDT({
-    datatable(
-      workflowLabels(),
-      escape = FALSE,
-      selection = "single",
-      rownames = FALSE,
-      filter = "top",
-      options = list(scrollX = TRUE)
+
+  output$workflowDescribe <- renderUI({
+    wl <- purrr::discard_at(workflowLabels(), c("workflow", "inputs"))
+    workflowLabelsLst <- lapply(wl, as.list)
+    tags$ul(
+      Map(function(x, y) {
+        # print(y[[1]])
+        tags$li(
+          span(
+            strong(x)
+          ),
+          ifelse(grepl("clipbtn", as.character(y[[1]])), HTML(y[[1]]), y)
+        )
+      }, names(workflowLabelsLst), unname(workflowLabelsLst))
     )
   })
   ## Get a table of workflow options

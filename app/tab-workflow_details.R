@@ -14,19 +14,12 @@ tab_workflow_details <- card(
     ),
     nav_panel(
       title = "Workflow Description",
-      DTOutput("workflowDescribe")
+      card_body(
+        uiOutput("workflowDescribe")
+      )
     ),
     nav_panel(
-      title = "Workflow Options",
-      DTOutput("workflowOpt")
-    ),
-    nav_panel(
-      title = "Workflow Inputs",
-      reactjsonOutput("workflowInp", height = "100%")
-      # actionButton("linkToViewerTab", "View list")
-    ),
-    nav_panel(
-      title = "Mermaid",
+      title = "Diagram",
       uiOutput("mermaid_diagram")
       # actionButton("linkToViewerTab", "View list")
     ),
@@ -51,6 +44,15 @@ tab_workflow_details <- card(
       ),
       downloadButton("downloadCache", "Download Call Caching Data"),
       DTOutput("cachingListBatch")
+    ),
+    nav_panel(
+      title = "Workflow Options",
+      DTOutput("workflowOpt")
+    ),
+    nav_panel(
+      title = "Workflow Inputs",
+      reactjsonOutput("workflowInp", height = "100%")
+      # actionButton("linkToViewerTab", "View list")
     ),
     nav_panel(
       title = "Workflow Outputs",
