@@ -135,14 +135,6 @@ server <- function(input, output, session) {
     }
   })
 
-  output$toggleServersBox <- renderUI({
-    if (nzchar(rv$token)) {
-      welcome_servers_box
-    } else {
-      NULL
-    }
-  })
-
   observeEvent(input$submit, {
     if (!is.null(input$username) && !is.null(input$password)) {
       try_auth <- tryCatch(
