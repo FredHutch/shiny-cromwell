@@ -712,9 +712,9 @@ server <- function(input, output, session) {
   is_workflow_empty <- function() {
     NROW(workflowUpdate()) == 0 || NCOL(workflowUpdate()) == 1
   }
-  output$submittedBoxValue <- renderText({
+  submittedText <- reactive({
     if (is_workflow_empty()) {
-      return(0)
+      0
     } else {
       workflowUpdate() %>%
         filter(!is.na(workflow_id)) %>%
@@ -722,9 +722,9 @@ server <- function(input, output, session) {
         pull(1)
     }
   })
-  output$successBoxValue <- renderText({
+  succeededText <- reactive({
     if (is_workflow_empty()) {
-      return(0)
+      0
     } else {
       workflowUpdate() %>%
         filter(status == "Succeeded") %>%
@@ -732,9 +732,9 @@ server <- function(input, output, session) {
         pull(1)
     }
   })
-  output$failBoxValue <- renderText({
+  failedText <- reactive({
     if (is_workflow_empty()) {
-      return(0)
+      0
     } else {
       workflowUpdate() %>%
         filter(status == "Failed") %>%
@@ -742,15 +742,26 @@ server <- function(input, output, session) {
         pull(1)
     }
   })
-  output$inprogressBoxValue <- renderText({
+  runningText <- reactive({
     if (is_workflow_empty()) {
-      return(0)
+      0
     } else {
       workflowUpdate() %>%
         filter(status == "Running") %>%
         summarise(n_distinct(workflow_id)) %>%
         pull(1)
     }
+  })
+  output$trackingSummaryStats <- renderUI({
+    tagList(
+      tags$span(paste("Submitted: ", submittedText()), style = "color:#353a3f; font-weight:bold; display:inline"),
+      HTML("&nbsp;-&nbsp;"),
+      tags$span(paste("Succeeded: ", succeededText()), style = "color:#3b872e; font-weight:bold; display:inline"),
+      HTML("&nbsp;-&nbsp;"),
+      tags$span(paste("Failed: ", failedText()), style = "color:#b12418; font-weight:bold; display:inline"),
+      HTML("&nbsp;-&nbsp;"),
+      tags$span(paste("Running: ", runningText()), style = "color:#efbc4b; font-weight:bold; display:inline")
+    )
   })
 
   # Data for cards out of workflowUpdate data
