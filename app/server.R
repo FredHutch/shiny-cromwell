@@ -754,13 +754,17 @@ server <- function(input, output, session) {
   })
   output$trackingSummaryStats <- renderUI({
     tagList(
-      tags$span(paste("Submitted: ", submittedText()), style = "color:#353a3f; font-weight:bold; display:inline"),
+      # tags$span(paste("Submitted: ", submittedText()), style = "color:#353a3f; font-weight:bold; display:inline"),
+      tags$span(paste("Submitted: ", submittedText()), class = "text-secondary fw-bold", style = "display:inline"),
       HTML("&nbsp;-&nbsp;"),
-      tags$span(paste("Succeeded: ", succeededText()), style = "color:#3b872e; font-weight:bold; display:inline"),
+      # tags$span(paste("Succeeded: ", succeededText()), style = "color:#3b872e; font-weight:bold; display:inline"),
+      tags$span(paste("Succeeded: ", succeededText()), class = "text-success fw-bold", style = "display:inline"),
       HTML("&nbsp;-&nbsp;"),
-      tags$span(paste("Failed: ", failedText()), style = "color:#b12418; font-weight:bold; display:inline"),
+      # tags$span(paste("Failed: ", failedText()), style = "color:#b12418; font-weight:bold; display:inline"),
+      tags$span(paste("Failed: ", failedText()), class = "text-danger fw-bold", style = "display:inline"),
       HTML("&nbsp;-&nbsp;"),
-      tags$span(paste("Running: ", runningText()), style = "color:#efbc4b; font-weight:bold; display:inline")
+      # tags$span(paste("Running: ", runningText()), style = "color:#efbc4b; font-weight:bold; display:inline")
+      tags$span(paste("Running: ", runningText()), class = "text-warning fw-bold", style = "display:inline")
     )
   })
 
@@ -790,9 +794,9 @@ server <- function(input, output, session) {
           card_body(
             class = "d-flex align-items-left justify-content-between gap-1",
             fillable = FALSE,
-            tags$button(
+            tags$span(
               w$status,
-              class = glue("btn btn-{card_header_color(w$status)} btn-sm col-2")
+              class = glue("text-{card_header_color(w$status)} fw-bold")
             ),
             span(bsicons::bs_icon("send"), w$submission),
             span(bsicons::bs_icon("clock-history"), w$workflowDuration)
