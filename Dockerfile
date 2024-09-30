@@ -1,4 +1,4 @@
-FROM fredhutch/r-shiny-server-base:4.3.2
+FROM fredhutch/r-shiny-server-base:4.4.1
 
 RUN apt-get update -y && apt-get install -y libssh-dev python3-pip git libmariadb-dev
 
