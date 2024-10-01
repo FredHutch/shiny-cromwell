@@ -1,11 +1,3 @@
-welcome_servers_box <- box(
-  id = "boxServers", title = "PROOF Server", width = 4, solidHeader = TRUE, status = "warning", icon = icon("truck-fast"),
-  shiny::markdown("This tab allows you to:
-  - Start or delete your PROOF server
-  - Get metadata for your PROOF server"),
-  align = "left"
-)
-
 ablank <- function(...) {
   htmltools::a(..., target = "_blank")
 }
