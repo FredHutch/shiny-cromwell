@@ -654,7 +654,25 @@ server <- function(input, output, session) {
     })
   })
 
-  ### Go to resources page from welcome page
+  ### Links to various tabs from the welcome page
+  observeEvent(input$linkToServerTab, {
+    nav_select("proof", "Server")
+  })
+  observeEvent(input$linkToValidateTab, {
+    nav_select("proof", "Validate")
+  })
+  observeEvent(input$linkToSubmitTab, {
+    nav_select("proof", "Submit")
+  })
+  observeEvent(input$linkTrackingTab, {
+    nav_select("proof", "Track workflows")
+  })
+  observeEvent(input$linkToWorkflowDetailsTab, {
+    nav_select("proof", "Workflow Details")
+  })
+  observeEvent(input$linkToTroubleshootingTab, {
+    nav_select("proof", "Troubleshoot")
+  })
   observeEvent(input$linkToResourcesTab, {
     nav_select("proof", "Resources")
   })
