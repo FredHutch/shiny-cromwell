@@ -78,38 +78,7 @@ card_tracking_intro <- card(
   ),
   card_body(
     fillable = FALSE,
-    tags$button(
-      "Submitted",
-      span(
-        textOutput("submittedBoxValue"),
-        class = "badge text-bg-dark"
-      ),
-      class = "btn btn-secondary btn-sm"
-    ),
-    tags$button(
-      "Succeeded",
-      span(
-        textOutput("successBoxValue"),
-        class = "badge text-bg-dark"
-      ),
-      class = "btn btn-success btn-sm"
-    ),
-    tags$button(
-      "Failed",
-      span(
-        textOutput("failBoxValue"),
-        class = "badge text-bg-dark"
-      ),
-      class = "btn btn-danger btn-sm"
-    ),
-    tags$button(
-      "Running",
-      span(
-        textOutput("inprogressBoxValue"),
-        class = "badge text-bg-dark"
-      ),
-      class = "btn btn-info btn-sm"
-    )
+    uiOutput("trackingSummaryStats")
   )
 )
 

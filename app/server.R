@@ -32,6 +32,7 @@ library(cookies)
 library(listviewer)
 
 library(parsedate)
+library(ids)
 
 source("sidebar.R")
 source("modals.R")
@@ -421,7 +422,7 @@ server <- function(input, output, session) {
       )
     })
   })
-      
+
   # reset
   observeEvent(input$resetValidate, {
     reset_inputs(c("validatewdlFile", "validateinputFile"))
@@ -471,8 +472,8 @@ server <- function(input, output, session) {
         options = isolate(file_workOptions()),
         labels = data.frame(
           "workflowType" = "AppSubmission",
-          "Label" = isolate(input$labelValue),
-          "secondaryLabel" = isolate(input$seclabelValue)
+          "Label" = ifelse(nzchar(isolate(input$labelValue)), isolate(input$labelValue), ids::adjective_animal(style = "Pascal")),
+          "secondaryLabel" = ifelse(nzchar(isolate(input$seclabelValue)), isolate(input$seclabelValue), ids::adjective_animal(style = "Pascal"))
         ),
         url = rv$url,
         token = rv$token
@@ -587,7 +588,7 @@ server <- function(input, output, session) {
         url = rv$url,
         token = rv$token
       )
-    
+
       if ("workflow_id" %in% colnames(cromTable)) {
         workflowDat <- cromTable %>% select(one_of(
           "workflow_name", "workflow_id", "status", "submission", "start",
@@ -711,9 +712,9 @@ server <- function(input, output, session) {
   is_workflow_empty <- function() {
     NROW(workflowUpdate()) == 0 || NCOL(workflowUpdate()) == 1
   }
-  output$submittedBoxValue <- renderText({
+  submittedText <- reactive({
     if (is_workflow_empty()) {
-      return(0)
+      0
     } else {
       workflowUpdate() %>%
         filter(!is.na(workflow_id)) %>%
@@ -721,9 +722,9 @@ server <- function(input, output, session) {
         pull(1)
     }
   })
-  output$successBoxValue <- renderText({
+  succeededText <- reactive({
     if (is_workflow_empty()) {
-      return(0)
+      0
     } else {
       workflowUpdate() %>%
         filter(status == "Succeeded") %>%
@@ -731,9 +732,9 @@ server <- function(input, output, session) {
         pull(1)
     }
   })
-  output$failBoxValue <- renderText({
+  failedText <- reactive({
     if (is_workflow_empty()) {
-      return(0)
+      0
     } else {
       workflowUpdate() %>%
         filter(status == "Failed") %>%
@@ -741,15 +742,30 @@ server <- function(input, output, session) {
         pull(1)
     }
   })
-  output$inprogressBoxValue <- renderText({
+  runningText <- reactive({
     if (is_workflow_empty()) {
-      return(0)
+      0
     } else {
       workflowUpdate() %>%
         filter(status == "Running") %>%
         summarise(n_distinct(workflow_id)) %>%
         pull(1)
     }
+  })
+  output$trackingSummaryStats <- renderUI({
+    tagList(
+      # tags$span(paste("Submitted: ", submittedText()), style = "color:#353a3f; font-weight:bold; display:inline"),
+      tags$span(paste("Submitted: ", submittedText()), class = "text-secondary fw-bold", style = "display:inline"),
+      HTML("&nbsp;-&nbsp;"),
+      # tags$span(paste("Succeeded: ", succeededText()), style = "color:#3b872e; font-weight:bold; display:inline"),
+      tags$span(paste("Succeeded: ", succeededText()), class = "text-success fw-bold", style = "display:inline"),
+      HTML("&nbsp;-&nbsp;"),
+      # tags$span(paste("Failed: ", failedText()), style = "color:#b12418; font-weight:bold; display:inline"),
+      tags$span(paste("Failed: ", failedText()), class = "text-danger fw-bold", style = "display:inline"),
+      HTML("&nbsp;-&nbsp;"),
+      # tags$span(paste("Running: ", runningText()), style = "color:#efbc4b; font-weight:bold; display:inline")
+      tags$span(paste("Running: ", runningText()), class = "text-warning fw-bold", style = "display:inline")
+    )
   })
 
   # Data for cards out of workflowUpdate data
@@ -768,7 +784,9 @@ server <- function(input, output, session) {
               label = "Workflow Details",
               icon = icon("rectangle-list"),
               class = "btn-secondary btn-sm",
-              onclick = glue('Shiny.setInputValue(\"selectedWorkflowId\", \"{w$workflow_id}\")')
+              onclick = glue('Shiny.setInputValue(\"selectedWorkflowId\", \"{w$workflow_id}\");
+                Shiny.setInputValue(\"selectedWorkflowLabel\", \"{w$Label}\");
+                Shiny.setInputValue(\"selectedWorkflowSecLabel\", \"{w$secondaryLabel}\")')
             ),
             class = "d-flex justify-content-between gap-1",
             # class = "bg-secondary"
@@ -776,9 +794,9 @@ server <- function(input, output, session) {
           card_body(
             class = "d-flex align-items-left justify-content-between gap-1",
             fillable = FALSE,
-            tags$button(
+            tags$span(
               w$status,
-              class = glue("btn btn-{card_header_color(w$status)} btn-sm col-2")
+              class = glue("text-{card_header_color(w$status)} fw-bold")
             ),
             span(bsicons::bs_icon("send"), w$submission),
             span(bsicons::bs_icon("clock-history"), w$workflowDuration)
@@ -794,8 +812,8 @@ server <- function(input, output, session) {
     })
     # Filter by date
     dat <- Filter(\(w) {
-      parse_date(w$data$submission) >= parse_date(input$runs_date[1]) && 
-        parse_date(w$data$submission) <= parse_date(input$runs_date[2])
+      parse_date_tz(w$data$submission) >= parse_date_tz(paste(input$runs_date[1], "00:00:00")) &&
+      parse_date_tz(w$data$submission) <= parse_date_tz(paste(input$runs_date[2], "23:59:00"))
     }, dat)
     # Filter by status
     if (!is.null(input$workStatus)) {
@@ -827,7 +845,15 @@ server <- function(input, output, session) {
 
   output$selectedWorkflowUI <- renderUI({
     if (!is.null(input$selectedWorkflowId)) {
-      h4(bsicons::bs_icon("caret-right"), input$selectedWorkflowId)
+      htmltools::tagList(
+        htmltools::tags$span(
+          h3("Workflow Specific Job Information", bsicons::bs_icon("caret-right"), paste(substring(input$selectedWorkflowId, 1, 13), " ...")),
+        ),
+        htmltools::tags$div(
+          span(bsicons::bs_icon("tag-fill"), input$selectedWorkflowLabel),
+          span(bsicons::bs_icon("tag"), input$selectedWorkflowSecLabel)
+        )
+      )
     }
   })
 
@@ -875,14 +901,20 @@ server <- function(input, output, session) {
         )
       )
     })
-  output$workflowDescribe <- renderDT({
-    datatable(
-      workflowLabels(),
-      escape = FALSE,
-      selection = "single",
-      rownames = FALSE,
-      filter = "top",
-      options = list(scrollX = TRUE)
+
+  output$workflowDescribe <- renderUI({
+    wl <- purrr::discard_at(workflowLabels(), c("workflow", "inputs"))
+    workflowLabelsLst <- lapply(wl, as.list)
+    tags$ul(
+      Map(function(x, y) {
+        # print(y[[1]])
+        tags$li(
+          span(
+            strong(x)
+          ),
+          ifelse(grepl("clipbtn", as.character(y[[1]])), HTML(y[[1]]), y)
+        )
+      }, names(workflowLabelsLst), unname(workflowLabelsLst))
     )
   })
   ## Get a table of workflow options
