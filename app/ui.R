@@ -57,7 +57,7 @@ ui <- cookies::add_cookie_handlers(
     # ),
     nav_spacer(),
     nav_item(
-      textOutput("userName")
+      uiOutput("userName")
     ),
     nav_item(
       uiOutput("ownCromwell")

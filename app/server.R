@@ -108,11 +108,16 @@ server <- function(input, output, session) {
     }
   })
 
-  output$userName <- renderText({
-    if (is.null(input$username)) {
+  output$userName <- renderUI({
+    the_name <- if (is.null(input$username)) {
       rv$user
     } else {
       input$username
+    }
+    if (nzchar(the_name)) {
+      span(icon("user"), the_name)
+    } else {
+      span()
     }
   })
 
@@ -221,6 +226,7 @@ server <- function(input, output, session) {
   observe({
     if (proof_loggedin(rv$token)) {
       shinyjs::hide("ownCrom")
+      shinyjs::hide("ownCromwell")
     }
   })
 
