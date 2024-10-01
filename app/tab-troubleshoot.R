@@ -1,29 +1,29 @@
 tab_troublehsoot <- nav_panel(NULL,
-  card(
-    class = "border border-primary",
-    max_height = 300,
-    card_header(h2("Abort a Workflow")),
-    card_body(
-      fillable = FALSE,
-      p("Aborting a workflow cannot be undone and can take some time to fully stop all jobs submitted in complex or highly parallelized workflows."),
-      textInput(
-        inputId = "abortWorkflowID",
-        label = "Workflow id to abort:",
-        value = "",
-        placeholder = "577b9aa4-b26b-4fd6-9f17-7fb33780bbd0",
-        width = "25%"
-      ),
-      actionButton(
-        inputId = "abortWorkflow",
-        class = "btn-sm",
-        label = "Abort Workflow",
-        icon = icon("thumbs-down"),
-        width = "250px"
-      ),
-      actionButton("resetAbort", "Reset", class = "btn-sm", width = "250px")
-    ),
-    verbatimTextOutput(outputId = "abortResult")
-  ),
+  # card(
+  #   class = "border border-primary",
+  #   max_height = 300,
+  #   card_header(h2("Abort a Workflow")),
+  #   card_body(
+  #     fillable = FALSE,
+  #     p("Aborting a workflow cannot be undone and can take some time to fully stop all jobs submitted in complex or highly parallelized workflows."),
+  #     textInput(
+  #       inputId = "abortWorkflowID",
+  #       label = "Workflow id to abort:",
+  #       value = "",
+  #       placeholder = "577b9aa4-b26b-4fd6-9f17-7fb33780bbd0",
+  #       width = "25%"
+  #     ),
+  #     actionButton(
+  #       inputId = "abortWorkflow",
+  #       class = "btn-sm",
+  #       label = "Abort Workflow",
+  #       icon = icon("thumbs-down"),
+  #       width = "250px"
+  #     ),
+  #     actionButton("resetAbort", "Reset", class = "btn-sm", width = "250px")
+  #   ),
+  #   verbatimTextOutput(outputId = "abortResult")
+  # ),
   card(
     class = "border border-primary",
     full_screen = TRUE,

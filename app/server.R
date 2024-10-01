@@ -493,37 +493,7 @@ server <- function(input, output, session) {
     output$submissionResult <- renderText({})
   })
 
-
-
   ###### Troubleshoot tab ######
-  ## Abort a workflow
-  input_abortWorkflowID <- reactive({
-    reactiveInput(rv_file$abortWorkflowID_state, input$abortWorkflowID)
-  })
-  observeEvent(input$abortWorkflowID, {
-    rv_file$abortWorkflowID_state <- 'loaded'
-  })
-
-  observeEvent(input$abortWorkflow, {
-    output$abortResult <- renderPrint({
-      validate_workflowid(isolate(input$abortWorkflowID))
-      stop_safe_loggedin_serverup(rv$url, rv$token, rv$own)
-      cromwell_abort(
-        workflow_id = isolate(input_abortWorkflowID()),
-        url = rv$url,
-        token = rv$token
-      )
-    })
-  })
-
-  ## reset abort
-  observeEvent(input$resetAbort, {
-    reset_inputs("abortWorkflowID")
-    rv_file$abortWorkflowID_state <- 'reset'
-    output$abortResult <- renderText({})
-  })
-
-
   ## Troubleshoot a workflow
   input_troubleWorkflowID <- reactive({
     reactiveInput(rv_file$troubleWorkflowID_state, input$troubleWorkflowID)
@@ -550,7 +520,6 @@ server <- function(input, output, session) {
     rv_file$troubleWorkflowID_state <- 'reset'
     output$troubleResult <- renderText({})
   })
-
 
 
   ############ CROMWELL Tracking Tab  ############
@@ -812,10 +781,21 @@ server <- function(input, output, session) {
             span(bsicons::bs_icon("clock-history"), w$workflowDuration)
           ),
           card_body(
+            class = "d-flex justify-content-between gap-1",
             fillable = FALSE,
-            span(bsicons::bs_icon("person-badge"), w$workflow_name),
-            span(bsicons::bs_icon("tag-fill"), w$Label),
-            span(bsicons::bs_icon("tag"), w$secondaryLabel)
+            div(
+              span(bsicons::bs_icon("person-badge"), w$workflow_name),
+              span(bsicons::bs_icon("tag-fill"), w$Label),
+              span(bsicons::bs_icon("tag"), w$secondaryLabel)
+            ),
+            actionButton(
+              inputId = "abortWorkflow",
+              label = "Abort Workflow",
+              icon = icon("eject"),
+              class = "btn-sm",
+              onclick = glue('Shiny.setInputValue(\"selectedWorkflowId\", \"{w$workflow_id}\")'),
+              disabled = !w$status %in% c("Submitted", "Running")
+            )
           )
         )
       )
@@ -839,6 +819,39 @@ server <- function(input, output, session) {
     }
     # return cards
     purrr::map(dat, "card")
+  })
+
+  ## Abort a workflow with the abort button on each card
+  observeEvent(input$abortWorkflow, {
+    validate_workflowid(isolate(input$selectedWorkflowId))
+    stop_safe_loggedin_serverup(rv$url, rv$token, rv$own)
+    aborted <- tryCatch(
+      {
+        cromwell_abort(
+          workflow_id = isolate(input$selectedWorkflowId),
+          url = rv$url,
+          token = rv$token
+        )
+      },
+      error = function(e) e
+    )
+    if (rlang::is_error(aborted)) {
+      print(glue("In Abort Workflow button: {aborted$message}"))
+      default_abort_msg <- "Try refreshing data"
+      msg <- aborted$message
+      if (grepl("404", msg)) {
+        msg <- "Not found"
+      } else {
+        msg <- default_abort_msg
+      }
+    } else {
+      msg <- "Workflow aborted!"
+    }
+    updateActionButton(
+      inputId = "abortWorkflow",
+      label = msg,
+      icon = icon("eject")
+    )
   })
 
   observeEvent(input$goToWorkflowDetails, {
