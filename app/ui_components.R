@@ -15,34 +15,6 @@ help_html <- helpText(
         <p>')
 )
 
-dropdown_user_name <- tags$li(
-  class = "dropdown",
-  style = "padding: 12px;",
-  textOutput("userName")
-)
-dropdown_own_cromwell <- tags$li(
-  class = "dropdown",
-  style = "padding: 8px;",
-  uiOutput("ownCromwell")
-)
-dropdown_loginout <- tags$li(
-  # class = "dropdown",
-  style = "padding: 8px;",
-  uiOutput("loggedInOut")
-)
-dropdown_help <- dropdownMenu(
-  type = "notifications",
-  badgeStatus = NULL,
-  icon = icon("circle-question", "fa-solid fa-lg"),
-  headerText = help_html
-)
-dropdown_src <- dropdownMenu(
-  type = "notifications",
-  badgeStatus = NULL,
-  icon = icon("github", "fa-solid fa-lg"),
-  headerText = helpText(htmlOutput("gitHtml"))
-)
-
 tooltip_style <- tags$style(
   HTML("
     .tooltip{
