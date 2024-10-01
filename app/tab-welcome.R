@@ -6,49 +6,42 @@ welcome_servers_box <- box(
   align = "left"
 )
 
-tab_welcome <- tabItem(
-  tabName = "welcome",
-  fluidRow(
-    column(
-      width = 12,
-      h2("What is this app?"),
-      shiny::includeMarkdown("about.md")
-    )
-  ),
-  fluidRow(
-    align = "left",
-    h2("Dashboard Tabs"),
-    uiOutput("toggleServersBox"),
-    box(
-      id = "boxValidate", title = "Validate", width = 6, solidHeader = TRUE, status = "primary", icon = icon("stethoscope"),
-      shiny::markdown("This tab allows you to:
-      - Validate a workflow you'd like to run"),
-      align = "left"
-    ),
-    box(
-      id = "boxSubmit", title = "Submit Jobs", width = 6, solidHeader = TRUE, status = "success", icon = icon("paper-plane"),
-      shiny::markdown("This tab allows you to:
-        - Run a workflow"),
-      align = "left"
-    )
-  ),
-  fluidRow(
-    align = "center",
-    box(
-      id = "boxTrack", title = "Track Jobs", width = 6, solidHeader = TRUE, status = "info", icon = icon("binoculars"),
-      shiny::markdown("This tab allows you to:
-      - Query your server database for the jobs run the most recent days (your choice how far back to go)
-      - See statuses of all your workflows
-      - Look within a workflow at the individual calls, failures and call caching results
-      - Download a list of the final workflow outputs for further processing"),
-      align = "left"
-    ),
-    box(
-      id = "boxTrouble", title = "Troubleshoot", width = 6, solidHeader = TRUE, status = "danger", icon = icon("wrench"),
-      shiny::markdown("This tab allows you to:
-      - Abort a workflow
-      - Troubleshoot the workflow itself by looking at the entire raw json of workflow metadata (it's especially helpful for complex workflows)"),
-      align = "left"
+ablank <- function(...) {
+  htmltools::a(..., target = "_blank")
+}
+
+tab_welcome <- nav_panel(
+  title = "Welcome",
+  card(
+    class = "align-items-center",
+    card_header(h1("PROOF")),
+    card_body(
+      class = "align-items-center",
+      h3("Run ", ablank("WDL", href = "https://openwdl.org/"), "workflows on the Fred Hutch cluster"),
+      p("This is a",
+        ablank("Shiny", href="https://shiny.posit.co/"),
+        "app being developed by the",
+        ablank("Fred Hutch Data Science Lab, DaSL", href="https://hutchdatascience.org/"),
+        "that simplifies user interactions with a",
+        ablank("Cromwell", href="https://cromwell.readthedocs.io/en/stable/"),
+        "server, an open source",
+        ablank("WDL", href="https://openwdl.org/"),
+        "workflow engine that can be used with the Fred Hutch scientific computing cluster. We are developing this
+        application alongside Fred Hutch oriented infrastructure with the intention to develop
+        open source resources to enable others to do the same."),
+      h3("To get started"),
+      tags$ol(
+        tags$li(tags$u("Log in to PROOF with your Fred Hutch credentials")),
+        tags$li(tags$u("Start your PROOF/Cromwell server")),
+        tags$li("(optional)", tags$u(" Validate your WDL")),
+        tags$li(tags$u("Submit your WDL"), " and 1-2 optional json input and parameter files"),
+        tags$li(tags$u("Track your workflow", " to see how long it takes and if it succeeds or fails")),
+        tags$li("Check", tags$u(" workflow details")),
+        tags$li("Check the", tags$u(" troubleshooting page to dig into error messages if needed"))
+      ),
+      h4("To learn more about PROOF and WDL head over to the ",
+        actionLink("linkToResourcesTab", "Resources page")
+      )
     )
   )
 )
