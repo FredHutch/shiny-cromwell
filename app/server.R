@@ -279,6 +279,14 @@ server <- function(input, output, session) {
             )
           )
 
+          # update records in cookies DB
+          user_to_db(
+            user = rv$user,
+            token = to_base64(rv$token),
+            url = to_base64(rv$url),
+            drop_existing = TRUE
+          )
+
           # reset loading spinner
           shinyFeedback::resetLoadingButton("beginCromwell")
 
@@ -312,6 +320,14 @@ server <- function(input, output, session) {
 
         # wait for server to go down
         proof_wait_for_down(rv$token)
+
+        # update records in cookies DB
+        user_to_db(
+          user = rv$user,
+          token = to_base64(rv$token),
+          url = "",
+          drop_existing = TRUE
+        )
 
         # reset loading spinner
         shinyFeedback::resetLoadingButton("deleteCromwell")
