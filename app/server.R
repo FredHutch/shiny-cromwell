@@ -826,6 +826,29 @@ server <- function(input, output, session) {
     purrr::map(dat, "card")
   })
 
+  observeEvent(input$trackingUpdate, {
+  # observeEvent(input$proof, {
+    # wnames <- as.character(workflowUpdate()$workflow_name) |>
+    #   purrr::discard(is.na) |>
+    #   unique()
+    stop_safe_loggedin_serverup(rv$url, rv$token, rv$own)
+    jobs <- cromwell_jobs(
+      days = 60,
+      url = rv$url,
+      token = rv$token
+    )
+    wnames <- as.character(jobs$workflow_name) |>
+      purrr::discard(is.na) |>
+      unique()
+    print(wnames)
+    updateSelectInput(
+      session = session,
+      inputId = "workName",
+      label = "Workflow name",
+      choices = wnames
+    )
+  })
+
   ## Abort a workflow with the abort button on each card
   observeEvent(input$abortWorkflow, {
     validate_workflowid(isolate(input$selectedWorkflowId))

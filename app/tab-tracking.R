@@ -19,11 +19,12 @@ sidebar_tracking <- sidebar(
     placement = "bottom"
   ),
   hr(),
-  textInput(
+  selectInput(
     inputId = "workName", 
     label = "Workflow name",
     value = "",
-    placeholder = "myCustomWorkflow",
+    choices = "",
+    multiple = FALSE
   ),
   selectInput(
     inputId = "workStatus",
