@@ -22,7 +22,6 @@ sidebar_tracking <- sidebar(
   selectInput(
     inputId = "workName", 
     label = "Workflow name",
-    value = "",
     choices = "",
     multiple = FALSE
   ),
