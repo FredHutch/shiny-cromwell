@@ -709,63 +709,46 @@ server <- function(input, output, session) {
     }
   })
 
-  ## Render some info boxes
+  ## Compute totals for each Cromwell status
   is_workflow_empty <- function() {
     NROW(workflowUpdate()) == 0 || NCOL(workflowUpdate()) == 1
   }
-  submittedText <- reactive({
+  status_text <- function(status) {
     if (is_workflow_empty()) {
       0
     } else {
-      workflowUpdate() %>%
-        filter(!is.na(workflow_id)) %>%
+      df <- workflowUpdate()
+      if (status == "Submitted") {
+        df <- filter(df, !is.na(workflow_id))
+      } else {
+        # !! needed to get the value of the variable
+        df <- filter(df, status == !!status)
+      }
+      df %>%
         summarize(n_distinct(workflow_id)) %>%
         pull(1)
     }
-  })
-  succeededText <- reactive({
-    if (is_workflow_empty()) {
-      0
-    } else {
-      workflowUpdate() %>%
-        filter(status == "Succeeded") %>%
-        summarise(n_distinct(workflow_id)) %>%
-        pull(1)
-    }
-  })
-  failedText <- reactive({
-    if (is_workflow_empty()) {
-      0
-    } else {
-      workflowUpdate() %>%
-        filter(status == "Failed") %>%
-        summarise(n_distinct(workflow_id)) %>%
-        pull(1)
-    }
-  })
-  runningText <- reactive({
-    if (is_workflow_empty()) {
-      0
-    } else {
-      workflowUpdate() %>%
-        filter(status == "Running") %>%
-        summarise(n_distinct(workflow_id)) %>%
-        pull(1)
-    }
-  })
+  }
+  submittedText <- reactive({ status_text(status = "Submitted") })
+  succeededText <- reactive({ status_text(status = "Succeeded") })
+  pendingText <- reactive({ status_text(status = "Pending") })
+  failedText <- reactive({ status_text(status = "Failed") })
+  runningText <- reactive({ status_text(status = "Running") })
+  abortedText <- reactive({ status_text(status = "Aborted") })
+
   output$trackingSummaryStats <- renderUI({
     tagList(
-      # tags$span(paste("Submitted: ", submittedText()), style = "color:#353a3f; font-weight:bold; display:inline"),
-      tags$span(paste("Submitted: ", submittedText()), class = "text-secondary fw-bold", style = "display:inline"),
+      tags$span(paste("Submitted: ", submittedText()), class = "text-primary fw-bold", style = "display:inline"),
       HTML("&nbsp;-&nbsp;"),
-      # tags$span(paste("Succeeded: ", succeededText()), style = "color:#3b872e; font-weight:bold; display:inline"),
+      tags$span(paste("Pending: ", pendingText()), class = "text-info fw-bold", style = "display:inline"),
+      HTML("&nbsp;-&nbsp;"),
+      tags$span(paste("Running: ", runningText()), class = "text-warning fw-bold", style = "display:inline"),
+      HTML("&nbsp;-&nbsp;"),
       tags$span(paste("Succeeded: ", succeededText()), class = "text-success fw-bold", style = "display:inline"),
       HTML("&nbsp;-&nbsp;"),
-      # tags$span(paste("Failed: ", failedText()), style = "color:#b12418; font-weight:bold; display:inline"),
       tags$span(paste("Failed: ", failedText()), class = "text-danger fw-bold", style = "display:inline"),
       HTML("&nbsp;-&nbsp;"),
-      # tags$span(paste("Running: ", runningText()), style = "color:#efbc4b; font-weight:bold; display:inline")
-      tags$span(paste("Running: ", runningText()), class = "text-warning fw-bold", style = "display:inline")
+      tags$span(paste("Aborted: ", abortedText()), class = "text-secondary fw-bold", style = "display:inline")
     )
   })
 

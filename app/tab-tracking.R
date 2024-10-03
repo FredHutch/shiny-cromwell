@@ -67,10 +67,9 @@ card_tracking_intro <- card(
     h3("Track your Workflows"),
     popover(
       bsicons::bs_icon("question-circle"),
-      p("Once you've submitted workflows, you can track the status of all the workflows you've submitted
-        in the specified time range by clicking `Update View`.  If you use PROOF a lot,
-        this and the filtering tools below can help you return only the workflows you're interested in monitoring,
-        making tracking and the application itself much faster. "),
+      p("Click",  strong("Refresh data"), " to update data on this page.
+        Use the filtering tools in the sidebar to help you return only
+        the workflows you're interested in monitoring."),
       title = "Help",
       placement = "left"
     ),
