@@ -5,8 +5,6 @@ library(glue)
 library(bslib)
 
 sidebar_tracking <- sidebar(
-  # numericInput("daysToShow", "Days of History to Display:",
-  #     min = 1, max = NA, value = 1, step = 1),
   actionButton(
     inputId = "trackingUpdate",
     label = "Refresh data",
@@ -19,11 +17,17 @@ sidebar_tracking <- sidebar(
     placement = "bottom"
   ),
   hr(),
-  textInput(
-    inputId = "workName", 
+  selectInput(
+    inputId = "workName",
     label = "Workflow name",
-    value = "",
-    placeholder = "myCustomWorkflow",
+    choices = "",
+    multiple = TRUE
+  ),
+  selectInput(
+    inputId = "labelName",
+    label = "Label name",
+    choices = "",
+    multiple = TRUE
   ),
   selectInput(
     inputId = "workStatus",
@@ -36,7 +40,7 @@ sidebar_tracking <- sidebar(
     multiple = TRUE,
   ),
   dateRangeInput(
-    inputId = "runs_date", 
+    inputId = "runs_date",
     label = "Date Range",
     start = "2024-01-01",
     end = lubridate::today(),
@@ -53,15 +57,9 @@ sidebar_tracking <- sidebar(
     multiple = FALSE
   ),
   actionButton("resetTrackingFilters", "Reset all filters", class = "btn-sm")
-  # actionButton(
-  #   inputId = "trackingUpdate",
-  #   label = "Refresh data",
-  #   icon = icon("refresh")
-  # )
 )
 
 card_tracking_intro <- card(
-  # max_height = "100px",
   fill = FALSE,
   card_header(
     h3("Track your Workflows"),
@@ -103,13 +101,7 @@ tab_tracking <- page_sidebar(
   navset_card_underline(
     nav_panel(
       title = "Workflow Runs",
-      # dateRangeInput("runs_date",
-      #   label = "Date Range",
-      #   start = "2024-01-01",
-      #   end = "2024-08-30"
-      # ),
       workflow_cards
-      # card_workflow_runs
     ),
     nav_panel(
       title = "Workflow Timing",
