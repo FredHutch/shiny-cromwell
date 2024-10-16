@@ -753,9 +753,9 @@ server <- function(input, output, session) {
   })
 
   # Data for cards out of workflowUpdate data
-  output$workflows_cards <- renderUI({
+  workflowCards <- reactive({
     dflst <- apply(workflowUpdate(), 1, as.list)
-    dat <- lapply(dflst, function(w) {
+    lapply(dflst, function(w) {
       list(
        data = w,
        card = card(
@@ -805,6 +805,10 @@ server <- function(input, output, session) {
         )
       )
     })
+  })
+
+  workflowCardsFiltered <- reactive({
+    dat <- workflowCards()
     # Filter by date
     dat <- Filter(\(w) {
       parse_date_tz(w$data$submission) >= parse_date_tz(paste(input$runs_date[1], "00:00:00")) &&
@@ -817,20 +821,29 @@ server <- function(input, output, session) {
       }, dat)
     }
     # Filter by workflow name
-    if (nzchar(input$workName)) {
+    print(input$workName)
+    if (!is.null(input$workName)) {
       dat <- Filter(\(w) {
-        w$data$workflow_name == input$workName
+        w$data$workflow_name %in% input$workName
       }, dat)
     }
-    # return cards
-    purrr::map(dat, "card")
+    # Filter by labels
+    print(input$labelName)
+    if (!is.null(input$labelName)) {
+      dat <- Filter(\(w) {
+        w$data$Label %in% input$labelName ||
+          w$data$secondaryLabel %in% input$labelName
+      }, dat)
+    }
+    return(dat)
   })
 
-  observeEvent(input$trackingUpdate, {
-  # observeEvent(input$proof, {
-    # wnames <- as.character(workflowUpdate()$workflow_name) |>
-    #   purrr::discard(is.na) |>
-    #   unique()
+  output$workflows_cards <- renderUI({
+    purrr::map(workflowCardsFiltered(), "card")
+  })
+
+  # Tracking page filters: Workflow name - initial
+  observeEvent(input$proof, {
     stop_safe_loggedin_serverup(rv$url, rv$token, rv$own)
     jobs <- cromwell_jobs(
       days = 60,
@@ -846,6 +859,20 @@ server <- function(input, output, session) {
       inputId = "workName",
       label = "Workflow name",
       choices = wnames
+    )
+  })
+
+
+  # Tracking page filters: Workflow labels - initial
+  observeEvent(input$proof, {
+    df <- workflowUpdate()
+    labels <- unique(c(df$Label, df$secondaryLabel))
+    print(labels)
+    updateSelectInput(
+      session = session,
+      inputId = "labelName",
+      label = "Label name",
+      choices = labels
     )
   })
 
