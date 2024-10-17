@@ -1,5 +1,8 @@
 library(memoise)
 library(bsicons)
+library(parsedate)
+library(uuid)
+library(rclipboard)
 
 # coerce dates to PT from UTC
 as_pt <- function(x) {
@@ -78,11 +81,6 @@ make_wdlbtn <- function(workflow_id) {
       onclick = 'Shiny.setInputValue(\"wdlview_btn\", this.id, {priority: \"event\"})'
     )
   )
-}
-
-abbreviate <- function(x, last = 100) {
-  if (nchar(x) < 100) return(x)
-  paste0(substring(x, 1, last), " ...")
 }
 
 wdl_to_file <- function(workflow_id, url, token) {
