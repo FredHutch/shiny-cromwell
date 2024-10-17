@@ -5,7 +5,6 @@ library(shinydashboard)
 library(shinydashboardPlus)
 library(shinyFeedback)
 library(shinyWidgets)
-library(shinyvalidate)
 library(shinylogs)
 
 library(DT)
@@ -20,21 +19,16 @@ library(dplyr)
 library(tibble)
 library(magrittr)
 
-library(uuid)
 library(httr)
 
 library(proofr)
 library(rcromwell)
 
-library(rclipboard)
-
 library(cookies)
 library(listviewer)
 
-library(parsedate)
 library(ids)
 
-source("sidebar.R")
 source("modals.R")
 source("proof.R")
 source("buttons.R")
@@ -51,15 +45,15 @@ FOCUS_ID <- 1
 SHINY_LOGGING <- as.logical(Sys.getenv("SHINY_LOG", FALSE))
 
 # FIXME: maybe remove later, was running into some timeouts during testing
-proof_timeout(sec = PROOF_TIMEOUT)
+proofr::proof_timeout(sec = PROOF_TIMEOUT)
 
 # sanitize errors - note that some actual errors will still happen
 options(shiny.sanitize.errors = SANITIZE_ERRORS)
 
-myCols <- brewer.pal(6, "RdYlBu")
+myCols <- RColorBrewer::brewer.pal(6, "RdYlBu")
 
 server <- function(input, output, session) {
-  if (SHINY_LOGGING) track_usage(storage_mode = store_null())
+  if (SHINY_LOGGING) shinylogs::track_usage(storage_mode = shinylogs::store_null())
 
   session$allowReconnect(TRUE)
 
@@ -129,14 +123,6 @@ server <- function(input, output, session) {
     } else {
       updateBox("boxValidate", action = "update", options = list(width = 6))
       updateBox("boxSubmit", action = "update", options = list(width = 6))
-    }
-  })
-
-  output$uiSideBar <- renderMenu({
-    if (nzchar(rv$token)) {
-      proofSidebar()
-    } else {
-      nonProofSidebar()
     }
   })
 
@@ -548,23 +534,6 @@ server <- function(input, output, session) {
 
   workflowUpdate <- eventReactive(input$trackingUpdate, {
       stop_safe_loggedin_serverup(rv$url, rv$token, rv$own)
-      # if (input$workName == "") {
-      #   cromTable <- cromwell_jobs(
-      #     days = input$daysToShow,
-      #     days = 60,
-      #     workflow_status = input$workStatus,
-      #     url = rv$url,
-      #     token = rv$token
-      #   )
-      # } else {
-      #   cromTable <- cromwell_jobs(
-      #     days = input$daysToShow,
-      #     workflow_status = input$workStatus,
-      #     workflow_name = input$workName,
-      #     url = rv$url,
-      #     token = rv$token
-      #   )
-      # }
 
       cromTable <- cromwell_jobs(
         days = 60,
@@ -675,22 +644,6 @@ server <- function(input, output, session) {
   observeEvent(input$linkToTrackingTab_from_mermaid, {
     nav_select("proof", "Track workflows")
   })
-
-  callDurationUpdate <- eventReactive(input$trackingUpdate,
-    {
-      stop_safe_loggedin_serverup(rv$url, rv$token, rv$own)
-      if (nrow(workflowUpdate()) == 1 & is.na(workflowUpdate()$workflow_id[1])) {
-        callDuration <- data.frame("noCalls" = "No workflows with calls were submitted, please choose a different time period. ")
-      } else {
-        callDuration <- purrr::map_dfr(workflowUpdate()$workflow_id, cromwell_call) %>%
-          dplyr::select(workflow_id, callName, executionStatus, callDuration, jobId)
-      }
-
-      callDuration
-    },
-    ignoreNULL = TRUE
-  )
-
 
   output$workflowDuration <- renderPlot({
     if ("workflow_name" %in% colnames(workflowUpdate())) {
@@ -1026,55 +979,6 @@ server <- function(input, output, session) {
     ignoreNULL = TRUE
   )
 
-  output$workflowTiming <- renderPlot({
-    if ("callName" %in% colnames(callsUpdate())) {
-      print("in render plot ...")
-      ggplot(callsUpdate(), aes(x = as.factor(callName), y = callDuration)) +
-        geom_point(aes(color = executionStatus), size = 3) + # coord_flip() +
-        theme_minimal() +
-        theme(axis.text.x = element_text(hjust = 1, angle = 25)) +
-        scale_color_manual(values = myCols) +
-        ylab("Call Duration (mins)") +
-        xlab("Call Name")
-    } else {
-      ggplot() +
-        geom_blank()
-    }
-  })
-
-  ## Render some info boxes
-  output$pendingBatch <- renderValueBox({
-    infoBox(
-      "Pending",
-      value = nrow(callsUpdate() %>% filter(executionStatus %in% c("Starting", "QueuedInCromwell"))),
-      icon = icon("clock"),
-      color = "yellow", width = 6
-    )
-  })
-  output$runningBatch <- renderInfoBox({
-    infoBox(
-      "Running",
-      value = nrow(callsUpdate() %>% filter(executionStatus == "Running")),
-      icon = icon("sync"),
-      color = "teal", width = 6
-    )
-  })
-  output$failedBatch <- renderInfoBox({
-    infoBox(
-      "Failed",
-      value = nrow(callsUpdate() %>% filter(executionStatus == "Failed")),
-      icon = icon("thumbs-down"),
-      color = "maroon", width = 6
-    )
-  })
-  output$succeededBatch <- renderInfoBox({
-    infoBox(
-      "Succeeded",
-      value = nrow(callsUpdate() %>% filter(executionStatus == "Done")),
-      icon = icon("thumbs-up"),
-      color = "green", width = 6
-    )
-  })
   ## Jobs Lists
   output$tasklistBatch <- renderDT({
     datatable(
@@ -1186,7 +1090,6 @@ server <- function(input, output, session) {
     rownames = FALSE
   )
 
-
   output$downloadCache <- downloadHandler(
     filename = function() {
       paste0(unique(cacheUpdate()$workflow_id), "-callCachingData.csv")
@@ -1195,31 +1098,6 @@ server <- function(input, output, session) {
       write.csv(cacheUpdate(), file, row.names = FALSE)
     }
   )
-  ## Render some info boxes
-  output$cacheHits <- renderInfoBox({
-    infoBox(
-      "Cache Hits",
-      value = if ("callCaching.hit" %in% colnames(cacheUpdate())) {
-        nrow(cacheUpdate() %>% filter(as.logical(callCaching.hit)))
-      } else {
-        0
-      },
-      icon = icon("grin-tongue"),
-      color = "aqua", width = 6
-    )
-  })
-  output$cacheMisses <- renderInfoBox({
-    infoBox(
-      "Cache Misses",
-      value = if ("callCaching.hit" %in% colnames(cacheUpdate())) {
-        nrow(cacheUpdate() %>% filter(!as.logical(callCaching.hit)))
-      } else {
-        0
-      },
-      icon = icon("meh"),
-      color = "orange", width = 6
-    )
-  })
 
   ## Outputs Data
   ### Go get the output data for the selected workflow

@@ -26,7 +26,6 @@ source("tab-tracking.R")
 source("tab-workflow_details.R")
 source("tab-troubleshoot.R")
 source("tab-details.R")
-source("sidebar.R")
 
 ui <- cookies::add_cookie_handlers(
   page_navbar(
@@ -37,7 +36,7 @@ ui <- cookies::add_cookie_handlers(
     tab_welcome,
     nav_panel(title = "Resources",
       card(
-        shiny::includeMarkdown("about2.md")
+        shiny::includeMarkdown("about.md")
       )
     ),
     nav_panel(title = "Server", tab_servers),
@@ -50,11 +49,6 @@ ui <- cookies::add_cookie_handlers(
       )
     ),
     nav_panel(title = "Troubleshoot", tab_troublehsoot, shinyjs::useShinyjs()),
-    # nav_panel(title = "Visualize", tab_details,
-    #   tags$head(
-    #     tags$script(src = "https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js")
-    #   )
-    # ),
     nav_spacer(),
     nav_item(
       uiOutput("userName")
