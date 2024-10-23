@@ -786,6 +786,11 @@ server <- function(input, output, session) {
           w$data$secondaryLabel %in% input$labelName
       }, dat)
     }
+    sort_dates <- purrr::map_vec(dat, \(card) parse_date_tz(card$data$submission))
+    dat <- switch(input$sortTracking,
+      "Newest to oldest" = dat[order(sort_dates, decreasing = TRUE)],
+      "Oldest to newest" = dat[order(sort_dates)]
+    )
     return(dat)
   })
 
