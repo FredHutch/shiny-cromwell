@@ -774,20 +774,23 @@ server <- function(input, output, session) {
       }, dat)
     }
     # Filter by workflow name
-    print(input$workName)
     if (!is.null(input$workName)) {
       dat <- Filter(\(w) {
         w$data$workflow_name %in% input$workName
       }, dat)
     }
     # Filter by labels
-    print(input$labelName)
     if (!is.null(input$labelName)) {
       dat <- Filter(\(w) {
         w$data$Label %in% input$labelName ||
           w$data$secondaryLabel %in% input$labelName
       }, dat)
     }
+    sort_dates <- purrr::map_vec(dat, \(card) parse_date_tz(card$data$submission))
+    dat <- switch(input$sortTracking,
+      "Newest to oldest" = dat[order(sort_dates, decreasing = TRUE)],
+      "Oldest to newest" = dat[order(sort_dates)]
+    )
     return(dat)
   })
 
@@ -796,7 +799,7 @@ server <- function(input, output, session) {
   })
 
   # Tracking page filters: Workflow name - initial
-  observeEvent(input$proof, {
+  observeEvent(workflowCards(), {
     stop_safe_loggedin_serverup(rv$url, rv$token, rv$own)
     jobs <- cromwell_jobs(
       days = 60,
@@ -806,7 +809,6 @@ server <- function(input, output, session) {
     wnames <- as.character(jobs$workflow_name) |>
       purrr::discard(is.na) |>
       unique()
-    print(wnames)
     updateSelectInput(
       session = session,
       inputId = "workName",
@@ -817,10 +819,9 @@ server <- function(input, output, session) {
 
 
   # Tracking page filters: Workflow labels - initial
-  observeEvent(input$proof, {
+  observeEvent(workflowCards(), {
     df <- workflowUpdate()
     labels <- unique(c(df$Label, df$secondaryLabel))
-    print(labels)
     updateSelectInput(
       session = session,
       inputId = "labelName",
@@ -870,6 +871,7 @@ server <- function(input, output, session) {
   ## reset trouble
   observeEvent(input$resetTrackingFilters, {
     reset_inputs("workName")
+    reset_inputs("labelName")
     reset_inputs("workStatus")
     reset_inputs("runs_date")
   })
