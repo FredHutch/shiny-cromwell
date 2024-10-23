@@ -17,11 +17,17 @@ sidebar_tracking <- sidebar(
     placement = "bottom"
   ),
   hr(),
-  textInput(
-    inputId = "workName", 
+  selectInput(
+    inputId = "workName",
     label = "Workflow name",
-    value = "",
-    placeholder = "myCustomWorkflow",
+    choices = "",
+    multiple = TRUE
+  ),
+  selectInput(
+    inputId = "labelName",
+    label = "Label name",
+    choices = "",
+    multiple = TRUE
   ),
   selectInput(
     inputId = "workStatus",
@@ -34,7 +40,7 @@ sidebar_tracking <- sidebar(
     multiple = TRUE,
   ),
   dateRangeInput(
-    inputId = "runs_date", 
+    inputId = "runs_date",
     label = "Date Range",
     start = "2024-01-01",
     end = lubridate::today(),
