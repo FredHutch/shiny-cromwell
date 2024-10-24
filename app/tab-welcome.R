@@ -10,7 +10,7 @@ tab_welcome <- nav_panel(
         h1("PROOF"),
         h4("Run WDL workflows on the Fred Hutch cluster")
       ),
-      p("This is a",
+      p("PROOF (Production Onramp for Optimization and Feasibility) is a",
         ablank("Shiny", href="https://shiny.posit.co/"),
         "app being developed by the",
         ablank("Fred Hutch Data Science Lab, DaSL", href="https://hutchdatascience.org/"),
