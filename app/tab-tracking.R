@@ -17,17 +17,11 @@ sidebar_tracking <- sidebar(
     placement = "bottom"
   ),
   hr(),
-  selectInput(
-    inputId = "workName",
+  textInput(
+    inputId = "workName", 
     label = "Workflow name",
-    choices = "",
-    multiple = TRUE
-  ),
-  selectInput(
-    inputId = "labelName",
-    label = "Label name",
-    choices = "",
-    multiple = TRUE
+    value = "",
+    placeholder = "myCustomWorkflow",
   ),
   selectInput(
     inputId = "workStatus",
@@ -40,16 +34,14 @@ sidebar_tracking <- sidebar(
     multiple = TRUE,
   ),
   dateRangeInput(
-    inputId = "runs_date",
+    inputId = "runs_date", 
     label = "Date Range",
     start = "2024-01-01",
     end = lubridate::today(),
-    min = "2024-01-01",
-    max = lubridate::today(),
     format = "m/d/yy"
   ),
   selectInput(
-    inputId = "sortTracking",
+    inputId = "",
     label = "Sort",
     choices = c(
       "Newest to oldest",

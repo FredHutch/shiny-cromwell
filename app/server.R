@@ -706,9 +706,9 @@ server <- function(input, output, session) {
   })
 
   # Data for cards out of workflowUpdate data
-  workflowCards <- reactive({
+  output$workflows_cards <- renderUI({
     dflst <- apply(workflowUpdate(), 1, as.list)
-    lapply(dflst, function(w) {
+    dat <- lapply(dflst, function(w) {
       list(
        data = w,
        card = card(
@@ -758,10 +758,6 @@ server <- function(input, output, session) {
         )
       )
     })
-  })
-
-  workflowCardsFiltered <- reactive({
-    dat <- workflowCards()
     # Filter by date
     dat <- Filter(\(w) {
       parse_date_tz(w$data$submission) >= parse_date_tz(paste(input$runs_date[1], "00:00:00")) &&
@@ -774,60 +770,13 @@ server <- function(input, output, session) {
       }, dat)
     }
     # Filter by workflow name
-    if (!is.null(input$workName)) {
+    if (nzchar(input$workName)) {
       dat <- Filter(\(w) {
-        w$data$workflow_name %in% input$workName
+        w$data$workflow_name == input$workName
       }, dat)
     }
-    # Filter by labels
-    if (!is.null(input$labelName)) {
-      dat <- Filter(\(w) {
-        w$data$Label %in% input$labelName ||
-          w$data$secondaryLabel %in% input$labelName
-      }, dat)
-    }
-    sort_dates <- purrr::map_vec(dat, \(card) parse_date_tz(card$data$submission))
-    dat <- switch(input$sortTracking,
-      "Newest to oldest" = dat[order(sort_dates, decreasing = TRUE)],
-      "Oldest to newest" = dat[order(sort_dates)]
-    )
-    return(dat)
-  })
-
-  output$workflows_cards <- renderUI({
-    purrr::map(workflowCardsFiltered(), "card")
-  })
-
-  # Tracking page filters: Workflow name - initial
-  observeEvent(workflowCards(), {
-    stop_safe_loggedin_serverup(rv$url, rv$token, rv$own)
-    jobs <- cromwell_jobs(
-      days = 60,
-      url = rv$url,
-      token = rv$token
-    )
-    wnames <- as.character(jobs$workflow_name) |>
-      purrr::discard(is.na) |>
-      unique()
-    updateSelectInput(
-      session = session,
-      inputId = "workName",
-      label = "Workflow name",
-      choices = wnames
-    )
-  })
-
-
-  # Tracking page filters: Workflow labels - initial
-  observeEvent(workflowCards(), {
-    df <- workflowUpdate()
-    labels <- unique(c(df$Label, df$secondaryLabel))
-    updateSelectInput(
-      session = session,
-      inputId = "labelName",
-      label = "Label name",
-      choices = labels
-    )
+    # return cards
+    purrr::map(dat, "card")
   })
 
   ## Abort a workflow with the abort button on each card
@@ -871,7 +820,6 @@ server <- function(input, output, session) {
   ## reset trouble
   observeEvent(input$resetTrackingFilters, {
     reset_inputs("workName")
-    reset_inputs("labelName")
     reset_inputs("workStatus")
     reset_inputs("runs_date")
   })
