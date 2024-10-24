@@ -30,15 +30,19 @@ source("tab-details.R")
 ui <- cookies::add_cookie_handlers(
   page_navbar(
     id = "proof",
-    title = "PROOF",
-    bg = "#0062cc",
+    title = tags$span(
+      tags$img(
+        src = "fred-hutch.png",
+        width = "96px",
+        height = "auto",
+        class = "me-3",
+        alt = "Fred Hutch logo"
+      ),
+      ""
+    ),
+    bg = "#000000",
     underline = TRUE,
     tab_welcome,
-    nav_panel(title = "Resources",
-      card(
-        shiny::includeMarkdown("about.md")
-      )
-    ),
     nav_panel(title = "Server", tab_servers),
     nav_panel(title = "Validate", tab_validate, shinyjs::useShinyjs()),
     nav_panel(title = "Submit", tab_submission, shinyjs::useShinyjs()),
@@ -49,6 +53,11 @@ ui <- cookies::add_cookie_handlers(
       )
     ),
     nav_panel(title = "Troubleshoot", tab_troublehsoot, shinyjs::useShinyjs()),
+    nav_panel(title = "Help",
+      card(
+        shiny::includeMarkdown("about.md")
+      )
+    ),
     nav_spacer(),
     nav_item(
       uiOutput("userName")

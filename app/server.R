@@ -633,8 +633,8 @@ server <- function(input, output, session) {
   observeEvent(input$linkToTroubleshootingTab, {
     nav_select("proof", "Troubleshoot")
   })
-  observeEvent(input$linkToResourcesTab, {
-    nav_select("proof", "Resources")
+  observeEvent(input$linkToHelpTab, {
+    nav_select("proof", "Help")
   })
 
   ### go back to tracking tab from details tab

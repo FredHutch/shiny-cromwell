@@ -3,7 +3,7 @@ ablank <- function(...) {
 }
 
 tab_welcome <- nav_panel(
-  title = "Welcome",
+  title = "PROOF",
   card(
     card_body(
       div(
@@ -46,7 +46,7 @@ tab_welcome <- nav_panel(
         )
       ),
       h4("To learn more about PROOF and WDL head over to the ",
-        actionLink("linkToResourcesTab", "Resources page")
+        actionLink("linkToHelpTab", "Help page")
       )
     )
   )
