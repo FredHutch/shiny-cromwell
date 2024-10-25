@@ -55,7 +55,11 @@ ui <- cookies::add_cookie_handlers(
     nav_panel(title = "Troubleshoot", tab_troublehsoot, shinyjs::useShinyjs()),
     nav_panel(title = "Help",
       card(
-        shiny::includeMarkdown("about.md")
+        shiny::includeMarkdown("about.md"),
+        card_body(
+          h1("App details"),
+          htmlOutput("gitHtml")
+        )
       )
     ),
     nav_spacer(),

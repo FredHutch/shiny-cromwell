@@ -57,14 +57,35 @@ server <- function(input, output, session) {
 
   session$allowReconnect(TRUE)
 
-  # Upper right github icon for source code
-  output$gitHtml <- renderText({
-    glue('<b>Code</b>: <a href="https://github.com/FredHutch/shiny-cromwell/tree/{COMMIT_BRANCH}" target="_blank">FredHutch/shiny-cromwell</a>
-                    <br>
-                    <b>Built from</b>: <a href="https://github.com/FredHutch/shiny-cromwell/tree/{COMMIT_SHA}" target="_blank">{substring(COMMIT_SHORT_SHA, 1, 7)}</a>
-                    <br>
-                    <b>Last built on</b>: {stamp("Mar 1, 1999", quiet = TRUE)(ymd_hms(COMMIT_TIMESTAMP))}
-          ')
+  # For the Help page
+  output$gitHtml <- renderUI({
+    div(
+      tags$span(
+        tags$b("Code:"),
+        tags$a(
+          "FredHutch/shiny-cromwell",
+          href = glue("https://github.com/FredHutch/shiny-cromwell/tree/{COMMIT_BRANCH}"),
+          target="_blank"
+        )
+      ),
+      tags$br(),
+      tags$span(
+        tags$b("Built from:"),
+        tags$a(
+          glue("{substring(COMMIT_SHORT_SHA, 1, 7)}"),
+          href = glue("https://github.com/FredHutch/shiny-cromwell/tree/{COMMIT_SHA}"),
+          target="_blank"
+        )
+      ),
+      tags$br(),
+      tags$span(
+        tags$b('Last built on:', style = "display:inline;"),
+        tags$p(
+          glue('Last built on: {stamp("Mar 1, 1999", quiet = TRUE)(ymd_hms(COMMIT_TIMESTAMP))}'),
+          style = "display:inline;"
+        )
+      )
+    )
   })
 
   rv <- reactiveValues(token = "", url = "", validateFilepath="", own = FALSE, user = "")
