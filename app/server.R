@@ -750,7 +750,11 @@ server <- function(input, output, session) {
           id = glue("job_card_{w$workflow_id}"),
           class = "border border-secondary",
           card_header(
-            w$workflow_id,
+            div(
+              span(bsicons::bs_icon("person-badge"), w$workflow_name),
+              span("(", bsicons::bs_icon("tag-fill"), w$Label),
+              span(bsicons::bs_icon("tag"), w$secondaryLabel, ")")
+            ),
             actionButton(
               "goToWorkflowDetails",
               label = "Workflow Details",
@@ -776,11 +780,7 @@ server <- function(input, output, session) {
           card_body(
             class = "d-flex justify-content-between gap-1",
             fillable = FALSE,
-            div(
-              span(bsicons::bs_icon("person-badge"), w$workflow_name),
-              span(bsicons::bs_icon("tag-fill"), w$Label),
-              span(bsicons::bs_icon("tag"), w$secondaryLabel)
-            ),
+            w$workflow_id,
             actionButton(
               inputId = "abortWorkflow",
               label = "Abort Workflow",
