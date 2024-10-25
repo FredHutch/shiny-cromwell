@@ -28,6 +28,7 @@ library(cookies)
 library(listviewer)
 
 library(ids)
+library(shinycssloaders)
 
 source("modals.R")
 source("proof.R")
@@ -355,7 +356,7 @@ server <- function(input, output, session) {
   cromwellProofStatusData <- reactivePoll(2000, session,
     checkFunc = function() {
       if (!is.null(input$tabs)) {
-        if (input$tabs != "cromwell") return(NULL)
+        if (input$proof != "Server") return(NULL)
       }
       if (proof_loggedin(rv$token)) {
         tmp <- proof_status(token = rv$token)
@@ -369,7 +370,7 @@ server <- function(input, output, session) {
     }
   )
 
-  proofStatusTextGenerator <- function(name, list_index, tip = "", value_if_null = NULL) {
+  proofStatusTextGenerator <- function(dat, name, list_index, tip = "", value_if_null = NULL) {
     renderUI({
       if (proof_loggedin(rv$token)) {
         if (nzchar(tip)) {
@@ -381,7 +382,7 @@ server <- function(input, output, session) {
             ),
             HTML(paste0(
               strong(glue("{name}: ")),
-              purrr::flatten(cromwellProofStatusData())[[list_index]] %||% value_if_null
+              purrr::flatten(dat)[[list_index]] %||% value_if_null
             ))
           )
         } else {
@@ -389,7 +390,7 @@ server <- function(input, output, session) {
             icon("question-circle"),
             HTML(paste0(
               strong(glue("{name}: ")),
-              purrr::flatten(cromwellProofStatusData())[[list_index]] %||% value_if_null
+              purrr::flatten(dat)[[list_index]] %||% value_if_null
             ))
           )
         }
@@ -397,18 +398,23 @@ server <- function(input, output, session) {
     })
   }
 
-  output$proofStatusJobStatus <- proofStatusTextGenerator("Job status", "jobStatus", "PROOF server job status", value_if_null = "Stopped")
-  output$proofStatusUrlStr <- proofStatusTextGenerator("Cromwell URL", "cromwellUrl")
-  output$proofStatusWorkflowLogDir <- proofStatusTextGenerator("Workflow log directory", "WORKFLOWLOGDIR")
-  output$proofStatusScratchDir <- proofStatusTextGenerator("Scratch directory", "SCRATCHDIR", "Working directory on Scratch")
-  output$proofStatusSlurmJobId <- proofStatusTextGenerator("Slurm job ID", "SLURM_JOB_ID", "PROOF server SLURM job id")
-  output$proofStatusCromwellDir <- proofStatusTextGenerator("Cromwell directory", "CROMWELL_DIR")
-  output$proofStatusServerLogDir <- proofStatusTextGenerator("Server log directory", "SERVERLOGDIR", "PROOF server log directory")
-  output$proofStatusSingularityCacheDir <- proofStatusTextGenerator("Singlarity cache directory", "SINGULARITYCACHEDIR")
-  output$proofStatusServerTime <- proofStatusTextGenerator("Server time", "SERVERTIME", "PROOF server job lifetime")
-  output$proofStatusUseAWS <- proofStatusTextGenerator("Use AWS?", "USE_AWS", "AWS credentials found?")
-  output$proofStatusSlurmJobAccount <- proofStatusTextGenerator("Slurm job account", "SLURM_JOB_ACCOUNT", "Designated Gizmo PI account")
-  output$proofStatusServerStartTime <- proofStatusTextGenerator("PROOF Server Start Time", "jobStartTime")
+  observe({
+    showPageSpinner(type = 5, caption = "Loading changed server details ...")
+    dat <- cromwellProofStatusData()
+    output$proofStatusJobStatus <- proofStatusTextGenerator(dat, "Job status", "jobStatus", "PROOF server job status", value_if_null = "Stopped")
+    output$proofStatusUrlStr <- proofStatusTextGenerator(dat, "Cromwell URL", "cromwellUrl")
+    output$proofStatusWorkflowLogDir <- proofStatusTextGenerator(dat, "Workflow log directory", "WORKFLOWLOGDIR")
+    output$proofStatusScratchDir <- proofStatusTextGenerator(dat, "Scratch directory", "SCRATCHDIR", "Working directory on Scratch")
+    output$proofStatusSlurmJobId <- proofStatusTextGenerator(dat, "Slurm job ID", "SLURM_JOB_ID", "PROOF server SLURM job id")
+    output$proofStatusCromwellDir <- proofStatusTextGenerator(dat, "Cromwell directory", "CROMWELL_DIR")
+    output$proofStatusServerLogDir <- proofStatusTextGenerator(dat, "Server log directory", "SERVERLOGDIR", "PROOF server log directory")
+    output$proofStatusSingularityCacheDir <- proofStatusTextGenerator(dat, "Singlarity cache directory", "SINGULARITYCACHEDIR")
+    output$proofStatusServerTime <- proofStatusTextGenerator(dat, "Server time", "SERVERTIME", "PROOF server job lifetime")
+    output$proofStatusUseAWS <- proofStatusTextGenerator(dat, "Use AWS?", "USE_AWS", "AWS credentials found?")
+    output$proofStatusSlurmJobAccount <- proofStatusTextGenerator(dat, "Slurm job account", "SLURM_JOB_ACCOUNT", "Designated Gizmo PI account")
+    output$proofStatusServerStartTime <- proofStatusTextGenerator(dat, "PROOF Server Start Time", "jobStartTime")
+    hidePageSpinner()
+  })
 
   ###### Cromwell Validate tab ######
   ## Validate a possible workflow
