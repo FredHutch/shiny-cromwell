@@ -308,6 +308,12 @@ server <- function(input, output, session) {
     }
   })
 
+  observe({
+    shinyjs::toggleState("cromwellStart",
+      cromwellProofStatusData()$jobStatus != "RUNNING"
+    )
+  })
+
   # Disable or enable the Delete button for deleting proof server
   observeEvent(input$cromwellDelete, {
     showModal(verifyCromwellDeleteModal())
@@ -515,6 +521,12 @@ server <- function(input, output, session) {
     })
   })
 
+  observe({
+    shinyjs::toggleState("submitWorkflow",
+      !rlang::is_empty(input$wdlFile$datapath)
+    )
+  })
+
   # reset
   observeEvent(input$resetSubmission, {
     reset_inputs(c(
@@ -526,6 +538,7 @@ server <- function(input, output, session) {
     rv_file$input2JSON_state <- 'reset'
     rv_file$workOptions_state <- 'reset'
     output$submissionResult <- renderText({})
+    shinyjs::disable("submitWorkflow")
   })
 
   ###### Troubleshoot tab ######

@@ -45,7 +45,14 @@ ui <- cookies::add_cookie_handlers(
     tab_welcome,
     nav_panel(title = "Server", tab_servers),
     nav_panel(title = "Validate", tab_validate, shinyjs::useShinyjs()),
-    nav_panel(title = "Submit", tab_submission, shinyjs::useShinyjs()),
+    nav_panel(title = "Submit", tab_submission, shinyjs::useShinyjs(),
+      tags$style("
+        .btn.btn-success:disabled {
+          background-color: #d0d0d0;
+          opacity: 1.0;
+        }"
+      ),
+    ),
     nav_panel(title = "Track workflows", tab_tracking, rclipboard::rclipboardSetup()),
     nav_panel(title = "Workflow Details", tab_workflow_details,
       tags$head(

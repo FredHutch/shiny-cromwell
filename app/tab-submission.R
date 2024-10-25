@@ -29,7 +29,11 @@ tab_submission <- card(
         inputId = "submitWorkflow",
         label = "Submit Workflow",
         icon = icon("paper-plane"),
-        width = "250px"
+        width = "250px",
+        class = "btn-success"
+      ),
+      card(
+        uiOutput(outputId = "submissionResult")
       ),
       actionButton(
         inputId = "resetSubmission",
@@ -53,9 +57,6 @@ tab_submission <- card(
           inputId = "workOptions", "Workflow Options JSON (optional):",
           accept = ".json"
         )
-      ),
-      card(
-        uiOutput(outputId = "submissionResult")
       )
     )
   )
