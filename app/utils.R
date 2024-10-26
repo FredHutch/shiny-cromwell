@@ -3,6 +3,58 @@ library(bsicons)
 library(parsedate)
 library(uuid)
 library(rclipboard)
+library(shinyFeedback)
+
+# exact copy from shiny:::validateIcon
+proofValidateIcon <- function (icon) {
+  if (is.null(icon) || identical(icon, character(0))) {
+    return(icon)
+  } else if (inherits(icon, "shiny.tag") && icon$name == "i") {
+    return(icon)
+  } else {
+    stop("Invalid icon. Use Shiny's 'icon()' function to generate a valid icon")
+  }
+}
+
+# copy from shinyFeedback::loadingButton adding ability to pass in:
+# - onclick (most importantly)
+# - icon (less important)
+proofLoadingButton <- function(inputId, label,
+  class = "btn btn-primary", style = "width: 150px;",
+  loadingLabel = "Loading...", loadingSpinner = "spinner",
+  loadingClass = NULL, loadingStyle = NULL, icon = NULL, ...) {
+
+  shiny::addResourcePath("shinyfeedback", system.file("assets",
+    package = "shinyFeedback"))
+  if (is.null(loadingClass)) {
+    loadingClass <- class
+  }
+  if (is.null(loadingStyle)) {
+    loadingStyle <- style
+  }
+  rOptions <- list(label = label, class = class, style = style,
+    loadingLabel = loadingLabel, loadingSpinner = loadingSpinner,
+    loadingClass = loadingClass, loadingStyle = loadingStyle)
+  jsonOptions <- jsonlite::toJSON(rOptions, auto_unbox = TRUE)
+  htmltools::span(
+    class = "sf-loading-button",
+    id = paste0("sf-loading-button-", inputId),
+    tags$button(
+      id = inputId,
+      class = class,
+      style = style,
+      list(proofValidateIcon(icon), label),
+      ...
+    ),
+    tags$head(
+      htmltools::singleton(fontawesome::fa_html_dependency()),
+      htmltools::singleton(
+        tags$script(src = "shinyfeedback/js/loadingbutton.js?version=1"),
+      ),
+      tags$script(sprintf("loadingButtons.create('%s', %s)", inputId, jsonOptions))
+    )
+  )
+}
 
 # coerce dates to PT from UTC
 as_pt <- function(x) {

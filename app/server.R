@@ -741,6 +741,10 @@ server <- function(input, output, session) {
   })
 
   # Data for cards out of workflowUpdate data
+  workflowDetailsId <- function(workflow_id) {
+    paste0("goToWorkflowDetails-", workflow_id)
+  }
+
   output$workflows_cards <- renderUI({
     dflst <- apply(workflowUpdate(), 1, as.list)
     dat <- lapply(dflst, function(w) {
@@ -755,17 +759,15 @@ server <- function(input, output, session) {
               span("(", bsicons::bs_icon("tag-fill"), w$Label),
               span(bsicons::bs_icon("tag"), w$secondaryLabel, ")")
             ),
-            actionButton(
-              "goToWorkflowDetails",
+            proofLoadingButton(
+              inputId = workflowDetailsId(w$workflow_id),
               label = "Workflow Details",
-              icon = icon("rectangle-list"),
-              class = "btn-secondary btn-sm",
+              class = "btn btn-secondary btn-sm",
               onclick = glue('Shiny.setInputValue(\"selectedWorkflowId\", \"{w$workflow_id}\");
                 Shiny.setInputValue(\"selectedWorkflowLabel\", \"{w$Label}\");
                 Shiny.setInputValue(\"selectedWorkflowSecLabel\", \"{w$secondaryLabel}\")')
             ),
             class = "d-flex justify-content-between gap-1",
-            # class = "bg-secondary"
           ),
           card_body(
             class = "d-flex align-items-left justify-content-between gap-1",
@@ -847,9 +849,19 @@ server <- function(input, output, session) {
     )
   })
 
-  observeEvent(input$goToWorkflowDetails, {
-    print(input$goToWorkflowDetails)
-    nav_select("proof", "Workflow Details")
+  reactive_buttons <- reactive({
+    button_ids <- names(input)
+    button_ids[grepl("goToWorkflowDetails", button_ids)]
+  })
+
+  observe({
+    matching_ids <- reactive_buttons()
+    lapply(matching_ids, function(id) {
+      observeEvent(input[[id]], {
+        nav_select("proof", "Workflow Details")
+        shinyFeedback::resetLoadingButton(id)
+      })
+    })
   })
 
   ## reset trouble
