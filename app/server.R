@@ -309,7 +309,7 @@ server <- function(input, output, session) {
 
   observe({
     shinyjs::toggleState("cromwellStart",
-      cromwellProofStatusData()$jobStatus != "RUNNING"
+      proof_status(token = rv$token)$jobStatus != "RUNNING"
     )
   })
 
