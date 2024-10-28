@@ -26,6 +26,7 @@ library(rcromwell)
 
 library(cookies)
 library(listviewer)
+library(rclipboard)
 
 library(ids)
 
@@ -745,9 +746,12 @@ server <- function(input, output, session) {
               inputId = workflowDetailsId(w$workflow_id),
               label = "Workflow Details",
               class = "btn btn-secondary btn-sm",
-              onclick = glue('Shiny.setInputValue(\"selectedWorkflowId\", \"{w$workflow_id}\");
+              onclick = glue('
+                Shiny.setInputValue(\"selectedWorkflowId\", \"{w$workflow_id}\");
+                Shiny.setInputValue(\"selectedWorkflowName\", \"{w$workflow_name}\");
                 Shiny.setInputValue(\"selectedWorkflowLabel\", \"{w$Label}\");
-                Shiny.setInputValue(\"selectedWorkflowSecLabel\", \"{w$secondaryLabel}\")')
+                Shiny.setInputValue(\"selectedWorkflowSecLabel\", \"{w$secondaryLabel}\")
+              ')
             ),
             class = "d-flex justify-content-between gap-1",
           ),
@@ -857,11 +861,27 @@ server <- function(input, output, session) {
     if (!is.null(input$selectedWorkflowId)) {
       htmltools::tagList(
         htmltools::tags$span(
-          h3("Workflow Specific Job Information", bsicons::bs_icon("caret-right"), paste(substring(input$selectedWorkflowId, 1, 13), " ...")),
+          h4(input$selectedWorkflowName, style = "display:inline"),
+          h5(
+            " (",
+            span(bsicons::bs_icon("tag-fill"), input$selectedWorkflowLabel),
+            span(bsicons::bs_icon("tag"), input$selectedWorkflowSecLabel),
+            ")",
+            style = "display:inline"
+          )
         ),
         htmltools::tags$div(
-          span(bsicons::bs_icon("tag-fill"), input$selectedWorkflowLabel),
-          span(bsicons::bs_icon("tag"), input$selectedWorkflowSecLabel)
+          rclipButton(
+            inputId = "clipbtn",
+            label = "",
+            clipText = input$selectedWorkflowId,
+            icon = icon("clipboard"),
+            tooltip = "Copy workflow ID",
+            placement = "left",
+            options = list(delay = list(show = 800, hide = 100), trigger = "hover"),
+            class = "btn-secondary btn-sm"
+          ),
+          input$selectedWorkflowId
         )
       )
     }

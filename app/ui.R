@@ -52,8 +52,11 @@ ui <- cookies::add_cookie_handlers(
         }"
       ),
     ),
-    nav_panel(title = "Track workflows", tab_tracking, rclipboard::rclipboardSetup()),
+    nav_panel(title = "Track workflows", tab_tracking,
+      rclipboard::rclipboardSetup()
+    ),
     nav_panel(title = "Workflow Details", tab_workflow_details,
+      rclipboard::rclipboardSetup(),
       tags$head(
         tags$script(src = "https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js")
       )
