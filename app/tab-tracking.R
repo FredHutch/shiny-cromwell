@@ -3,6 +3,7 @@ library(bsicons)
 library(htmltools)
 library(glue)
 library(bslib)
+library(shinycssloaders)
 
 sidebar_tracking <- sidebar(
   actionButton(
@@ -85,7 +86,9 @@ card_workflow_runs <- card(
 workflow_cards <- layout_column_wrap(
   width = 1/1,
   fillable = FALSE,
-  uiOutput("workflows_cards")
+  shinycssloaders::withSpinner(
+    uiOutput("workflows_cards")
+  )
 )
 
 tab_tracking <- page_sidebar(
