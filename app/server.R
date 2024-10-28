@@ -308,9 +308,11 @@ server <- function(input, output, session) {
   })
 
   observe({
-    shinyjs::toggleState("cromwellStart",
-      proof_status(token = rv$token)$jobStatus != "RUNNING"
-    )
+    if (proof_loggedin_serverup(rv$url, rv$token)) {
+      shinyjs::toggleState("cromwellStart",
+        proof_status(token = rv$token)$jobStatus != "RUNNING"
+      )
+    }
   })
 
   # Disable or enable the Delete button for deleting proof server
