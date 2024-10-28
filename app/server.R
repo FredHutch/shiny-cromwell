@@ -379,8 +379,8 @@ server <- function(input, output, session) {
 
   proofStatusTextGenerator <- function(name, list_index, tip = "", value_if_null = NULL) {
     renderUI({
-      dat <- cromwellProofStatusData()
       if (proof_loggedin(rv$token)) {
+        dat <- cromwellProofStatusData()
         if (nzchar(tip)) {
           tags$span(
             bslib::tooltip(
