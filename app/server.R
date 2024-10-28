@@ -508,6 +508,7 @@ server <- function(input, output, session) {
         url = rv$url,
         token = rv$token
       )
+      shinyjs::disable("submitWorkflow")
       HTML(glue('
         <br>
         <ul>
