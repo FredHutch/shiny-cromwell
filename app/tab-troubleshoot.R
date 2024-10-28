@@ -1,6 +1,6 @@
 library(shinyjs)
 
-tab_troublehsoot <- nav_panel(title = "Troubleshoot",
+panel_troublehsoot <- nav_panel(title = "Troubleshoot",
   card(
     class = "border border-primary",
     full_screen = TRUE,
