@@ -39,10 +39,6 @@ tab_welcome <- nav_panel(
         ),
         tags$li("Check",
           actionLink("linkToWorkflowDetailsTab", "workflow details")
-        ),
-        tags$li("Check the",
-          actionLink("linkToTroubleshootingTab", "troubleshooting page"),
-          " to dig into error messages if needed"
         )
       ),
       h4("To learn more about PROOF and WDL head over to the ",

@@ -97,8 +97,7 @@ server <- function(input, output, session) {
     inputJSON_state = NULL,
     input2JSON_state = NULL,
     workOptions_state = NULL,
-    abortWorkflowID_state = NULL,
-    troubleWorkflowID_state = NULL
+    abortWorkflowID_state = NULL
   )
 
   # Login and UI component handling
@@ -540,33 +539,16 @@ server <- function(input, output, session) {
   })
 
   ###### Troubleshoot tab ######
-  ## Troubleshoot a workflow
-  input_troubleWorkflowID <- reactive({
-    reactiveInput(rv_file$troubleWorkflowID_state, input$troubleWorkflowID)
-  })
-  observeEvent(input$troubleWorkflowID, {
-    rv_file$troubleWorkflowID_state <- 'loaded'
-  })
-
-  observeEvent(input$troubleWorkflow, {
+  observeEvent(input$selectedWorkflowId, {
     output$troubleResult <- renderPrint({
-      validate_workflowid(isolate(input$troubleWorkflowID))
       stop_safe_loggedin_serverup(rv$url, rv$token, rv$own)
       cromwell_glob(
-        workflow_id = isolate(input_troubleWorkflowID()),
+        workflow_id = input$selectedWorkflowId,
         url = rv$url,
         token = rv$token
       )
     })
   })
-
-  ## reset trouble
-  observeEvent(input$resetTrouble, {
-    reset_inputs("troubleWorkflowID")
-    rv_file$troubleWorkflowID_state <- 'reset'
-    output$troubleResult <- renderText({})
-  })
-
 
   ############ CROMWELL Tracking Tab  ############
 
@@ -667,9 +649,6 @@ server <- function(input, output, session) {
   })
   observeEvent(input$linkToWorkflowDetailsTab, {
     nav_select("proof", "Workflow Details")
-  })
-  observeEvent(input$linkToTroubleshootingTab, {
-    nav_select("proof", "Troubleshoot")
   })
   observeEvent(input$linkToHelpTab, {
     nav_select("proof", "Help")

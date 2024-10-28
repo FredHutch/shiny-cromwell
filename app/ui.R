@@ -24,7 +24,6 @@ source("tab-validate.R")
 source("tab-submission.R")
 source("tab-tracking.R")
 source("tab-workflow_details.R")
-source("tab-troubleshoot.R")
 source("tab-details.R")
 
 ui <- cookies::add_cookie_handlers(
@@ -59,7 +58,6 @@ ui <- cookies::add_cookie_handlers(
         tags$script(src = "https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js")
       )
     ),
-    nav_panel(title = "Troubleshoot", tab_troublehsoot, shinyjs::useShinyjs()),
     nav_panel(title = "Help",
       card(
         shiny::includeMarkdown("about.md"),

@@ -1,5 +1,7 @@
 library(listviewer)
 
+source("tab-troubleshoot.R")
+
 tab_workflow_details <- card(
   id = "workflow_details",
   card_header(
@@ -62,6 +64,7 @@ tab_workflow_details <- card(
       ),
       downloadButton("downloadOutputs", "Download Workflow Output Data"),
       DTOutput("outputslistBatch")
-    )
+    ),
+    tab_troublehsoot
   )
 )
