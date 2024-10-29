@@ -947,24 +947,36 @@ server <- function(input, output, session) {
       }, names(workflowLabelsLst), unname(workflowLabelsLst))
     )
   })
-  ## Get a table of workflow options
-  workflowOptions <- eventReactive(input$joblistCromwell_rows_selected, {
-    print("find options")
-    data <- workflowUpdate()
-    FOCUS_ID <- data[input$joblistCromwell_rows_selected, ]$workflow_id
+
+  ## Workflow options
+  workflowOptions <- eventReactive(input$selectedWorkflowId, {
     as.data.frame(jsonlite::fromJSON(
-      cromwell_workflow(FOCUS_ID,
+      cromwell_workflow(input$selectedWorkflowId,
         url = rv$url,
         token = rv$token
       )$options
     ))
   })
-  output$workflowOpt <- renderDT(
-    data <- workflowOptions(),
-    class = "compact",
-    filter = "top",
-    options = list(scrollX = TRUE), selection = "single", rownames = FALSE
-  )
+
+  output$workflowOpt <- renderUI({
+    if (NROW(workflowOptions()) > 0) {
+      renderDT(
+        expr = workflowOptions(),
+        class = "compact",
+        filter = "top",
+        options = list(scrollX = TRUE),
+        selection = "single",
+        rownames = FALSE
+      )
+    } else {
+      div(
+        "No options data found",
+        class = "alert alert-primary",
+        role = "alert"
+      )
+    }
+  })
+
   ## Get a table of workflow inputs
   workflowInputs <- eventReactive(input$selectedWorkflowId, {
     print("find inputs")
@@ -1008,13 +1020,11 @@ server <- function(input, output, session) {
 
 
   #### Call Data
-  callsUpdate <- eventReactive(
-    input$selectedWorkflowId,
+  callsUpdate <- eventReactive(input$selectedWorkflowId,
     {
-      data <- workflowUpdate()
-      FOCUS_ID <<- input$selectedWorkflowId
       print("callsUpdate(); Querying cromwell for metadata for calls.")
-      theseCalls <- cromwell_call(FOCUS_ID,
+      theseCalls <- cromwell_call(
+        workflow_id = input$selectedWorkflowId,
         url = rv$url,
         token = rv$token
       )
@@ -1023,7 +1033,15 @@ server <- function(input, output, session) {
       } else {
         callDat <<- theseCalls %>% mutate(executionStatus = "NA")
       }
-      suppressWarnings(callDat %>% select(one_of("workflow_name", "detailedSubName", "callName", "executionStatus", "shardIndex", "callRoot", "start", "end", "callDuration", "docker", "modules"), everything()))
+      suppressWarnings(
+        callDat %>%
+        select(
+          one_of("workflow_name", "detailedSubName", "callName",
+            "executionStatus", "shardIndex", "callRoot", "start",
+            "end", "callDuration", "docker", "modules"),
+          everything()
+        )
+      )
     },
     ignoreNULL = TRUE
   )
@@ -1072,24 +1090,22 @@ server <- function(input, output, session) {
   ## Failure data
   failsUpdate <- eventReactive(input$getFailedData,
     {
-      data <- workflowUpdate()
-      FOCUS_ID <- input$selectedWorkflowId
-      print("failsUpdate(); Querying cromwell for metadata for failures.")
-      suppressWarnings(failDat <- cromwell_failures(FOCUS_ID,
+      suppressWarnings(cromwell_failures(
+        workflow_id = input$selectedWorkflowId,
         url = rv$url,
         token = rv$token
       ) %>%
         select(one_of(
           "callName", "jobId", "workflow_id", "detailedSubName", "shardIndex", "attempt",
           "failures.message", "failures.causedBy.message"
-        ), everything()) %>% unique())
-      return(failDat)
+        ), everything()) %>%
+        unique())
     },
     ignoreNULL = TRUE
   )
 
   output$failurelistBatch <- renderDT(
-    data <- failsUpdate(),
+    expr = failsUpdate(),
     class = "compact",
     filter = "top",
     options = list(scrollX = TRUE),
@@ -1108,25 +1124,23 @@ server <- function(input, output, session) {
   ### Call Caching data
   cacheUpdate <- eventReactive(input$getCacheData,
     {
-      data <- workflowUpdate()
-      FOCUS_ID <<- input$selectedWorkflowId
-      print("cacheUpdate(); Querying cromwell for metadata for call caching.")
-      theseCache <- cromwell_cache(FOCUS_ID,
+      theseCache <- cromwell_cache(
+        workflow_id = input$selectedWorkflowId,
         url = rv$url,
         token = rv$token
       )
       if ("callCaching.effectiveCallCachingMode" %in% colnames(theseCache)) {
-        cacheDat <- theseCache
+        theseCache
       } else {
-        cacheDat <- theseCache %>% mutate(callCaching.effectiveCallCachingMode = "NA")
+        theseCache %>%
+          mutate(callCaching.effectiveCallCachingMode = "NA")
       }
-      cacheDat
     },
     ignoreNULL = TRUE
   )
 
   output$cachingListBatch <- renderDT(
-    data <- cacheUpdate() %>%
+    expr = cacheUpdate() %>%
       select(
         any_of(
           c("workflow_name", "workflow_id", "callName", "shardIndex", "executionStatus")),
@@ -1152,10 +1166,8 @@ server <- function(input, output, session) {
   ### Go get the output data for the selected workflow
   outputsUpdate <- eventReactive(input$getOutputData,
     {
-      data <- workflowUpdate()
-      FOCUS_ID <<- input$selectedWorkflowId 
-      print("outputsUpdate(); Querying cromwell for a list of workflow outputs.")
-      outDat <<- try(cromwell_outputs(FOCUS_ID,
+      outDat <<- try(cromwell_outputs(
+        workflow_id = input$selectedWorkflowId,
         url = rv$url,
         token = rv$token
       ), silent = TRUE)
@@ -1168,7 +1180,7 @@ server <- function(input, output, session) {
   )
   ## render outputs list to a table
   output$outputslistBatch <- renderDT(
-    data <- outputsUpdate(),
+    expr = outputsUpdate(),
     class = "compact",
     filter = "top",
     options = list(scrollX = TRUE),

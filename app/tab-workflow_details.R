@@ -1,24 +1,31 @@
 library(listviewer)
 
 source("tab-troubleshoot.R")
+source("utils.R")
 
 panel_job_list <- nav_panel(
   title = "Job List",
   downloadButton("downloadJobs",
     "Download Workflow Jobs Data", style = "width:20%"),
-  DTOutput("tasklistBatch")
+  load_spinner(
+    DTOutput("tasklistBatch")
+  )
 )
 
 panel_workflow_description <- nav_panel(
   title = "Workflow Description",
   card_body(
-    uiOutput("workflowDescribe")
+    load_spinner(
+      uiOutput("workflowDescribe")
+    )
   )
 )
 
 panel_diagram <- nav_panel(
   title = "Diagram",
-  uiOutput("mermaid_diagram")
+  load_spinner(
+    uiOutput("mermaid_diagram")
+  )
 )
 
 panel_job_failures <- nav_panel(
@@ -47,12 +54,22 @@ panel_call_caching <- nav_panel(
 
 panel_options <- nav_panel(
   title = "Workflow Options",
-  DTOutput("workflowOpt")
+  card(
+    class = "border border-primary",
+    card_body(
+      fillable = TRUE,
+      load_spinner(
+        uiOutput("workflowOpt")
+      )
+    )
+  )
 )
 
 panel_inputs <- nav_panel(
   title = "Workflow Inputs",
-  reactjsonOutput("workflowInp", height = "100%")
+  load_spinner(
+    reactjsonOutput("workflowInp", height = "100%")
+  )
 )
 
 panel_outputs <- nav_panel(
@@ -64,7 +81,9 @@ panel_outputs <- nav_panel(
     icon("refresh")
   ),
   downloadButton("downloadOutputs", "Download Workflow Output Data"),
-  DTOutput("outputslistBatch")
+  load_spinner(
+    DTOutput("outputslistBatch")
+  )
 )
 
 tab_workflow_details <- card(

@@ -4,6 +4,12 @@ library(parsedate)
 library(uuid)
 library(rclipboard)
 library(shinyFeedback)
+library(shinycssloaders)
+
+# Wrapped in a function so we can change options in one place
+load_spinner <- function(...) {
+  shinycssloaders::withSpinner(...)
+}
 
 # exact copy from shiny:::validateIcon
 proofValidateIcon <- function (icon) {

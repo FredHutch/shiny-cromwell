@@ -1,5 +1,7 @@
 library(shinyjs)
 
+source("utils.R")
+
 panel_troublehsoot <- nav_panel(title = "Troubleshoot",
   card(
     class = "border border-primary",
@@ -9,7 +11,9 @@ panel_troublehsoot <- nav_panel(title = "Troubleshoot",
       fillable = FALSE,
       p("When a workflow fails but no jobs were started, or there appears to be no clear reason for a workflow to have failed, this tool can provide you the entire set of workflow metadata Cromwell has for your workflow in it's raw and unprocessed (json) form. For complex workflows, this can be rather large (and ugly!)."),
       br(),
-      verbatimTextOutput(outputId = "troubleResult")
+      load_spinner(
+        verbatimTextOutput(outputId = "troubleResult")
+      )
     )
   ),
   shinyjs::useShinyjs()
