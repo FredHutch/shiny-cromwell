@@ -1097,6 +1097,20 @@ server <- function(input, output, session) {
     rownames = FALSE
   )
 
+  output$failurelistBatch <- renderUI({
+    if (NROW(failsUpdate()) > 0) {
+      renderDT(
+        expr = failsUpdate(),
+        class = "compact",
+        filter = "top",
+        options = list(scrollX = TRUE),
+        rownames = FALSE
+      )
+    } else {
+      alert("No failures data found")
+    }
+  })
+
   output$downloadFails <- downloadHandler(
     filename = function() {
       paste0(unique(failsUpdate()$workflow_id), "-callFailureData.csv")
@@ -1124,19 +1138,26 @@ server <- function(input, output, session) {
     ignoreNULL = TRUE
   )
 
-  output$cachingListBatch <- renderDT(
-    expr = cacheUpdate() %>%
-      select(
-        any_of(
-          c("workflow_name", "workflow_id", "callName", "shardIndex", "executionStatus")),
-        everything()
-      ) %>%
-      unique(),
-    class = "compact",
-    filter = "top",
-    options = list(scrollX = TRUE),
-    rownames = FALSE
-  )
+  output$cachingListBatch <- renderUI({
+    if (NROW(cacheUpdate()) > 0) {
+      renderDT(
+        expr = cacheUpdate() %>%
+          select(
+            any_of(
+              c("workflow_name", "workflow_id", "callName",
+                "shardIndex", "executionStatus")),
+            everything()
+          ) %>%
+          unique(),
+        class = "compact",
+        filter = "top",
+        options = list(scrollX = TRUE),
+        rownames = FALSE
+      )
+    } else {
+      alert("No call caching data found")
+    }
+  })
 
   output$downloadCache <- downloadHandler(
     filename = function() {
@@ -1151,26 +1172,28 @@ server <- function(input, output, session) {
   ### Go get the output data for the selected workflow
   outputsUpdate <- eventReactive(input$getOutputData,
     {
-      outDat <<- try(cromwell_outputs(
+      cromwell_outputs(
         workflow_id = input$selectedWorkflowId,
         url = rv$url,
         token = rv$token
-      ), silent = TRUE)
-      if (!is.data.frame(outDat)) {
-        outDat <- dplyr::tibble("workflow_id" = "No outputs are available for this workflow yet.")
-      }
-      outDat
+      )
     },
     ignoreNULL = TRUE
   )
   ## render outputs list to a table
-  output$outputslistBatch <- renderDT(
-    expr = outputsUpdate(),
-    class = "compact",
-    filter = "top",
-    options = list(scrollX = TRUE),
-    rownames = FALSE
-  )
+  output$outputslistBatch <- renderUI({
+    if (NROW(outputsUpdate()) > 0) {
+      renderDT(
+        expr = outputsUpdate(),
+        class = "compact",
+        filter = "top",
+        options = list(scrollX = TRUE),
+        rownames = FALSE
+      )
+    } else {
+      alert("No output data found")
+    }
+  })
   ## Prep outputs table for download
   output$downloadOutputs <- downloadHandler(
     filename = function() {

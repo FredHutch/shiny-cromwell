@@ -24,7 +24,6 @@ source("tab-validate.R")
 source("tab-submission.R")
 source("tab-tracking.R")
 source("tab-workflow_details.R")
-source("tab-details.R")
 
 ui <- cookies::add_cookie_handlers(
   page_navbar(

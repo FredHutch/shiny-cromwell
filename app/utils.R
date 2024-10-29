@@ -185,3 +185,11 @@ card_header_color <- function(status) {
 parse_date_tz <- function(x, tz = "America/Los_Angeles") {
   parsedate::parse_date(x, default_tz = tz)
 }
+
+alert <- function(..., class = "alert alert-primary") {
+  div(
+    ...,
+    class = class,
+    role = "alert"
+  )
+}

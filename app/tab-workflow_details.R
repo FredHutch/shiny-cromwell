@@ -34,10 +34,15 @@ panel_job_failures <- nav_panel(
   actionButton(
     inputId = "getFailedData",
     label = "Get/Refresh Failed Job Metadata",
-    icon("refresh")
+    icon = icon("refresh"),
+    width = "300px"
   ),
-  downloadButton("downloadFails", "Download Call Failure Data"),
-  DTOutput("failurelistBatch")
+  downloadButton(
+    outputId = "downloadFails",
+    label = "Download Call Failure Data",
+    style = "width:300px;"
+  ),
+  uiOutput("failurelistBatch")
 )
 
 panel_call_caching <- nav_panel(
@@ -46,22 +51,24 @@ panel_call_caching <- nav_panel(
   actionButton(
     inputId = "getCacheData",
     label = "Get/Refresh Call Caching Metadata",
-    icon("refresh")
+    icon = icon("refresh"),
+    width = "300px"
   ),
-  downloadButton("downloadCache", "Download Call Caching Data"),
-  DTOutput("cachingListBatch")
+  downloadButton(
+    outputId = "downloadCache",
+    label = "Download Call Caching Data",
+    style = "width:300px;"
+  ),
+  load_spinner(
+    uiOutput("cachingListBatch")
+  )
 )
 
 panel_options <- nav_panel(
   title = "Workflow Options",
-  card(
-    class = "border border-primary",
-    card_body(
-      fillable = TRUE,
-      load_spinner(
-        uiOutput("workflowOpt")
-      )
-    )
+  br(),
+  load_spinner(
+    uiOutput("workflowOpt")
   )
 )
 
@@ -78,12 +85,15 @@ panel_outputs <- nav_panel(
   actionButton(
     inputId = "getOutputData",
     label = "Get/Refresh Workflow Output Metadata",
-    icon("refresh")
+    icon = icon("refresh"),
+    width = "350px"
   ),
-  downloadButton("downloadOutputs", "Download Workflow Output Data"),
-  load_spinner(
-    DTOutput("outputslistBatch")
-  )
+  downloadButton(
+    outputId = "downloadOutputs",
+    label = "Download Workflow Output Data",
+    style = "width:350px;"
+  ),
+  uiOutput("outputslistBatch")
 )
 
 tab_workflow_details <- card(
