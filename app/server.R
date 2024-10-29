@@ -184,6 +184,9 @@ server <- function(input, output, session) {
           same_site = "strict"
         )
 
+        # reset loading spinner
+        shinyFeedback::resetLoadingButton("submit")
+
         removeModal()
       }
     } else {

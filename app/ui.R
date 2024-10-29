@@ -29,12 +29,15 @@ ui <- cookies::add_cookie_handlers(
   page_navbar(
     id = "proof",
     title = tags$span(
-      tags$img(
-        src = "fred-hutch.png",
-        width = "96px",
-        height = "auto",
-        class = "me-3",
-        alt = "Fred Hutch logo"
+      tags$a(
+        tags$img(
+          src = "fred-hutch.png",
+          width = "96px",
+          height = "auto",
+          class = "me-3",
+          alt = "Fred Hutch logo"
+        ),
+        href = "https://www.fredhutch.org"
       ),
       ""
     ),
