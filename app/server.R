@@ -42,7 +42,6 @@ source("cookies-db.R")
 
 SANITIZE_ERRORS <- FALSE
 PROOF_TIMEOUT <- 20
-FOCUS_ID <- 1
 SHINY_LOGGING <- as.logical(Sys.getenv("SHINY_LOG", FALSE))
 
 # FIXME: maybe remove later, was running into some timeouts during testing
@@ -890,9 +889,8 @@ server <- function(input, output, session) {
   ## Get a table of workflow labels
   workflowLabels <- eventReactive(input$selectedWorkflowId, {
     print("find Labels")
-    data <- workflowUpdate()
-    FOCUS_ID <- input$selectedWorkflowId
-    workflow <- cromwell_workflow(FOCUS_ID,
+    workflow <- cromwell_workflow(
+      workflow_id = input$selectedWorkflowId,
       url = rv$url,
       token = rv$token
     )
@@ -930,7 +928,7 @@ server <- function(input, output, session) {
           everything()
         )
       )
-    })
+  })
 
   output$workflowDescribe <- renderUI({
     wl <- purrr::discard_at(workflowLabels(), c("workflow", "inputs"))
@@ -979,15 +977,8 @@ server <- function(input, output, session) {
 
   ## Get a table of workflow inputs
   workflowInputs <- eventReactive(input$selectedWorkflowId, {
-    print("find inputs")
-    data <- workflowUpdate()
-
-    FOCUS_ID <- input$selectedWorkflowId
-    output$currentWorkflowId <- renderText({
-      paste("Workflow ID: ", FOCUS_ID)
-    })
-
-    cromwell_workflow(FOCUS_ID,
+    cromwell_workflow(
+      workflow_id = input$selectedWorkflowId,
       url = rv$url,
       token = rv$token
     )$inputs
@@ -1000,11 +991,6 @@ server <- function(input, output, session) {
   observeEvent(input$workflowInp_edit, {
     str(input$workflowInp_edit, max.level=2)
   })
-  ### set workflow id display in viewer tab back to none
-  ### when nothing selected in the Workflows Run table
-  observeEvent(input$joblistCromwell_rows_selected, {
-    output$currentWorkflowId <- renderText({"Workflow ID: "})
-  }, ignoreNULL = FALSE)
 
   ## Render a list of jobs in a table for a workflow
   output$joblistCromwell <- renderDT({
@@ -1022,7 +1008,6 @@ server <- function(input, output, session) {
   #### Call Data
   callsUpdate <- eventReactive(input$selectedWorkflowId,
     {
-      print("callsUpdate(); Querying cromwell for metadata for calls.")
       theseCalls <- cromwell_call(
         workflow_id = input$selectedWorkflowId,
         url = rv$url,
