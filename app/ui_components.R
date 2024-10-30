@@ -1,7 +1,7 @@
 tooltip_style <- tags$style(
   HTML("
     .tooltip{
-       font-size: 1.5rem;
+       font-size: 1.1rem;
     }
   ")
 )
