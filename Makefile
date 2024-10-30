@@ -16,7 +16,7 @@ run_branch:
 	docker run --rm -it -p 3838:3838 nexus-registry.fredhutch.org/scicomp-nexus/shiny-cromwell:$(branch)
 
 # point the shiny app at the dev API
-# use: `make branch=inputs-viewer run_branch`
+# use: `make branch=inputs-viewer run_branch_dev_api`
 run_branch_dev_api:
 	docker pull nexus-registry.fredhutch.org/scicomp-nexus/shiny-cromwell:$(branch)
 	docker run -e PROOF_API_BASE_URL=https://proof-api-dev.fredhutch.org --rm -it -p 3838:3838 nexus-registry.fredhutch.org/scicomp-nexus/shiny-cromwell:$(branch)
