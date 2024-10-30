@@ -2,7 +2,8 @@ logInButton <-
   actionButton(
     inputId = "proofAuth",
     label = "PROOF Login",
-    class = "btn-sm",
+    class = "btn-success btn-sm",
+    style = "color: white;",
     icon = icon("truck-fast")
     
   )
@@ -20,6 +21,7 @@ logInCromwellButton <-
     inputId = "ownCrom",
     label = "DIY Cromwell",
     class = "btn-sm",
+    style = "color: white;",
     icon = icon("plug-circle-xmark")
   )
 logOutCromwellButton <-

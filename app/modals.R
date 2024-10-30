@@ -13,7 +13,11 @@ loginModal <- function(failed = FALSE, error = "Invalid username or password") {
     },
     footer = tagList(
       modalButton("Cancel"),
-      actionButton("submit", "Submit")
+      shinyFeedback::loadingButton(
+        inputId = "submit",
+        label = "Submit",
+        class = "btn btn-default"
+      )
     ),
     easyClose = TRUE
   )
