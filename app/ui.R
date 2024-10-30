@@ -82,17 +82,5 @@ ui <- cookies::add_cookie_handlers(
     nav_item(
       uiOutput("loggedInOut")
     )
-    # nav_menu(
-    #   NULL,
-    #   icon = icon("circle-question", "fa-solid fa-lg"),
-    #   align = "right",
-    #   nav_item(help_html)
-    # ),
-    # nav_menu(
-    #   NULL,
-    #   icon = icon("github", "fa-solid fa-lg"),
-    #   align = "right",
-    #   nav_item(helpText(htmlOutput("gitHtml")))
-    # )
   )
 )
