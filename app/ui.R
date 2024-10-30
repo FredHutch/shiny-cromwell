@@ -43,8 +43,9 @@ ui <- cookies::add_cookie_handlers(
     ),
     bg = "#000000",
     underline = TRUE,
+    header = tagList(google_analytics, enter_to_click),
     tab_welcome,
-    nav_panel(title = "Server", tab_servers),
+    nav_panel(title = "Server", tab_servers, tooltip_style),
     nav_panel(title = "Validate", tab_validate, shinyjs::useShinyjs()),
     nav_panel(title = "Submit", tab_submission, shinyjs::useShinyjs(),
       tags$style("
@@ -55,13 +56,15 @@ ui <- cookies::add_cookie_handlers(
       ),
     ),
     nav_panel(title = "Track workflows", tab_tracking,
-      rclipboard::rclipboardSetup()
+      rclipboard::rclipboardSetup(),
+      tooltip_style
     ),
     nav_panel(title = "Workflow Details", tab_workflow_details,
       rclipboard::rclipboardSetup(),
       tags$head(
         tags$script(src = "https://cdn.jsdelivr.net/npm/mermaid@11.4.0/dist/mermaid.min.js")
-      )
+      ),
+      tooltip_style
     ),
     nav_panel(title = "Help",
       card(
