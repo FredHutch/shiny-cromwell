@@ -1009,7 +1009,10 @@ server <- function(input, output, session) {
 
 
   #### Call Data
-  callsUpdate <- eventReactive(input$selectedWorkflowId,
+  callsUpdate <- eventReactive(c(
+      input$selectedWorkflowId,
+      input$refreshJobList
+    ),
     {
       theseCalls <- cromwell_call(
         workflow_id = input$selectedWorkflowId,
