@@ -1,9 +1,11 @@
-source("ui_components.R")
 library(bsicons)
 library(htmltools)
 library(glue)
 library(bslib)
 library(shinycssloaders)
+
+source("ui_components.R")
+source("constants.R")
 
 sidebar_tracking <- sidebar(
   actionButton(
@@ -37,8 +39,8 @@ sidebar_tracking <- sidebar(
   dateRangeInput(
     inputId = "runs_date", 
     label = "Date Range",
-    start = "2024-01-01",
-    min = "2024-01-01",
+    start = lubridate::today() - DAYS_WORKFLOW_HISTORY,
+    min = lubridate::today() - DAYS_WORKFLOW_HISTORY,
     end = lubridate::today(),
     max = lubridate::today(),
     format = "m/d/yy"

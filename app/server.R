@@ -39,6 +39,7 @@ source("tab-welcome.R")
 source("validators.R")
 source("inputs_utils.R")
 source("cookies-db.R")
+source("constants.R")
 
 SANITIZE_ERRORS <- FALSE
 PROOF_TIMEOUT <- 20
@@ -559,7 +560,7 @@ server <- function(input, output, session) {
       stop_safe_loggedin_serverup(rv$url, rv$token, rv$own)
 
       cromTable <- cromwell_jobs(
-        days = 120,
+        days = DAYS_WORKFLOW_HISTORY,
         url = rv$url,
         token = rv$token
       )
@@ -730,9 +731,9 @@ server <- function(input, output, session) {
     paste0("goToWorkflowDetails-", workflow_id)
   }
 
-  output$workflows_cards <- renderUI({
+  workflowCards <- reactive({
     dflst <- apply(workflowUpdate(), 1, as.list)
-    dat <- lapply(dflst, function(w) {
+    lapply(dflst, function(w) {
       list(
        data = w,
        card = card(
@@ -783,13 +784,17 @@ server <- function(input, output, session) {
         )
       )
     })
+  })
+
+  workflowCardsFiltered <- reactive({
+    dat <- workflowCards()
     # Filter by date
     dat <- Filter(\(w) {
       parse_date_tz(w$data$submission) >= parse_date_tz(paste(input$runs_date[1], "00:00:00")) &&
       parse_date_tz(w$data$submission) <= parse_date_tz(paste(input$runs_date[2], "23:59:00"))
     }, dat)
     # Filter by status
-    if (!is.null(input$workStatus)) {
+    if (!rlang::is_empty(input$workStatus)) {
       dat <- Filter(\(w) {
         w$data$status %in% input$workStatus
       }, dat)
@@ -797,16 +802,23 @@ server <- function(input, output, session) {
     # Filter by workflow name
     if (nzchar(input$workName)) {
       dat <- Filter(\(w) {
-        w$data$workflow_name == input$workName
+        w$data$workflow_name %in% input$workName
       }, dat)
     }
-    sort_dates <- purrr::map_vec(dat, \(card) parse_date_tz(card$data$submission))
-    dat <- switch(input$sortTracking,
-      "Newest to oldest" = dat[order(sort_dates, decreasing = TRUE)],
-      "Oldest to newest" = dat[order(sort_dates)]
-    )
-    # return cards
-    purrr::map(dat, "card")
+    sort_dates <- purrr::map_vec(dat, \(card)
+      parse_date_tz(card$data$submission))
+    if (!rlang::is_empty(sort_dates)) {
+      # skip sorting if sort_dates is empty for whatever reason
+      dat <- switch(input$sortTracking,
+        "Newest to oldest" = dat[order(sort_dates, decreasing = TRUE)],
+        "Oldest to newest" = dat[order(sort_dates)]
+      )
+    }
+    return(dat)
+  })
+
+  output$workflows_cards <- renderUI({
+    purrr::map(workflowCardsFiltered(), "card")
   })
 
   ## Abort a workflow with the abort button on each card
