@@ -559,7 +559,7 @@ server <- function(input, output, session) {
       stop_safe_loggedin_serverup(rv$url, rv$token, rv$own)
 
       cromTable <- cromwell_jobs(
-        days = 60,
+        days = 120,
         url = rv$url,
         token = rv$token
       )
