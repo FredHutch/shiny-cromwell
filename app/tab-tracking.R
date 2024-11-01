@@ -38,11 +38,13 @@ sidebar_tracking <- sidebar(
     inputId = "runs_date", 
     label = "Date Range",
     start = "2024-01-01",
+    min = "2024-01-01",
     end = lubridate::today(),
+    max = lubridate::today(),
     format = "m/d/yy"
   ),
   selectInput(
-    inputId = "",
+    inputId = "sortTracking",
     label = "Sort",
     choices = c(
       "Newest to oldest",
