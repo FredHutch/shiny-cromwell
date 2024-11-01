@@ -5,6 +5,7 @@ source("utils.R")
 
 panel_job_list <- nav_panel(
   title = "Job List",
+  id = "detailsJobs",
   downloadButton("downloadJobs",
     "Download Workflow Jobs Data", style = "width:20%"),
   load_spinner(
@@ -14,6 +15,7 @@ panel_job_list <- nav_panel(
 
 panel_workflow_description <- nav_panel(
   title = "Workflow Description",
+  id = "detailsWorkflowDesc",
   card_body(
     load_spinner(
       uiOutput("workflowDescribe")
@@ -23,6 +25,7 @@ panel_workflow_description <- nav_panel(
 
 panel_diagram <- nav_panel(
   title = "Diagram",
+  id = "detailsDiagram",
   load_spinner(
     uiOutput("mermaid_diagram")
   )
@@ -30,6 +33,7 @@ panel_diagram <- nav_panel(
 
 panel_job_failures <- nav_panel(
   title = "Job Failures",
+  id = "detailsJobFailures",
   p("Specific information for jobs with a status of 'Failed', only available upon request."),
   actionButton(
     inputId = "getFailedData",
@@ -42,11 +46,13 @@ panel_job_failures <- nav_panel(
     label = "Download Call Failure Data",
     style = "width:300px;"
   ),
-  uiOutput("failurelistBatch")
+  uiOutput("failuresAlert"),
+  DTOutput("failurelistBatch")
 )
 
 panel_call_caching <- nav_panel(
   title = "Call Caching ",
+  id = "detailsCallCaching",
   p("Only available upon request.  Note: this can be slow for very complex workflows.  "),
   actionButton(
     inputId = "getCacheData",
@@ -59,21 +65,25 @@ panel_call_caching <- nav_panel(
     label = "Download Call Caching Data",
     style = "width:300px;"
   ),
+  uiOutput("cachingAlert"),
   load_spinner(
-    uiOutput("cachingListBatch")
+    DTOutput("cachingListBatch")
   )
 )
 
 panel_options <- nav_panel(
   title = "Workflow Options",
+  id = "detailsWorkflowOptions",
   br(),
+  uiOutput("workflowOptAlert"),
   load_spinner(
-    uiOutput("workflowOpt")
+    DTOutput("workflowOpt")
   )
 )
 
 panel_inputs <- nav_panel(
   title = "Workflow Inputs",
+  id = "detailsWorkflowInputs",
   load_spinner(
     reactjsonOutput("workflowInp", height = "100%")
   )
@@ -81,6 +91,7 @@ panel_inputs <- nav_panel(
 
 panel_outputs <- nav_panel(
   title = "Workflow Outputs",
+  id = "detailsWorkflowOutputs",
   p("The specific outputs to the entire workflow itself are listed here only upon request and only if they are all available. "),
   actionButton(
     inputId = "getOutputData",
@@ -93,7 +104,8 @@ panel_outputs <- nav_panel(
     label = "Download Workflow Output Data",
     style = "width:350px;"
   ),
-  uiOutput("outputslistBatch")
+  uiOutput("outputsAlert"),
+  DTOutput("outputslistBatch")
 )
 
 tab_workflow_details <- card(

@@ -852,11 +852,19 @@ server <- function(input, output, session) {
     })
   })
 
-  ## reset trouble
+  observe({
+    matching_ids <- reactive_buttons()
+    lapply(matching_ids, function(id) {
+      observeEvent(input[[id]], {
+        nav_select("proof", "Workflow Details")
+        shinyFeedback::resetLoadingButton(id)
+      })
+    })
+  })
+
+  ## reset tracking workflows filters
   observeEvent(input$resetTrackingFilters, {
-    reset_inputs("workName")
-    reset_inputs("workStatus")
-    reset_inputs("runs_date")
+    reset_inputs(c("workName", "workStatus", "runs_date"))
   })
 
   output$selectedWorkflowUI <- renderUI({
@@ -959,22 +967,17 @@ server <- function(input, output, session) {
     ))
   })
 
-  output$workflowOpt <- renderUI({
-    if (NROW(workflowOptions()) > 0) {
-      renderDT(
-        expr = workflowOptions(),
-        class = "compact",
-        filter = "top",
-        options = list(scrollX = TRUE),
-        selection = "single",
-        rownames = FALSE
-      )
-    } else {
-      div(
-        "No options data found",
-        class = "alert alert-primary",
-        role = "alert"
-      )
+  output$workflowOpt <- renderDT(
+    expr = workflowOptions(),
+    class = "compact",
+    filter = "top",
+    options = list(scrollX = TRUE),
+    selection = "single",
+    rownames = FALSE
+  )
+  output$workflowOptAlert <- renderUI({
+    if (NROW(workflowOptions()) == 0) {
+      alert("No options data found")
     }
   })
 
@@ -1076,7 +1079,10 @@ server <- function(input, output, session) {
   )
 
   ## Failure data
-  failsUpdate <- eventReactive(input$getFailedData,
+  failsUpdate <- eventReactive(c(
+      input$selectedWorkflowId,
+      input$getFailedData
+    ),
     {
       suppressWarnings(cromwell_failures(
         workflow_id = input$selectedWorkflowId,
@@ -1099,17 +1105,8 @@ server <- function(input, output, session) {
     options = list(scrollX = TRUE),
     rownames = FALSE
   )
-
-  output$failurelistBatch <- renderUI({
-    if (NROW(failsUpdate()) > 0) {
-      renderDT(
-        expr = failsUpdate(),
-        class = "compact",
-        filter = "top",
-        options = list(scrollX = TRUE),
-        rownames = FALSE
-      )
-    } else {
+  output$failuresAlert <- renderUI({
+    if (NROW(failsUpdate()) == 0) {
       alert("No failures data found")
     }
   })
@@ -1124,7 +1121,10 @@ server <- function(input, output, session) {
   )
 
   ### Call Caching data
-  cacheUpdate <- eventReactive(input$getCacheData,
+  cacheUpdate <- eventReactive(c(
+      input$selectedWorkflowId,
+      input$getCacheData
+    ),
     {
       theseCache <- cromwell_cache(
         workflow_id = input$selectedWorkflowId,
@@ -1141,23 +1141,22 @@ server <- function(input, output, session) {
     ignoreNULL = TRUE
   )
 
-  output$cachingListBatch <- renderUI({
-    if (NROW(cacheUpdate()) > 0) {
-      renderDT(
-        expr = cacheUpdate() %>%
-          select(
-            any_of(
-              c("workflow_name", "workflow_id", "callName",
-                "shardIndex", "executionStatus")),
-            everything()
-          ) %>%
-          unique(),
-        class = "compact",
-        filter = "top",
-        options = list(scrollX = TRUE),
-        rownames = FALSE
-      )
-    } else {
+  output$cachingListBatch <- renderDT(
+    expr = cacheUpdate() %>%
+      select(
+        any_of(
+          c("workflow_name", "workflow_id", "callName",
+            "shardIndex", "executionStatus")),
+        everything()
+      ) %>%
+      unique(),
+    class = "compact",
+    filter = "top",
+    options = list(scrollX = TRUE),
+    rownames = FALSE
+  )
+  output$cachingAlert <- renderUI({
+    if (NROW(cacheUpdate()) == 0) {
       alert("No call caching data found")
     }
   })
@@ -1173,7 +1172,10 @@ server <- function(input, output, session) {
 
   ## Outputs Data
   ### Go get the output data for the selected workflow
-  outputsUpdate <- eventReactive(input$getOutputData,
+  outputsUpdate <- eventReactive(c(
+      input$selectedWorkflowId,
+      input$getOutputData
+    ),
     {
       cromwell_outputs(
         workflow_id = input$selectedWorkflowId,
@@ -1184,16 +1186,15 @@ server <- function(input, output, session) {
     ignoreNULL = TRUE
   )
   ## render outputs list to a table
-  output$outputslistBatch <- renderUI({
-    if (NROW(outputsUpdate()) > 0) {
-      renderDT(
-        expr = outputsUpdate(),
-        class = "compact",
-        filter = "top",
-        options = list(scrollX = TRUE),
-        rownames = FALSE
-      )
-    } else {
+  output$outputslistBatch <- renderDT(
+    expr = outputsUpdate(),
+    class = "compact",
+    filter = "top",
+    options = list(scrollX = TRUE),
+    rownames = FALSE
+  )
+  output$outputsAlert <- renderUI({
+    if (NROW(outputsUpdate()) == 0) {
       alert("No output data found")
     }
   })

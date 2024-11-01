@@ -2,7 +2,9 @@ library(shinyjs)
 
 source("utils.R")
 
-panel_troublehsoot <- nav_panel(title = "Troubleshoot",
+panel_troublehsoot <- nav_panel(
+  title = "Troubleshoot",
+  id = "detailsTroubleshoot",
   card(
     class = "border border-primary",
     full_screen = TRUE,
