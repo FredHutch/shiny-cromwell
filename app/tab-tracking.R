@@ -51,7 +51,11 @@ sidebar_tracking <- sidebar(
     selected = "Newest to oldest",
     multiple = FALSE
   ),
-  actionButton("resetTrackingFilters", "Reset all filters", class = "btn-sm")
+  actionButton(
+    inputId = "resetTrackingFilters",
+    label = "Reset all filters",
+    class = "btn-sm"
+  )
 )
 
 card_tracking_intro <- card(
