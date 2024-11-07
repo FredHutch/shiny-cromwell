@@ -21,7 +21,8 @@ panel_job_list <- nav_panel(
     load_spinner(
       DTOutput("tasklistBatch")
     )
-  )
+  ),
+  card_footer(table_footer(copy = FALSE))
 )
 
 panel_workflow_description <- nav_panel(

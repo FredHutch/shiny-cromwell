@@ -82,11 +82,6 @@ card_timing <- card(
   plotOutput("workflowDuration")
 )
 
-card_workflow_runs <- card(
-  DTOutput("joblistCromwell"),
-  card_footer(table_footer())
-)
-
 workflow_cards <- layout_column_wrap(
   width = 1/1,
   fillable = FALSE,
