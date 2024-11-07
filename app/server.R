@@ -322,39 +322,30 @@ server <- function(input, output, session) {
     showModal(verifyCromwellDeleteModal())
   })
 
-  # For the button WITHIN the Delete modal
-  observe({
-    shinyjs::toggleState("deleteCromwell", input$stopCromwell == "delete me")
-  })
-
   observeEvent(input$deleteCromwell, {
     if (proof_loggedin(rv$token)) {
-      if (input$stopCromwell == "delete me") {
-        try_delete <- tryCatch(proof_cancel(token = rv$token), error = function(e) e)
-        if (rlang::is_error(try_delete)) {
-          showModal(verifyCromwellDeleteModal(failed = TRUE, error = try_delete$message))
-        }
-
-        # wait for server to go down
-        proof_wait_for_down(rv$token)
-
-        # update records in cookies DB
-        user_to_db(
-          user = rv$user,
-          token = to_base64(rv$token),
-          url = "",
-          drop_existing = TRUE
-        )
-
-        # reset loading spinner
-        shinyFeedback::resetLoadingButton("deleteCromwell")
-
-        removeModal()
-        shinyjs::disable(id = "cromwellDelete")
-        shinyjs::enable(id = "cromwellStart")
-      } else {
-        showModal(verifyCromwellDeleteModal(failed = TRUE))
+      try_delete <- tryCatch(proof_cancel(token = rv$token), error = function(e) e)
+      if (rlang::is_error(try_delete)) {
+        showModal(verifyCromwellDeleteModal(failed = TRUE, error = try_delete$message))
       }
+
+      # wait for server to go down
+      proof_wait_for_down(rv$token)
+
+      # update records in cookies DB
+      user_to_db(
+        user = rv$user,
+        token = to_base64(rv$token),
+        url = "",
+        drop_existing = TRUE
+      )
+
+      # reset loading spinner
+      shinyFeedback::resetLoadingButton("deleteCromwell")
+
+      removeModal()
+      shinyjs::disable(id = "cromwellDelete")
+      shinyjs::enable(id = "cromwellStart")
     } else {
       showModal(verifyCromwellDeleteModal(failed = TRUE, error = "You're not logged in"))
     }
@@ -1012,7 +1003,10 @@ server <- function(input, output, session) {
 
 
   #### Call Data
-  callsUpdate <- eventReactive(input$selectedWorkflowId,
+  callsUpdate <- eventReactive(c(
+      input$selectedWorkflowId,
+      input$refreshJobList
+    ),
     {
       theseCalls <- cromwell_call(
         workflow_id = input$selectedWorkflowId,

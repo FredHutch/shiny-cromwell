@@ -1,24 +1,7 @@
-help_html <- helpText(
-  HTML('<u>Need Help?</u>
-        <p>
-            <br>
-            <b>Problem? Bug?</b> <a href="https://github.com/getwilds/proof/issues/new" target="_blank"><span class="badge bg-secondary">Open an issue</span></a>
-        </p>
-        <br>
-        <p>
-            <b>Discussion/Questions</b><br>
-            <a href="https://fhdata.slack.com/archives/CJFP1NYSZ" target="_blank"><span class="badge bg-secondary"><i class="fa-brands fa-slack"></i> Slack</span></a> #workflow-managers channel
-            <br>
-            Email <a href="mailto:wilds@fredhutch.org" target="_blank"><span class="badge bg-secondary">wilds@fredhutch.org</span></a>
-        </p>
-        <p></p>
-        <p>')
-)
-
 tooltip_style <- tags$style(
   HTML("
     .tooltip{
-       font-size: 1.5rem;
+       font-size: 1.1rem;
     }
   ")
 )

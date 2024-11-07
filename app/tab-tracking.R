@@ -51,7 +51,11 @@ sidebar_tracking <- sidebar(
     selected = "Newest to oldest",
     multiple = FALSE
   ),
-  actionButton("resetTrackingFilters", "Reset all filters", class = "btn-sm")
+  actionButton(
+    inputId = "resetTrackingFilters",
+    label = "Reset all filters",
+    class = "btn-sm"
+  )
 )
 
 card_tracking_intro <- card(
@@ -76,11 +80,6 @@ card_tracking_intro <- card(
 
 card_timing <- card(
   plotOutput("workflowDuration")
-)
-
-card_workflow_runs <- card(
-  DTOutput("joblistCromwell"),
-  card_footer(table_footer())
 )
 
 workflow_cards <- layout_column_wrap(

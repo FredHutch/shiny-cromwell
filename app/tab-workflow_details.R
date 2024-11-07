@@ -6,11 +6,24 @@ source("utils.R")
 panel_job_list <- nav_panel(
   title = "Job List",
   id = "detailsJobs",
-  downloadButton("downloadJobs",
-    "Download Workflow Jobs Data", style = "width:20%"),
-  load_spinner(
-    DTOutput("tasklistBatch")
-  )
+  card_header(
+    downloadButton(
+      outputId = "downloadJobs",
+      label = "Download Workflow Jobs Data",
+      style = "width:20%"
+    ),
+    actionButton(
+      inputId = "refreshJobList",
+      label = "Refresh data",
+      icon = icon("refresh")
+    )
+  ),
+  card_body(
+    load_spinner(
+      DTOutput("tasklistBatch")
+    )
+  ),
+  card_footer(table_footer(copy = FALSE))
 )
 
 panel_workflow_description <- nav_panel(
