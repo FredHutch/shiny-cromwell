@@ -25,6 +25,9 @@ source("tab-submission.R")
 source("tab-tracking.R")
 source("tab-workflow_details.R")
 
+contact_github <- tags$a(shiny::icon("github"), "Open Ticket", href = "https://github.com/getwilds/proof/issues/new?template=Blank+issue", target = "_blank")
+contact_email <- tags$a(shiny::icon("paper-plane"), "Email", href = "mailto:wilds@fredhutch.org", target = "_blank")
+
 ui <- cookies::add_cookie_handlers(
   page_navbar(
     id = "proof",
@@ -74,6 +77,11 @@ ui <- cookies::add_cookie_handlers(
           htmlOutput("gitHtml")
         )
       )
+    ),
+    nav_menu(
+      title = "Contact",
+      nav_item(contact_github),
+      nav_item(contact_email)
     ),
     nav_spacer(),
     nav_item(
