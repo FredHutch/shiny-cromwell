@@ -6,7 +6,7 @@
 - Find Cromwell and WDL Resources in [Fred Hutch's GitHub organization](https://github.com/FredHutch?utf8=%E2%9C%93&q=wdl+OR+cromwell&type=&language=).
 - Learn about Cromwell and WDL on the [Fred Hutch Biomedical Data Science Wiki](https://sciwiki.fredhutch.org/compdemos/Cromwell/).
 - Join the community in the [#workflow-managers FH-Data Slack channel](https://fhdata.slack.com/archives/CJFP1NYSZ), (open to all Fred Hutch, UW and Seattle Children's staff using their work emails).
-- Get Help from Fred Hutch DaSL staff through [Data House Calls](https://hutchdatascience.org/datahousecalls/).
+- Get Help from Fred Hutch DaSL staff through [Data House Calls](https://calendly.com/data-house-calls/resources).
 
 
 ## Users Elsewhere
