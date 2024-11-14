@@ -757,7 +757,7 @@ server <- function(input, output, session) {
               class = glue("text-{card_header_color(w$status)} fw-bold")
             ),
             span(bsicons::bs_icon("send"), w$submission),
-            span(bsicons::bs_icon("clock-history"), w$workflowDuration)
+            span(bsicons::bs_icon("clock-history"), w$workflowDuration, "min")
           ),
           card_body(
             class = "d-flex justify-content-between gap-1",
