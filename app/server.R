@@ -1056,7 +1056,7 @@ server <- function(input, output, session) {
           dplyr::mutate(dplyr::across(matches(c("start", "end")), as_pt))
       },
       escape = FALSE,
-      selection = "single",
+      selection = "none",
       rownames = FALSE,
       filter = "top",
       options = list(
