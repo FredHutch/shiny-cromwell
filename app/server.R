@@ -398,8 +398,34 @@ server <- function(input, output, session) {
     rv_file$validateinputFile_state <- 'loaded'
   })
 
+  tickle_server <- function(url, token, user) {
+    ping <- cromwell_version_safe(url, token)$result
+    if (!rlang::is_list(ping)) {
+      status <- proof_status(token = token)
+      if (status$canJobStart) {
+        return(invisible())
+      }
+      rv$url <- status$cromwellUrl
+      user_to_db(
+        user = user,
+        token = to_base64(token),
+        url = to_base64(rv$url),
+        drop_existing = TRUE
+      )
+
+      cookies::set_cookie(
+        cookie_name = "user",
+        cookie_value = user,
+        expiration = COOKIE_EXPIRY_DAYS,
+        secure_only = TRUE,
+        same_site = "strict"
+      )
+    }
+  }
+
   observeEvent(input$validateWorkflow, {
     output$validationResult <- renderPrint({
+      tickle_server(rv$url, rv$token, rv$user)
       stop_safe_loggedin_serverup(rv$url, rv$token, rv$own)
       cromwell_validate(
         wdl = isolate(file_validatewdlFile()),
@@ -409,7 +435,7 @@ server <- function(input, output, session) {
       )
     })
   })
-      
+
   # reset
   observeEvent(input$resetValidate, {
     reset_inputs(c("validatewdlFile", "validateinputFile"))
@@ -451,6 +477,7 @@ server <- function(input, output, session) {
 
   observeEvent(input$submitWorkflow, {
     output$submissionResult <- renderPrint({
+      tickle_server(rv$url, rv$token, rv$user)
       stop_safe_loggedin_serverup(rv$url, rv$token, rv$own)
       cromwell_submit_batch(
         wdl = isolate(file_wdlFile()),
@@ -495,6 +522,7 @@ server <- function(input, output, session) {
   observeEvent(input$abortWorkflow, {
     output$abortResult <- renderPrint({
       validate_workflowid(isolate(input$abortWorkflowID))
+      tickle_server(rv$url, rv$token, rv$user)
       stop_safe_loggedin_serverup(rv$url, rv$token, rv$own)
       cromwell_abort(
         workflow_id = isolate(input_abortWorkflowID()),
@@ -523,6 +551,7 @@ server <- function(input, output, session) {
   observeEvent(input$troubleWorkflow, {
     output$troubleResult <- renderPrint({
       validate_workflowid(isolate(input$troubleWorkflowID))
+      tickle_server(rv$url, rv$token, rv$user)
       stop_safe_loggedin_serverup(rv$url, rv$token, rv$own)
       cromwell_glob(
         workflow_id = isolate(input_troubleWorkflowID()),
@@ -544,6 +573,7 @@ server <- function(input, output, session) {
   ############ CROMWELL Tracking Tab  ############
 
   workflowUpdate <- eventReactive(input$trackingUpdate, {
+      tickle_server(rv$url, rv$token, rv$user)
       stop_safe_loggedin_serverup(rv$url, rv$token, rv$own)
       if (input$workName == "") {
         cromTable <- cromwell_jobs(
@@ -640,6 +670,7 @@ server <- function(input, output, session) {
 
   callDurationUpdate <- eventReactive(input$trackingUpdate,
     {
+      tickle_server(rv$url, rv$token, rv$user)
       stop_safe_loggedin_serverup(rv$url, rv$token, rv$own)
       if (nrow(workflowUpdate()) == 1 & is.na(workflowUpdate()$workflow_id[1])) {
         callDuration <- data.frame("noCalls" = "No workflows with calls were submitted, please choose a different time period. ")
