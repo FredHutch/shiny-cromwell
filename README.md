@@ -15,7 +15,7 @@ You can run this Shiny app locally. First you'll need to install required packag
 (note: run `make pkg_deps_cmd` to update the below code block)
 
 ```r
-pak::pak(c("getwilds/proofr@v0.3.0", "getwilds/rcromwell@v3.3.0", "dplyr", "DT", "ggplot2", "glue", "httr", "jsonlite", "lubridate", "magrittr", "memoise", "purrr", "rclipboard", "RColorBrewer", "rlang", "shiny", "shinyBS", "shinydashboard", "shinydashboardPlus", "shinyFeedback", "shinyjs", "shinylogs", "shinyvalidate", "shinyWidgets", "testthat", "tibble", "uuid"))
+pak::pak(c("getwilds/proofr@v0.4.0", "getwilds/rcromwell@v3.3.0", "dplyr", "DT", "ggplot2", "glue", "httr", "jsonlite", "lubridate", "magrittr", "memoise", "purrr", "rclipboard", "RColorBrewer", "rlang", "shiny", "shinyBS", "shinydashboard", "shinydashboardPlus", "shinyFeedback", "shinyjs", "shinylogs", "shinyvalidate", "shinyWidgets", "testthat", "tibble", "uuid"))
 ```
 
 And the above yourself in R. 
