@@ -15,6 +15,19 @@ run_branch:
 	docker pull nexus-registry.fredhutch.org/scicomp-nexus/shiny-cromwell:$(branch)
 	docker run --rm -it -p 3838:3838 nexus-registry.fredhutch.org/scicomp-nexus/shiny-cromwell:$(branch)
 
+# point the shiny app at the dev API
+# use: `make branch=inputs-viewer run_branch_dev_api`
+run_branch_dev_api:
+	docker pull nexus-registry.fredhutch.org/scicomp-nexus/shiny-cromwell:$(branch)
+	docker run -e PROOF_API_BASE_URL=https://proof-api-dev.fredhutch.org --rm -it -p 3838:3838 nexus-registry.fredhutch.org/scicomp-nexus/shiny-cromwell:$(branch)
+
+# point the shiny app at a custom API instance
+# use: `make branch=inputs-viewer url=http://gizmo666:2112 run_branch_custom_api`
+run_branch_custom_api:
+	docker pull nexus-registry.fredhutch.org/scicomp-nexus/shiny-cromwell:$(branch)
+	docker run -e PROOF_API_BASE_URL=$(url) --rm -it -p 3838:3838 nexus-registry.fredhutch.org/scicomp-nexus/shiny-cromwell:$(branch)
+
+
 # use: `make style_file FILE=stuff.R`
 # accepts 1 file only
 style_file:
