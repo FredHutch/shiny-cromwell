@@ -8,6 +8,7 @@ source("ui_components.R")
 source("constants.R")
 
 sidebar_tracking <- sidebar(
+  id = "trackingSidebar",
   actionButton(
     inputId = "trackingUpdate",
     label = "Refresh data",
@@ -15,7 +16,7 @@ sidebar_tracking <- sidebar(
   ),
   popover(
     bsicons::bs_icon("question-circle"),
-    p("Data for the past 60 days"),
+    p(glue("Data for the past {DAYS_WORKFLOW_HISTORY} days")),
     title = "Help",
     placement = "bottom"
   ),
@@ -37,7 +38,7 @@ sidebar_tracking <- sidebar(
     multiple = TRUE,
   ),
   dateRangeInput(
-    inputId = "runs_date", 
+    inputId = "runs_date",
     label = "Date Range",
     start = lubridate::today() - DAYS_WORKFLOW_HISTORY,
     min = lubridate::today() - DAYS_WORKFLOW_HISTORY,
