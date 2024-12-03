@@ -4,7 +4,7 @@ RUN apt-get update -y && apt-get install -y libssh-dev python3-pip git libmariad
 
 RUN R -q -e 'install.packages(c("ellipsis"), repos="https://cran.rstudio.com/")'
 RUN R -q -e 'install.packages(c("shiny"), repos="https://cran.rstudio.com/")'
-RUN R -q -e 'install.packages(c("waldo", "shinyFeedback", "shinyWidgets", "shinydashboard", "shinydashboardPlus", "ssh", "remotes", "markdown", "lubridate", "jsonlite", "dplyr", "DT", "glue", "httr", "purrr", "RColorBrewer", "rlang", "shinyBS", "shinyjs", "tidyverse", "uuid", "memoise", "rclipboard", "shinyvalidate", "shinylogs", "testhat", "bsicons", "listviewer", "htmltools", "cookies", "RMariaDB", "DBI", "parsedate", "shinylogs", "ids", "shinycssloaders"), repos="https://cran.r-project.org")'
+RUN R -q -e 'install.packages(c("waldo", "shinyFeedback", "shinyWidgets", "shinydashboard", "shinydashboardPlus", "ssh", "remotes", "markdown", "lubridate", "jsonlite", "dplyr", "DT", "glue", "httr", "purrr", "RColorBrewer", "rlang", "shinyBS", "shinyjs", "tidyverse", "uuid", "memoise", "rclipboard", "shinyvalidate", "shinylogs", "testthat", "bsicons", "listviewer", "htmltools", "cookies", "RMariaDB", "DBI", "parsedate", "shinylogs", "ids", "shinycssloaders"), repos="https://cran.r-project.org")'
 
 RUN R -q -e "remotes::install_github('getwilds/proofr@v0.3.0')"
 
@@ -46,5 +46,3 @@ ENV SHINY_LOG_STDERR=1
 WORKDIR /srv/shiny-server/
 CMD R -f start.R
 # CMD /usr/bin/shiny-server
-
-
