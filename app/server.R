@@ -546,6 +546,18 @@ server <- function(input, output, session) {
   })
 
   ############ CROMWELL Tracking Tab  ############
+  observeEvent(input$trackingSidebar, {
+    date_start <- lubridate::today() - DAYS_WORKFLOW_HISTORY
+    date_end <- lubridate::today()
+    updateDateRangeInput(session,
+      inputId = "runs_date",
+      label = "Date Range",
+      start = date_start,
+      min = date_start,
+      end = date_end,
+      max = date_end
+    )
+  })
 
   workflowUpdate <- eventReactive(input$trackingUpdate, {
       stop_safe_loggedin_serverup(rv$url, rv$token, rv$own)
