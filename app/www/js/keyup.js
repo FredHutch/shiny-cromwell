@@ -11,7 +11,7 @@ $(document).keyup(function(event) {
 });
 
 $(document).keyup(function(event) {
-  if ($("#stopCromwell").is(":focus") && (event.key == "Enter")) {
+  if (event.key == "Enter") {
     $("#deleteCromwell").click();
   }
 });
