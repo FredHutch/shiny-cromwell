@@ -1,5 +1,6 @@
 variables:
   CI_DEBUG_SERVICES: "true"
+  BRANCH_OR_TAG: ""
 
 
 before_script:
@@ -13,6 +14,7 @@ before_script:
   - mkdir -p $HOME/.docker
   - echo $DOCKER_AUTH_CONFIG > $HOME/.docker/config.json
   - set -x
+  - if [ -n "$CI_COMMIT_BRANCH" ]; then export BRANCH_OR_TAG=$CI_COMMIT_BRANCH; else export BRANCH_OR_TAG=$CI_COMMIT_TAG; fi
 
 stages:
   - build
@@ -31,6 +33,7 @@ build:
       --build-arg CI_COMMIT_SHA=${CI_COMMIT_SHA} \
       --build-arg CI_COMMIT_SHORT_SHA=${CI_COMMIT_SHORT_SHA} \
       --build-arg CI_COMMIT_TIMESTAMP=${CI_COMMIT_TIMESTAMP} \
+      --build-arg CI_COMMIT_TAG=${CI_COMMIT_TAG} \      
       .
     rm .my.cnf
     docker push sc-registry.fredhutch.org/shiny-cromwell:test
@@ -55,8 +58,8 @@ test:
 deploy_review_image:
   stage: deploy
   script:
-    - docker tag sc-registry.fredhutch.org/shiny-cromwell:test nexus-registry.fredhutch.org/scicomp-nexus/${CI_PROJECT_NAME}:${CI_COMMIT_BRANCH}
-    - docker push nexus-registry.fredhutch.org/scicomp-nexus/${CI_PROJECT_NAME}:${CI_COMMIT_BRANCH}
+    - docker tag sc-registry.fredhutch.org/shiny-cromwell:test nexus-registry.fredhutch.org/scicomp-nexus/${CI_PROJECT_NAME}:${BRANCH_OR_TAG}
+    - docker push nexus-registry.fredhutch.org/scicomp-nexus/${CI_PROJECT_NAME}:${BRANCH_OR_TAG}
 
 deploy_preview:
   stage: deploy
