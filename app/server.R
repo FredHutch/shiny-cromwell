@@ -761,6 +761,9 @@ server <- function(input, output, session) {
   workflowDetailsId <- function(workflow_id) {
     paste0("goToWorkflowDetails-", workflow_id)
   }
+  abortWorkflowId <- function(workflow_id) {
+    paste0("abortWorkflow-", workflow_id)
+  }
 
   workflowCards <- reactive({
     dflst <- apply(workflowUpdate(), 1, as.list)
@@ -804,7 +807,7 @@ server <- function(input, output, session) {
             fillable = FALSE,
             w$workflow_id,
             actionButton(
-              inputId = "abortWorkflow",
+              inputId = abortWorkflowId(w$workflow_id),
               label = "Abort Workflow",
               icon = icon("eject"),
               class = "btn-sm",
