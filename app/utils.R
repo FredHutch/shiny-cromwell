@@ -171,7 +171,7 @@ mermaid_container <- function(code) {
 }
 
 card_header_color <- function(status) {
-  switch(status, 
+  switch(status,
     Submitted = "primary",
     Pending = "info",
     Running = "warning",
@@ -181,6 +181,28 @@ card_header_color <- function(status) {
     "secondary"
   )
 }
+
+plot_status_color <- function(status) {
+  dplyr::case_match(
+    status,
+    "Submitted" ~ "#316df4",
+    "Pending" ~ "#5dc7eb",
+    "Running" ~ "#f5c344",
+    "Succeeded" ~ "#408558",
+    "Failed" ~ "#cb444a",
+    "Aborted" ~ "#353a40",
+    .default = "#353a40"
+  )
+}
+
+status_color_map <- list(
+  "Submitted" = "#316df4",
+  "Pending" = "#5dc7eb",
+  "Running" = "#f5c344",
+  "Succeeded" = "#408558",
+  "Failed" = "#cb444a",
+  "Aborted" = "#353a40"
+)
 
 parse_date_tz <- function(x, tz = "America/Los_Angeles") {
   parsedate::parse_date(x, default_tz = tz)

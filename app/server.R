@@ -51,8 +51,6 @@ proofr::proof_timeout(sec = PROOF_TIMEOUT)
 # sanitize errors - note that some actual errors will still happen
 options(shiny.sanitize.errors = SANITIZE_ERRORS)
 
-myCols <- RColorBrewer::brewer.pal(6, "RdYlBu")
-
 server <- function(input, output, session) {
   if (SHINY_LOGGING) shinylogs::track_usage(storage_mode = shinylogs::store_null())
 
@@ -699,13 +697,21 @@ server <- function(input, output, session) {
 
   output$workflowDuration <- renderPlot({
     if ("workflow_name" %in% colnames(workflowUpdate())) {
-      print("inside workflowDuration ...")
-      ggplot(workflowUpdate(), aes(x = as.factor(workflow_name), y = as.numeric(workflowDuration))) +
-        geom_point(aes(color = status), width = 0.05, size = 4) +
+      df <- workflowUpdate() %>%
+        mutate(
+          status_color = plot_status_color(status)
+        )
+      ggplot(df,
+        aes(x = as.factor(workflow_name), y = as.numeric(workflowDuration))
+      ) +
+        geom_point(aes(color = status_color), width = 0.05, size = 4) +
         coord_flip() +
         theme_minimal(base_size=16) +
         theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-        scale_color_manual(values = myCols) +
+        scale_color_manual(
+          labels = names(status_color_map),
+          values = unname(unlist(status_color_map))
+        ) +
         ylab("Workflow Duration (mins)") +
         xlab("Workflow Name")
     } else {
@@ -761,6 +767,9 @@ server <- function(input, output, session) {
   workflowDetailsId <- function(workflow_id) {
     paste0("goToWorkflowDetails-", workflow_id)
   }
+  abortWorkflowId <- function(workflow_id) {
+    paste0("abortWorkflow-", workflow_id)
+  }
 
   workflowCards <- reactive({
     dflst <- apply(workflowUpdate(), 1, as.list)
@@ -804,7 +813,7 @@ server <- function(input, output, session) {
             fillable = FALSE,
             w$workflow_id,
             actionButton(
-              inputId = "abortWorkflow",
+              inputId = abortWorkflowId(w$workflow_id),
               label = "Abort Workflow",
               icon = icon("eject"),
               class = "btn-sm",

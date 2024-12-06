@@ -3,7 +3,7 @@ FILE_TARGET := "${FILE}"
 DEPS := $(shell ${RSCRIPT} -e 'invisible(lapply(c("glue", "cli"), require, character.only = TRUE, quiet = TRUE))' -e 'deps = renv::dependencies(quiet = TRUE)' -e 'uniq_pkgs = sort(unique(deps$$Package))' -e 'uniq_pkgs = uniq_pkgs[!grepl("^proofr$$|^rcromwell$$", uniq_pkgs)]' -e 'cat(c("getwilds/proofr@v0.4.0", "getwilds/rcromwell@v3.3.0", uniq_pkgs), file="deps.txt", sep="\n")')
 
 run:
-	${RSCRIPT} -e "options(shiny.autoreload = TRUE)" \
+	${RSCRIPT} -e "options(shiny.devmode = TRUE)" \
 		-e "shiny::runApp(\"app\", launch.browser = TRUE, port = 4026)"
 
 run_docker:
