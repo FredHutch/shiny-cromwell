@@ -13,11 +13,7 @@ loginModal <- function(failed = FALSE, error = "Invalid username or password") {
     },
     footer = tagList(
       modalButton("Cancel"),
-      shinyFeedback::loadingButton(
-        inputId = "submit",
-        label = "Submit",
-        class = "btn btn-default"
-      )
+      actionButton("submit", "Submit")
     ),
     easyClose = TRUE
   )
@@ -71,15 +67,21 @@ verifyCromwellDeleteModal <- function(failed = FALSE, error = "Woops, an error! 
     "Stop your PROOF server. Although you can't undo this action, you can start up another one anytime!",
     br(),
     br(),
+    textInput(
+      inputId = "stopCromwell",
+      label = div(HTML("To stop your server, confirm by typing<br> <em>delete me</em> into the field."))
+    ),
     if (failed) {
       div(tags$b(error, style = "color: red;"))
     },
     footer = tagList(
       modalButton("Cancel"),
-      shinyFeedback::loadingButton(
-        inputId = "deleteCromwell",
-        label = "Stop Server",
-        class = "btn btn-warning"
+      shinyjs::disabled(
+        shinyFeedback::loadingButton(
+          inputId = "deleteCromwell",
+          label = "Stop Server",
+          class = "btn btn-warning"
+        )
       )
     ),
     easyClose = TRUE

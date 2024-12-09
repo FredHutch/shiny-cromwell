@@ -5,6 +5,7 @@ library(shinydashboard)
 library(shinydashboardPlus)
 library(shinyFeedback)
 library(shinyWidgets)
+library(shinyvalidate)
 library(shinylogs)
 
 library(DT)
@@ -19,17 +20,18 @@ library(dplyr)
 library(tibble)
 library(magrittr)
 
+library(uuid)
 library(httr)
 
 library(proofr)
 library(rcromwell)
 
-library(cookies)
-library(listviewer)
 library(rclipboard)
 
-library(ids)
+library(cookies)
+library(listviewer)
 
+source("sidebar.R")
 source("modals.R")
 source("proof.R")
 source("buttons.R")
@@ -39,54 +41,33 @@ source("tab-welcome.R")
 source("validators.R")
 source("inputs_utils.R")
 source("cookies-db.R")
-source("constants.R")
 
 SANITIZE_ERRORS <- FALSE
 PROOF_TIMEOUT <- 20
+FOCUS_ID <- 1
 SHINY_LOGGING <- as.logical(Sys.getenv("SHINY_LOG", FALSE))
 
 # FIXME: maybe remove later, was running into some timeouts during testing
-proofr::proof_timeout(sec = PROOF_TIMEOUT)
+proof_timeout(sec = PROOF_TIMEOUT)
 
 # sanitize errors - note that some actual errors will still happen
 options(shiny.sanitize.errors = SANITIZE_ERRORS)
 
-myCols <- RColorBrewer::brewer.pal(6, "RdYlBu")
+myCols <- brewer.pal(6, "RdYlBu")
 
 server <- function(input, output, session) {
-  if (SHINY_LOGGING) shinylogs::track_usage(storage_mode = shinylogs::store_null())
+  if (SHINY_LOGGING) track_usage(storage_mode = store_null())
 
   session$allowReconnect(TRUE)
 
-  # For the Help page
-  output$gitHtml <- renderUI({
-    div(
-      tags$span(
-        tags$b("Code:"),
-        tags$a(
-          "FredHutch/shiny-cromwell",
-          href = glue("https://github.com/FredHutch/shiny-cromwell/tree/{COMMIT_BRANCH}"),
-          target="_blank"
-        )
-      ),
-      tags$br(),
-      tags$span(
-        tags$b("Built from:"),
-        tags$a(
-          glue("{substring(COMMIT_SHORT_SHA, 1, 7)}"),
-          href = glue("https://github.com/FredHutch/shiny-cromwell/tree/{COMMIT_SHA}"),
-          target="_blank"
-        )
-      ),
-      tags$br(),
-      tags$span(
-        tags$b('Last built on:', style = "display:inline;"),
-        tags$p(
-          glue('Last built on: {stamp("Mar 1, 1999", quiet = TRUE)(ymd_hms(COMMIT_TIMESTAMP))}'),
-          style = "display:inline;"
-        )
-      )
-    )
+  # Upper right github icon for source code
+  output$gitHtml <- renderText({
+    glue('<b>Code</b>: <a href="https://github.com/FredHutch/shiny-cromwell/tree/{COMMIT_BRANCH}" target="_blank">FredHutch/shiny-cromwell</a>
+                    <br>
+                    <b>Built from</b>: <a href="https://github.com/FredHutch/shiny-cromwell/tree/{COMMIT_SHA}" target="_blank">{substring(COMMIT_SHORT_SHA, 1, 7)}</a>
+                    <br>
+                    <b>Last built on</b>: {stamp("Mar 1, 1999", quiet = TRUE)(ymd_hms(COMMIT_TIMESTAMP))}
+          ')
   })
 
   rv <- reactiveValues(token = "", url = "", validateFilepath="", own = FALSE, user = "")
@@ -98,7 +79,8 @@ server <- function(input, output, session) {
     inputJSON_state = NULL,
     input2JSON_state = NULL,
     workOptions_state = NULL,
-    abortWorkflowID_state = NULL
+    abortWorkflowID_state = NULL,
+    troubleWorkflowID_state = NULL
   )
 
   # Login and UI component handling
@@ -123,16 +105,11 @@ server <- function(input, output, session) {
     }
   })
 
-  output$userName <- renderUI({
-    the_name <- if (is.null(input$username)) {
+  output$userName <- renderText({
+    if (is.null(input$username)) {
       rv$user
     } else {
       input$username
-    }
-    if (nzchar(the_name)) {
-      span(icon("user"), the_name)
-    } else {
-      span()
     }
   })
 
@@ -144,6 +121,22 @@ server <- function(input, output, session) {
     } else {
       updateBox("boxValidate", action = "update", options = list(width = 6))
       updateBox("boxSubmit", action = "update", options = list(width = 6))
+    }
+  })
+
+  output$uiSideBar <- renderMenu({
+    if (nzchar(rv$token)) {
+      proofSidebar()
+    } else {
+      nonProofSidebar()
+    }
+  })
+
+  output$toggleServersBox <- renderUI({
+    if (nzchar(rv$token)) {
+      welcome_servers_box
+    } else {
+      NULL
     }
   })
 
@@ -184,9 +177,6 @@ server <- function(input, output, session) {
           secure_only = TRUE,
           same_site = "strict"
         )
-
-        # reset loading spinner
-        shinyFeedback::resetLoadingButton("submit")
 
         removeModal()
       }
@@ -236,7 +226,6 @@ server <- function(input, output, session) {
   observe({
     if (proof_loggedin(rv$token)) {
       shinyjs::hide("ownCrom")
-      shinyjs::hide("ownCromwell")
     }
   })
 
@@ -289,14 +278,6 @@ server <- function(input, output, session) {
             )
           )
 
-          # update records in cookies DB
-          user_to_db(
-            user = rv$user,
-            token = to_base64(rv$token),
-            url = to_base64(rv$url),
-            drop_existing = TRUE
-          )
-
           # reset loading spinner
           shinyFeedback::resetLoadingButton("beginCromwell")
 
@@ -310,43 +291,36 @@ server <- function(input, output, session) {
     }
   })
 
-  observe({
-    if (proof_loggedin_serverup(rv$url, rv$token)) {
-      shinyjs::toggleState("cromwellStart",
-        proof_status(token = rv$token)$jobStatus != "RUNNING"
-      )
-    }
-  })
-
   # Disable or enable the Delete button for deleting proof server
   observeEvent(input$cromwellDelete, {
     showModal(verifyCromwellDeleteModal())
   })
 
+  # For the button WITHIN the Delete modal
+  observe({
+    shinyjs::toggleState("deleteCromwell", input$stopCromwell == "delete me")
+  })
+
   observeEvent(input$deleteCromwell, {
     if (proof_loggedin(rv$token)) {
-      try_delete <- tryCatch(proof_cancel(token = rv$token), error = function(e) e)
-      if (rlang::is_error(try_delete)) {
-        showModal(verifyCromwellDeleteModal(failed = TRUE, error = try_delete$message))
+      if (input$stopCromwell == "delete me") {
+        try_delete <- tryCatch(proof_cancel(token = rv$token), error = function(e) e)
+        if (rlang::is_error(try_delete)) {
+          showModal(verifyCromwellDeleteModal(failed = TRUE, error = try_delete$message))
+        }
+
+        # wait for server to go down
+        proof_wait_for_down(rv$token)
+
+        # reset loading spinner
+        shinyFeedback::resetLoadingButton("deleteCromwell")
+
+        removeModal()
+        shinyjs::disable(id = "cromwellDelete")
+        shinyjs::enable(id = "cromwellStart")
+      } else {
+        showModal(verifyCromwellDeleteModal(failed = TRUE))
       }
-
-      # wait for server to go down
-      proof_wait_for_down(rv$token)
-
-      # update records in cookies DB
-      user_to_db(
-        user = rv$user,
-        token = to_base64(rv$token),
-        url = "",
-        drop_existing = TRUE
-      )
-
-      # reset loading spinner
-      shinyFeedback::resetLoadingButton("deleteCromwell")
-
-      removeModal()
-      shinyjs::disable(id = "cromwellDelete")
-      shinyjs::enable(id = "cromwellStart")
     } else {
       showModal(verifyCromwellDeleteModal(failed = TRUE, error = "You're not logged in"))
     }
@@ -357,7 +331,7 @@ server <- function(input, output, session) {
   cromwellProofStatusData <- reactivePoll(2000, session,
     checkFunc = function() {
       if (!is.null(input$tabs)) {
-        if (input$proof != "Server") return(NULL)
+        if (input$tabs != "cromwell") return(NULL)
       }
       if (proof_loggedin(rv$token)) {
         tmp <- proof_status(token = rv$token)
@@ -374,28 +348,17 @@ server <- function(input, output, session) {
   proofStatusTextGenerator <- function(name, list_index, tip = "", value_if_null = NULL) {
     renderUI({
       if (proof_loggedin(rv$token)) {
-        dat <- cromwellProofStatusData()
-        if (nzchar(tip)) {
-          tags$span(
-            bslib::tooltip(
-              icon("question-circle"),
-              tip,
-              placement = "right"
-            ),
-            HTML(paste0(
-              strong(glue("{name}: ")),
-              purrr::flatten(dat)[[list_index]] %||% value_if_null
-            ))
-          )
-        } else {
-          tags$span(
+        tags$span(
+          shinyBS::tipify(
             icon("question-circle"),
-            HTML(paste0(
-              strong(glue("{name}: ")),
-              purrr::flatten(dat)[[list_index]] %||% value_if_null
-            ))
-          )
-        }
+            tip,
+            placement = "right"
+          ),
+          HTML(paste0(
+            strong(glue("{name}: ")),
+            purrr::flatten(cromwellProofStatusData())[[list_index]] %||% value_if_null
+          ))
+        )
       }
     })
   }
@@ -513,37 +476,23 @@ server <- function(input, output, session) {
   })
 
   observeEvent(input$submitWorkflow, {
-    output$submissionResult <- renderUI({
+    output$submissionResult <- renderPrint({
       tickle_server(rv$url, rv$token, rv$user)
       stop_safe_loggedin_serverup(rv$url, rv$token, rv$own)
-      df <- cromwell_submit_batch(
+      cromwell_submit_batch(
         wdl = isolate(file_wdlFile()),
         params = isolate(file_inputJSON()),
         batch = isolate(file_input2JSON()),
         options = isolate(file_workOptions()),
         labels = data.frame(
           "workflowType" = "AppSubmission",
-          "Label" = ifelse(nzchar(isolate(input$labelValue)), isolate(input$labelValue), ids::adjective_animal(style = "Pascal")),
-          "secondaryLabel" = ifelse(nzchar(isolate(input$seclabelValue)), isolate(input$seclabelValue), ids::adjective_animal(style = "Pascal"))
+          "Label" = isolate(input$labelValue),
+          "secondaryLabel" = isolate(input$seclabelValue)
         ),
         url = rv$url,
         token = rv$token
       )
-      shinyjs::disable("submitWorkflow")
-      HTML(glue('
-        <br>
-        <ul>
-          <li><strong>Workflow ID:</strong> {df$id}</li>
-          <li><strong>Status:</strong> {df$status}</li>
-        </ul>
-      '))
     })
-  })
-
-  observe({
-    shinyjs::toggleState("submitWorkflow",
-      !rlang::is_empty(input$wdlFile$datapath)
-    )
   })
 
   # reset
@@ -557,44 +506,91 @@ server <- function(input, output, session) {
     rv_file$input2JSON_state <- 'reset'
     rv_file$workOptions_state <- 'reset'
     output$submissionResult <- renderText({})
-    shinyjs::disable("submitWorkflow")
   })
 
+
+
   ###### Troubleshoot tab ######
-  observeEvent(input$selectedWorkflowId, {
-    output$troubleResult <- renderPrint({
+  ## Abort a workflow
+  input_abortWorkflowID <- reactive({
+    reactiveInput(rv_file$abortWorkflowID_state, input$abortWorkflowID)
+  })
+  observeEvent(input$abortWorkflowID, {
+    rv_file$abortWorkflowID_state <- 'loaded'
+  })
+
+  observeEvent(input$abortWorkflow, {
+    output$abortResult <- renderPrint({
+      validate_workflowid(isolate(input$abortWorkflowID))
+      tickle_server(rv$url, rv$token, rv$user)
       stop_safe_loggedin_serverup(rv$url, rv$token, rv$own)
-      cromwell_glob(
-        workflow_id = input$selectedWorkflowId,
+      cromwell_abort(
+        workflow_id = isolate(input_abortWorkflowID()),
         url = rv$url,
         token = rv$token
       )
     })
   })
 
-  ############ CROMWELL Tracking Tab  ############
-  observeEvent(input$trackingSidebar, {
-    date_start <- lubridate::today() - DAYS_WORKFLOW_HISTORY
-    date_end <- lubridate::today()
-    updateDateRangeInput(session,
-      inputId = "runs_date",
-      label = "Date Range",
-      start = date_start,
-      min = date_start,
-      end = date_end,
-      max = date_end
-    )
+  ## reset abort
+  observeEvent(input$resetAbort, {
+    reset_inputs("abortWorkflowID")
+    rv_file$abortWorkflowID_state <- 'reset'
+    output$abortResult <- renderText({})
   })
+
+
+  ## Troubleshoot a workflow
+  input_troubleWorkflowID <- reactive({
+    reactiveInput(rv_file$troubleWorkflowID_state, input$troubleWorkflowID)
+  })
+  observeEvent(input$troubleWorkflowID, {
+    rv_file$troubleWorkflowID_state <- 'loaded'
+  })
+
+  observeEvent(input$troubleWorkflow, {
+    output$troubleResult <- renderPrint({
+      validate_workflowid(isolate(input$troubleWorkflowID))
+      tickle_server(rv$url, rv$token, rv$user)
+      stop_safe_loggedin_serverup(rv$url, rv$token, rv$own)
+      cromwell_glob(
+        workflow_id = isolate(input_troubleWorkflowID()),
+        url = rv$url,
+        token = rv$token
+      )
+    })
+  })
+
+  ## reset trouble
+  observeEvent(input$resetTrouble, {
+    reset_inputs("troubleWorkflowID")
+    rv_file$troubleWorkflowID_state <- 'reset'
+    output$troubleResult <- renderText({})
+  })
+
+
+
+  ############ CROMWELL Tracking Tab  ############
 
   workflowUpdate <- eventReactive(input$trackingUpdate, {
       tickle_server(rv$url, rv$token, rv$user)
       stop_safe_loggedin_serverup(rv$url, rv$token, rv$own)
-
-      cromTable <- cromwell_jobs(
-        days = DAYS_WORKFLOW_HISTORY,
-        url = rv$url,
-        token = rv$token
-      )
+      if (input$workName == "") {
+        cromTable <- cromwell_jobs(
+          days = input$daysToShow,
+          workflow_status = input$workStatus,
+          url = rv$url,
+          token = rv$token
+        )
+      } else {
+        cromTable <- cromwell_jobs(
+          days = input$daysToShow,
+          workflow_status = input$workStatus,
+          workflow_name = input$workName,
+          url = rv$url,
+          token = rv$token
+        )
+      }
 
       if ("workflow_id" %in% colnames(cromTable)) {
         workflowDat <- cromTable %>% select(one_of(
@@ -650,16 +646,13 @@ server <- function(input, output, session) {
       }
 
       workflowDat
-  },
-    # ignoreNULL = FALSE so that data for the tracking page loads when the user logs in
-    # ignoreNULL = TRUE would mean the data will only load after user first clicks
-    # the "Refresh data button"
-    ignoreNULL = FALSE
+    },
+    ignoreNULL = TRUE
   )
 
-  observeEvent(input$selectedWorkflowId, {
+  observeEvent(input$wdlview_btn, {
     mermaid_file <- wdl_to_file(
-      workflow_id = input$selectedWorkflowId,
+      workflow_id = strsplit(input$wdlview_btn, "_")[[1]][2],
       url = rv$url,
       token = rv$token
     )
@@ -667,35 +660,30 @@ server <- function(input, output, session) {
     output$mermaid_diagram <- renderUI({
       mermaid_container(mermaid_str)
     })
+    updateTabItems(session, "tabs", "wdl")
   })
 
-  ### Links to various tabs from the welcome page
-  observeEvent(input$linkToServerTab, {
-    nav_select("proof", "Server")
-  })
-  observeEvent(input$linkToValidateTab, {
-    nav_select("proof", "Validate")
-  })
-  observeEvent(input$linkToSubmitTab, {
-    nav_select("proof", "Submit")
-  })
-  observeEvent(input$linkTrackingTab, {
-    nav_select("proof", "Track workflows")
-  })
-  observeEvent(input$linkToWorkflowDetailsTab, {
-    nav_select("proof", "Workflow Details")
-  })
-  observeEvent(input$linkToHelpTab, {
-    nav_select("proof", "Help")
+  ### go back to tracking tab from wdl tab
+  observeEvent(input$linkToTrackingTab, {
+    updateTabsetPanel(session, "tabs", "tracking")
   })
 
-  ### go back to tracking tab from details tab
-  observeEvent(input$linkToTrackingTab_from_workflow_inputs, {
-    nav_select("proof", "Track workflows")
-  })
-  observeEvent(input$linkToTrackingTab_from_mermaid, {
-    nav_select("proof", "Track workflows")
-  })
+  callDurationUpdate <- eventReactive(input$trackingUpdate,
+    {
+      tickle_server(rv$url, rv$token, rv$user)
+      stop_safe_loggedin_serverup(rv$url, rv$token, rv$own)
+      if (nrow(workflowUpdate()) == 1 & is.na(workflowUpdate()$workflow_id[1])) {
+        callDuration <- data.frame("noCalls" = "No workflows with calls were submitted, please choose a different time period. ")
+      } else {
+        callDuration <- purrr::map_dfr(workflowUpdate()$workflow_id, cromwell_call) %>%
+          dplyr::select(workflow_id, callName, executionStatus, callDuration, jobId)
+      }
+
+      callDuration
+    },
+    ignoreNULL = TRUE
+  )
+
 
   output$workflowDuration <- renderPlot({
     if ("workflow_name" %in% colnames(workflowUpdate())) {
@@ -703,7 +691,7 @@ server <- function(input, output, session) {
       ggplot(workflowUpdate(), aes(x = as.factor(workflow_name), y = as.numeric(workflowDuration))) +
         geom_point(aes(color = status), width = 0.05, size = 4) +
         coord_flip() +
-        theme_minimal(base_size=16) +
+        theme_minimal() +
         theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
         scale_color_manual(values = myCols) +
         ylab("Workflow Duration (mins)") +
@@ -714,242 +702,63 @@ server <- function(input, output, session) {
     }
   })
 
-  ## Compute totals for each Cromwell status
-  is_workflow_empty <- function() {
-    NROW(workflowUpdate()) == 0 || NCOL(workflowUpdate()) == 1
-  }
-  status_text <- function(status) {
-    if (is_workflow_empty()) {
-      0
-    } else {
-      df <- workflowUpdate()
-      if (status == "Submitted") {
-        df <- filter(df, !is.na(workflow_id))
-      } else {
-        # !! needed to get the value of the variable
-        df <- filter(df, status == !!status)
-      }
-      df %>%
-        summarize(n_distinct(workflow_id)) %>%
-        pull(1)
-    }
-  }
-  submittedText <- reactive({ status_text(status = "Submitted") })
-  succeededText <- reactive({ status_text(status = "Succeeded") })
-  pendingText <- reactive({ status_text(status = "Pending") })
-  failedText <- reactive({ status_text(status = "Failed") })
-  runningText <- reactive({ status_text(status = "Running") })
-  abortedText <- reactive({ status_text(status = "Aborted") })
-
-  output$trackingSummaryStats <- renderUI({
-    tagList(
-      tags$span(paste("Submitted: ", submittedText()), class = "text-primary fw-bold", style = "display:inline"),
-      HTML("&nbsp;-&nbsp;"),
-      tags$span(paste("Pending: ", pendingText()), class = "text-info fw-bold", style = "display:inline"),
-      HTML("&nbsp;-&nbsp;"),
-      tags$span(paste("Running: ", runningText()), class = "text-warning fw-bold", style = "display:inline"),
-      HTML("&nbsp;-&nbsp;"),
-      tags$span(paste("Succeeded: ", succeededText()), class = "text-success fw-bold", style = "display:inline"),
-      HTML("&nbsp;-&nbsp;"),
-      tags$span(paste("Failed: ", failedText()), class = "text-danger fw-bold", style = "display:inline"),
-      HTML("&nbsp;-&nbsp;"),
-      tags$span(paste("Aborted: ", abortedText()), class = "text-secondary fw-bold", style = "display:inline")
+  ## Render some info boxes
+  output$submittedBox <- renderInfoBox({
+    infoBox(
+      "Total \nSubmitted",
+      workflowUpdate() %>%
+        filter(!is.na(workflow_id)) %>%
+        summarize(n_distinct(workflow_id)),
+      icon = icon("list"),
+      color = "purple", width = 3
     )
   })
-
-  # Data for cards out of workflowUpdate data
-  workflowDetailsId <- function(workflow_id) {
-    paste0("goToWorkflowDetails-", workflow_id)
-  }
-
-  workflowCards <- reactive({
-    dflst <- apply(workflowUpdate(), 1, as.list)
-    lapply(dflst, function(w) {
-      list(
-       data = w,
-       card = card(
-          id = glue("job_card_{w$workflow_id}"),
-          class = "border border-secondary",
-          card_header(
-            div(
-              span(bsicons::bs_icon("person-badge"), w$workflow_name),
-              span("(", bsicons::bs_icon("tag-fill"), w$Label),
-              span(bsicons::bs_icon("tag"), w$secondaryLabel, ")")
-            ),
-            proofLoadingButton(
-              inputId = workflowDetailsId(w$workflow_id),
-              label = "Workflow Details",
-              class = "btn btn-secondary btn-sm",
-              onclick = glue('
-                Shiny.setInputValue(\"selectedWorkflowId\", \"{w$workflow_id}\");
-                Shiny.setInputValue(\"selectedWorkflowName\", \"{w$workflow_name}\");
-                Shiny.setInputValue(\"selectedWorkflowLabel\", \"{w$Label}\");
-                Shiny.setInputValue(\"selectedWorkflowSecLabel\", \"{w$secondaryLabel}\")
-              ')
-            ),
-            class = "d-flex justify-content-between gap-1",
-          ),
-          card_body(
-            class = "d-flex align-items-left justify-content-between gap-1",
-            fillable = FALSE,
-            tags$span(
-              w$status,
-              class = glue("text-{card_header_color(w$status)} fw-bold")
-            ),
-            span(bsicons::bs_icon("send"), w$submission),
-            span(bsicons::bs_icon("clock-history"), w$workflowDuration, "min")
-          ),
-          card_body(
-            class = "d-flex justify-content-between gap-1",
-            fillable = FALSE,
-            w$workflow_id,
-            actionButton(
-              inputId = "abortWorkflow",
-              label = "Abort Workflow",
-              icon = icon("eject"),
-              class = "btn-sm",
-              onclick = glue('Shiny.setInputValue(\"selectedWorkflowId\", \"{w$workflow_id}\")'),
-              disabled = !w$status %in% c("Submitted", "Running")
-            )
-          )
-        )
-      )
-    })
-  })
-
-  workflowCardsFiltered <- reactive({
-    dat <- workflowCards()
-    # Filter by date
-    dat <- Filter(\(w) {
-      parse_date_tz(w$data$submission) >= parse_date_tz(paste(input$runs_date[1], "00:00:00")) &&
-      parse_date_tz(w$data$submission) <= parse_date_tz(paste(input$runs_date[2], "23:59:00"))
-    }, dat)
-    # Filter by status
-    if (!rlang::is_empty(input$workStatus)) {
-      dat <- Filter(\(w) {
-        w$data$status %in% input$workStatus
-      }, dat)
-    }
-    # Filter by workflow name
-    if (nzchar(input$workName)) {
-      dat <- Filter(\(w) {
-        w$data$workflow_name %in% input$workName
-      }, dat)
-    }
-    sort_dates <- purrr::map_vec(dat, \(card)
-      parse_date_tz(card$data$submission))
-    if (!rlang::is_empty(sort_dates)) {
-      # skip sorting if sort_dates is empty for whatever reason
-      dat <- switch(input$sortTracking,
-        "Newest to oldest" = dat[order(sort_dates, decreasing = TRUE)],
-        "Oldest to newest" = dat[order(sort_dates)]
-      )
-    }
-    return(dat)
-  })
-
-  output$workflows_cards <- renderUI({
-    purrr::map(workflowCardsFiltered(), "card")
-  })
-
-  ## Abort a workflow with the abort button on each card
-  observeEvent(input$abortWorkflow, {
-    validate_workflowid(isolate(input$selectedWorkflowId))
-    stop_safe_loggedin_serverup(rv$url, rv$token, rv$own)
-    aborted <- tryCatch(
-      {
-        cromwell_abort(
-          workflow_id = isolate(input$selectedWorkflowId),
-          url = rv$url,
-          token = rv$token
-        )
+  output$successBox <- renderInfoBox({
+    infoBox(
+      "Successful", if (is.na(workflowUpdate()$workflow_id[1])) {
+        0
+      } else {
+        workflowUpdate() %>%
+          filter(status == "Succeeded") %>%
+          summarise(n_distinct(workflow_id))
       },
-      error = function(e) e
+      icon = icon("grin"),
+      color = "yellow", width = 3
     )
-    if (rlang::is_error(aborted)) {
-      print(glue("In Abort Workflow button: {aborted$message}"))
-      default_abort_msg <- "Try refreshing data"
-      msg <- aborted$message
-      if (grepl("404", msg)) {
-        msg <- "Not found"
+  })
+  output$failBox <- renderInfoBox({
+    infoBox(
+      "Failed", if (is.na(workflowUpdate()$workflow_id[1])) {
+        0
       } else {
-        msg <- default_abort_msg
-      }
-    } else {
-      msg <- "Workflow aborted!"
-    }
-    updateActionButton(
-      inputId = "abortWorkflow",
-      label = msg,
-      icon = icon("eject")
+        workflowUpdate() %>%
+          filter(status == "Failed") %>%
+          summarise(n_distinct(workflow_id))
+      },
+      icon = icon("sad-tear"),
+      color = "red", width = 3
     )
   })
-
-  reactive_buttons <- reactive({
-    button_ids <- names(input)
-    button_ids[grepl("goToWorkflowDetails", button_ids)]
-  })
-
-  observe({
-    matching_ids <- reactive_buttons()
-    lapply(matching_ids, function(id) {
-      observeEvent(input[[id]], {
-        nav_select("proof", "Workflow Details")
-        shinyFeedback::resetLoadingButton(id)
-      })
-    })
-  })
-
-  observe({
-    matching_ids <- reactive_buttons()
-    lapply(matching_ids, function(id) {
-      observeEvent(input[[id]], {
-        nav_select("proof", "Workflow Details")
-        shinyFeedback::resetLoadingButton(id)
-      })
-    })
-  })
-
-  ## reset tracking workflows filters
-  observeEvent(input$resetTrackingFilters, {
-    reset_inputs(c("workName", "workStatus", "runs_date"))
-  })
-
-  output$selectedWorkflowUI <- renderUI({
-    if (!is.null(input$selectedWorkflowId)) {
-      htmltools::tagList(
-        htmltools::tags$span(
-          h4(input$selectedWorkflowName, style = "display:inline"),
-          h5(
-            " (",
-            span(bsicons::bs_icon("tag-fill"), input$selectedWorkflowLabel),
-            span(bsicons::bs_icon("tag"), input$selectedWorkflowSecLabel),
-            ")",
-            style = "display:inline"
-          )
-        ),
-        htmltools::tags$div(
-          rclipButton(
-            inputId = "clipbtn",
-            label = "",
-            clipText = input$selectedWorkflowId,
-            icon = icon("clipboard"),
-            tooltip = "Copy workflow ID",
-            placement = "left",
-            options = list(delay = list(show = 800, hide = 100), trigger = "hover"),
-            class = "btn-secondary btn-sm"
-          ),
-          input$selectedWorkflowId
-        )
-      )
-    }
+  output$inprogressBox <- renderInfoBox({
+    infoBox(
+      "In Progress", if (is.na(workflowUpdate()$workflow_id[1])) {
+        0
+      } else {
+        workflowUpdate() %>%
+          filter(status == "Running") %>%
+          summarise(n_distinct(workflow_id))
+      },
+      icon = icon("sync"),
+      color = "green", width = 3
+    )
   })
 
   ## Get a table of workflow labels
-  workflowLabels <- eventReactive(input$selectedWorkflowId, {
+  workflowLabels <- eventReactive(input$joblistCromwell_rows_selected, {
     print("find Labels")
-    workflow <- cromwell_workflow(
-      workflow_id = input$selectedWorkflowId,
+    data <- workflowUpdate()
+    FOCUS_ID <- data[input$joblistCromwell_rows_selected, ]$workflow_id
+    workflow <- cromwell_workflow(FOCUS_ID,
       url = rv$url,
       token = rv$token
     )
@@ -988,51 +797,45 @@ server <- function(input, output, session) {
         )
       )
   })
-
-  output$workflowDescribe <- renderUI({
-    wl <- purrr::discard_at(workflowLabels(), c("workflow", "inputs"))
-    workflowLabelsLst <- lapply(wl, as.list)
-    tags$ul(
-      Map(function(x, y) {
-        # print(y[[1]])
-        tags$li(
-          span(
-            strong(x)
-          ),
-          ifelse(grepl("clipbtn", as.character(y[[1]])), HTML(y[[1]]), y)
-        )
-      }, names(workflowLabelsLst), unname(workflowLabelsLst))
+  output$workflowDescribe <- renderDT({
+    datatable(
+      workflowLabels(),
+      escape = FALSE,
+      selection = "single",
+      rownames = FALSE,
+      filter = "top",
+      options = list(scrollX = TRUE)
     )
   })
-
-  ## Workflow options
-  workflowOptions <- eventReactive(input$selectedWorkflowId, {
+  ## Get a table of workflow options
+  workflowOptions <- eventReactive(input$joblistCromwell_rows_selected, {
+    print("find options")
+    data <- workflowUpdate()
+    FOCUS_ID <- data[input$joblistCromwell_rows_selected, ]$workflow_id
     as.data.frame(jsonlite::fromJSON(
-      cromwell_workflow(input$selectedWorkflowId,
+      cromwell_workflow(FOCUS_ID,
         url = rv$url,
         token = rv$token
       )$options
     ))
   })
-
   output$workflowOpt <- renderDT(
-    expr = workflowOptions(),
+    data <- workflowOptions(),
     class = "compact",
     filter = "top",
-    options = list(scrollX = TRUE),
-    selection = "single",
-    rownames = FALSE
+    options = list(scrollX = TRUE), selection = "single", rownames = FALSE
   )
-  output$workflowOptAlert <- renderUI({
-    if (NROW(workflowOptions()) == 0) {
-      alert("No options data found")
-    }
-  })
-
   ## Get a table of workflow inputs
-  workflowInputs <- eventReactive(input$selectedWorkflowId, {
-    cromwell_workflow(
-      workflow_id = input$selectedWorkflowId,
+  workflowInputs <- eventReactive(input$joblistCromwell_rows_selected, {
+    print("find inputs")
+    data <- workflowUpdate()
+
+    FOCUS_ID <- data[input$joblistCromwell_rows_selected, ]$workflow_id
+    output$currentWorkflowId <- renderText({
+      paste("Workflow ID: ", FOCUS_ID)
+    })
+
+    cromwell_workflow(FOCUS_ID,
       url = rv$url,
       token = rv$token
     )$inputs
@@ -1045,6 +848,19 @@ server <- function(input, output, session) {
   observeEvent(input$workflowInp_edit, {
     str(input$workflowInp_edit, max.level=2)
   })
+  ### go to viewer tab when clicked from Tracking tab
+  observeEvent(input$linkToViewerTab, {
+    updateTabItems(session, "tabs", "viewer")
+  })
+  ### go back to tracking tab from viewer tab
+  observeEvent(input$linkToTrackingTab, {
+    updateTabsetPanel(session, "tabs", "tracking")
+  })
+  ### set workflow id display in viewer tab back to none
+  ### when nothing selected in the Workflows Run table
+  observeEvent(input$joblistCromwell_rows_selected, {
+    output$currentWorkflowId <- renderText({"Workflow ID: "})
+  }, ignoreNULL = FALSE)
 
   ## Render a list of jobs in a table for a workflow
   output$joblistCromwell <- renderDT({
@@ -1060,13 +876,13 @@ server <- function(input, output, session) {
 
 
   #### Call Data
-  callsUpdate <- eventReactive(c(
-      input$selectedWorkflowId,
-      input$refreshJobList
-    ),
+  callsUpdate <- eventReactive(
+    input$joblistCromwell_rows_selected,
     {
-      theseCalls <- cromwell_call(
-        workflow_id = input$selectedWorkflowId,
+      data <- workflowUpdate()
+      FOCUS_ID <<- data[input$joblistCromwell_rows_selected, ]$workflow_id
+      print("callsUpdate(); Querying cromwell for metadata for calls.")
+      theseCalls <- cromwell_call(FOCUS_ID,
         url = rv$url,
         token = rv$token
       )
@@ -1075,19 +891,60 @@ server <- function(input, output, session) {
       } else {
         callDat <<- theseCalls %>% mutate(executionStatus = "NA")
       }
-      suppressWarnings(
-        callDat %>%
-        select(
-          one_of("workflow_name", "detailedSubName", "callName",
-            "executionStatus", "shardIndex", "callRoot", "start",
-            "end", "callDuration", "docker", "modules"),
-          everything()
-        )
-      )
+      suppressWarnings(callDat %>% select(one_of("workflow_name", "detailedSubName", "callName", "executionStatus", "shardIndex", "callRoot", "start", "end", "callDuration", "docker", "modules"), everything()))
     },
     ignoreNULL = TRUE
   )
 
+  output$workflowTiming <- renderPlot({
+    if ("callName" %in% colnames(callsUpdate())) {
+      print("in render plot ...")
+      ggplot(callsUpdate(), aes(x = as.factor(callName), y = callDuration)) +
+        geom_point(aes(color = executionStatus), size = 3) + # coord_flip() +
+        theme_minimal() +
+        theme(axis.text.x = element_text(hjust = 1, angle = 25)) +
+        scale_color_manual(values = myCols) +
+        ylab("Call Duration (mins)") +
+        xlab("Call Name")
+    } else {
+      ggplot() +
+        geom_blank()
+    }
+  })
+
+  ## Render some info boxes
+  output$pendingBatch <- renderValueBox({
+    infoBox(
+      "Pending",
+      value = nrow(callsUpdate() %>% filter(executionStatus %in% c("Starting", "QueuedInCromwell"))),
+      icon = icon("clock"),
+      color = "yellow", width = 6
+    )
+  })
+  output$runningBatch <- renderInfoBox({
+    infoBox(
+      "Running",
+      value = nrow(callsUpdate() %>% filter(executionStatus == "Running")),
+      icon = icon("sync"),
+      color = "teal", width = 6
+    )
+  })
+  output$failedBatch <- renderInfoBox({
+    infoBox(
+      "Failed",
+      value = nrow(callsUpdate() %>% filter(executionStatus == "Failed")),
+      icon = icon("thumbs-down"),
+      color = "maroon", width = 6
+    )
+  })
+  output$succeededBatch <- renderInfoBox({
+    infoBox(
+      "Succeeded",
+      value = nrow(callsUpdate() %>% filter(executionStatus == "Done")),
+      icon = icon("thumbs-up"),
+      color = "green", width = 6
+    )
+  })
   ## Jobs Lists
   output$tasklistBatch <- renderDT({
     datatable(
@@ -1096,7 +953,7 @@ server <- function(input, output, session) {
           dplyr::mutate(dplyr::across(matches(c("start", "end")), as_pt))
       },
       escape = FALSE,
-      selection = "none",
+      selection = "single",
       rownames = FALSE,
       filter = "top",
       options = list(
@@ -1130,37 +987,31 @@ server <- function(input, output, session) {
   )
 
   ## Failure data
-  failsUpdate <- eventReactive(c(
-      input$selectedWorkflowId,
-      input$getFailedData
-    ),
+  failsUpdate <- eventReactive(input$getFailedData,
     {
-      suppressWarnings(cromwell_failures(
-        workflow_id = input$selectedWorkflowId,
+      data <- workflowUpdate()
+      FOCUS_ID <- data[input$joblistCromwell_rows_selected, ]$workflow_id
+      print("failsUpdate(); Querying cromwell for metadata for failures.")
+      suppressWarnings(failDat <- cromwell_failures(FOCUS_ID,
         url = rv$url,
         token = rv$token
       ) %>%
         select(one_of(
           "callName", "jobId", "workflow_id", "detailedSubName", "shardIndex", "attempt",
           "failures.message", "failures.causedBy.message"
-        ), everything()) %>%
-        unique())
+        ), everything()) %>% unique())
+      return(failDat)
     },
     ignoreNULL = TRUE
   )
 
   output$failurelistBatch <- renderDT(
-    expr = failsUpdate(),
+    data <- failsUpdate(),
     class = "compact",
     filter = "top",
     options = list(scrollX = TRUE),
     rownames = FALSE
   )
-  output$failuresAlert <- renderUI({
-    if (NROW(failsUpdate()) == 0) {
-      alert("No failures data found")
-    }
-  })
 
   output$downloadFails <- downloadHandler(
     filename = function() {
@@ -1172,32 +1023,30 @@ server <- function(input, output, session) {
   )
 
   ### Call Caching data
-  cacheUpdate <- eventReactive(c(
-      input$selectedWorkflowId,
-      input$getCacheData
-    ),
+  cacheUpdate <- eventReactive(input$getCacheData,
     {
-      theseCache <- cromwell_cache(
-        workflow_id = input$selectedWorkflowId,
+      data <- workflowUpdate()
+      FOCUS_ID <<- data[input$joblistCromwell_rows_selected, ]$workflow_id
+      print("cacheUpdate(); Querying cromwell for metadata for call caching.")
+      theseCache <- cromwell_cache(FOCUS_ID,
         url = rv$url,
         token = rv$token
       )
       if ("callCaching.effectiveCallCachingMode" %in% colnames(theseCache)) {
-        theseCache
+        cacheDat <- theseCache
       } else {
-        theseCache %>%
-          mutate(callCaching.effectiveCallCachingMode = "NA")
+        cacheDat <- theseCache %>% mutate(callCaching.effectiveCallCachingMode = "NA")
       }
+      cacheDat
     },
     ignoreNULL = TRUE
   )
 
   output$cachingListBatch <- renderDT(
-    expr = cacheUpdate() %>%
+    data <- cacheUpdate() %>%
       select(
         any_of(
-          c("workflow_name", "workflow_id", "callName",
-            "shardIndex", "executionStatus")),
+          c("workflow_name", "workflow_id", "callName", "shardIndex", "executionStatus")),
         everything()
       ) %>%
       unique(),
@@ -1206,11 +1055,7 @@ server <- function(input, output, session) {
     options = list(scrollX = TRUE),
     rownames = FALSE
   )
-  output$cachingAlert <- renderUI({
-    if (NROW(cacheUpdate()) == 0) {
-      alert("No call caching data found")
-    }
-  })
+
 
   output$downloadCache <- downloadHandler(
     filename = function() {
@@ -1220,35 +1065,58 @@ server <- function(input, output, session) {
       write.csv(cacheUpdate(), file, row.names = FALSE)
     }
   )
+  ## Render some info boxes
+  output$cacheHits <- renderInfoBox({
+    infoBox(
+      "Cache Hits",
+      value = if ("callCaching.hit" %in% colnames(cacheUpdate())) {
+        nrow(cacheUpdate() %>% filter(as.logical(callCaching.hit)))
+      } else {
+        0
+      },
+      icon = icon("grin-tongue"),
+      color = "aqua", width = 6
+    )
+  })
+  output$cacheMisses <- renderInfoBox({
+    infoBox(
+      "Cache Misses",
+      value = if ("callCaching.hit" %in% colnames(cacheUpdate())) {
+        nrow(cacheUpdate() %>% filter(!as.logical(callCaching.hit)))
+      } else {
+        0
+      },
+      icon = icon("meh"),
+      color = "orange", width = 6
+    )
+  })
 
   ## Outputs Data
   ### Go get the output data for the selected workflow
-  outputsUpdate <- eventReactive(c(
-      input$selectedWorkflowId,
-      input$getOutputData
-    ),
+  outputsUpdate <- eventReactive(input$getOutputData,
     {
-      cromwell_outputs(
-        workflow_id = input$selectedWorkflowId,
+      data <- workflowUpdate()
+      FOCUS_ID <<- data[input$joblistCromwell_rows_selected, ]$workflow_id
+      print("outputsUpdate(); Querying cromwell for a list of workflow outputs.")
+      outDat <<- try(cromwell_outputs(FOCUS_ID,
         url = rv$url,
         token = rv$token
-      )
+      ), silent = TRUE)
+      if (!is.data.frame(outDat)) {
+        outDat <- dplyr::tibble("workflow_id" = "No outputs are available for this workflow yet.")
+      }
+      outDat
     },
     ignoreNULL = TRUE
   )
   ## render outputs list to a table
   output$outputslistBatch <- renderDT(
-    expr = outputsUpdate(),
+    data <- outputsUpdate(),
     class = "compact",
     filter = "top",
     options = list(scrollX = TRUE),
     rownames = FALSE
   )
-  output$outputsAlert <- renderUI({
-    if (NROW(outputsUpdate()) == 0) {
-      alert("No output data found")
-    }
-  })
   ## Prep outputs table for download
   output$downloadOutputs <- downloadHandler(
     filename = function() {

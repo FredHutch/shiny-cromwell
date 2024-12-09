@@ -1,5 +1,3 @@
-library(shinyvalidate)
-
 check_url <- function(x) {
   tmp <- tryCatch(cromwell_version(x), error = function(e) e)
   !rlang::is_error(tmp)
