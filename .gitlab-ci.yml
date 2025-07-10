@@ -2,14 +2,13 @@ variables:
   CI_DEBUG_SERVICES: "true"
   BRANCH_OR_TAG: ""
 
-
 before_script:
   - apk update
   - apk --no-cache add py3-pip python3 curl
   - python3 -m venv $HOME/.venv
   - export PATH=$HOME/.venv/bin:$PATH
   - pip3 install pyyaml
-  - curl -O https://raw.githubusercontent.com/FredHutch/swarm-build-helper/main/build_helper.py 
+  - curl -O https://raw.githubusercontent.com/FredHutch/swarm-build-helper/main/build_helper.py
   # below is from https://stackoverflow.com/a/65810302/470769
   - mkdir -p $HOME/.docker
   - echo $DOCKER_AUTH_CONFIG > $HOME/.docker/config.json
@@ -21,12 +20,19 @@ stages:
   - test
   - deploy
 
-  
 build:
   stage: build
   script: |
     python3 build_helper.py docker-compose.yml --fluentd-logging > /dev/null
     echo $DB_CONFIG | base64 -d > .my.cnf
+
+    # Set PROOF_API_BASE_URL based on CI_COMMIT_BRANCH
+    if [ "$CI_COMMIT_BRANCH" = "dev" ]; then
+      PROOF_API_BASE_URL="https://proof-api-dev.fredhutch.org"
+    else
+      PROOF_API_BASE_URL="https://proof-api.fredhutch.org"
+    fi
+
     docker build \
       -t sc-registry.fredhutch.org/shiny-cromwell:test \
       --build-arg CI_COMMIT_BRANCH=${CI_COMMIT_BRANCH} \
@@ -34,6 +40,7 @@ build:
       --build-arg CI_COMMIT_SHORT_SHA=${CI_COMMIT_SHORT_SHA} \
       --build-arg CI_COMMIT_TIMESTAMP=${CI_COMMIT_TIMESTAMP} \
       --build-arg CI_COMMIT_TAG=${CI_COMMIT_TAG} \
+      --build-arg PROOF_API_BASE_URL=${PROOF_API_BASE_URL} \
       .
     rm .my.cnf
     docker push sc-registry.fredhutch.org/shiny-cromwell:test
@@ -42,7 +49,7 @@ build:
 
 test:
   stage: test
-  services: 
+  services:
     - name: sc-registry.fredhutch.org/shiny-cromwell:test
       alias: shiny-cromwell
   script: |
@@ -65,7 +72,7 @@ deploy_preview:
   stage: deploy
   only:
     refs:
-       - dev
+      - dev
   script:
     - docker tag sc-registry.fredhutch.org/shiny-cromwell:test sc-registry.fredhutch.org/shiny-cromwell-preview:latest
     - docker push sc-registry.fredhutch.org/shiny-cromwell-preview:latest
@@ -75,15 +82,11 @@ deploy_preview:
     - python3 build_helper.py --fluentd-logging docker-compose-preview.yml | ssh -i ./sc_swarm_cicd_ssh_key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@sc-swarm-mgr.fhcrc.org docker stack deploy --prune --with-registry-auth -c - shiny-cromwell-preview
     - rm -f ./sc_swarm_cicd_ssh_key
 
-
-
-
-
 deploy:
   stage: deploy
   only:
     refs:
-       - main
+      - main
   script:
     - docker tag sc-registry.fredhutch.org/shiny-cromwell:test sc-registry.fredhutch.org/shiny-cromwell:latest
     - docker push sc-registry.fredhutch.org/shiny-cromwell:latest
@@ -93,5 +96,3 @@ deploy:
     - chmod 0400 ./sc_swarm_cicd_ssh_key
     - python3 build_helper.py  --fluentd-logging docker-compose.yml | ssh -i ./sc_swarm_cicd_ssh_key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@sc-swarm-mgr.fhcrc.org docker stack deploy --prune --with-registry-auth -c - shiny-cromwell
     - rm -f ./sc_swarm_cicd_ssh_key
-
-
