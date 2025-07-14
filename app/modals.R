@@ -55,6 +55,11 @@ cromwellStartModal <- function(failed = FALSE, error = "An error occurred") {
       label = div(HTML("Specify a non-default Slurm account (optional)")),
       value = NULL
     ),
+    checkboxInput(
+      inputId = "useRegulatedData",
+      label = div(HTML("Use regulated data? (optional)")),
+      value = FALSE
+    ),
     if (failed) {
       div(tags$b(error, style = "color: red;"))
     },

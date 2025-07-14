@@ -13,13 +13,19 @@ help_html <- helpText(
             Email <a href="mailto:wilds@fredhutch.org" target="_blank"><span class="badge bg-secondary">wilds@fredhutch.org</span></a>
         </p>
         <p></p>
-        <p>')
+        <p>'
+  )
 )
 
+regulated_data_callout <- tags$li(
+  class = "dropdown",
+  style = "padding: 12px;",
+  uiOutput("usingRegulatedData")
+)
 dropdown_user_name <- tags$li(
   class = "dropdown",
   style = "padding: 12px;",
-  textOutput("userName")
+  uiOutput("userName")
 )
 dropdown_own_cromwell <- tags$li(
   class = "dropdown",

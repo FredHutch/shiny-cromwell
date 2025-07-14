@@ -50,13 +50,17 @@ tab_servers <- tabItem(
       br(),
       br(),
       h4("Troubleshoot Your PROOF Server"),
-      p(strong("Note"), "If you're having trouble using your PROOF server, this information can be useful in getting help."),
+      p(
+        strong("Note"),
+        "If you're having trouble using your PROOF server, this information can be useful in getting help."
+      ),
       uiOutput("proofStatusSlurmJobId"),
       uiOutput("proofStatusCromwellDir"),
       uiOutput("proofStatusServerLogDir"),
       uiOutput("proofStatusSingularityCacheDir"),
       uiOutput("proofStatusUseAWS"),
-      uiOutput("proofStatusUrlStr")
+      uiOutput("proofStatusUrlStr"),
+      uiOutput("proofUseRegulatedData")
     ),
   ),
 )

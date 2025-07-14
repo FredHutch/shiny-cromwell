@@ -115,11 +115,36 @@ server <- function(input, output, session) {
     }
   })
 
-  output$userName <- renderText({
-    if (is.null(input$username)) {
+  output$usingRegulatedData <- renderUI({
+    req(rv$token)
+    # status <- proof_status(token = rv$token)
+    status <- cromwellProofStatusData()
+    if (!is.null(status$jobInfo$USE_REGULATED_DATA)) {
+      if (status$jobInfo$USE_REGULATED_DATA) {
+        span(
+          "Using regulated data",
+          class = "badge",
+          style = "padding: 8px 16px !important;"
+        )
+      }
+    } else {
+      NULL
+    }
+  })
+
+  output$userName <- renderUI({
+    the_name <- if (is.null(input$username)) {
       rv$user
     } else {
       input$username
+    }
+    if (is.null(the_name) || !nzchar(the_name)) {
+      NULL
+    } else {
+      tags$span(
+        icon("user"),
+        HTML(the_name)
+      )
     }
   })
 
@@ -267,16 +292,26 @@ server <- function(input, output, session) {
       # fail out early if already running
       if (!proof_status(token = rv$token)$canJobStart) {
         # stop(safeError("Your Cromwell server is already running"))
-        showModal(cromwellStartModal(failed = TRUE, error = "Your Cromwell server is already running"))
+        showModal(cromwellStartModal(
+          failed = TRUE,
+          error = "Your Cromwell server is already running"
+        ))
       } else {
         # start cromwell server
         try_start <- tryCatch(
-          proof_start(slurm_account = input$slurmAccount, token = rv$token),
+          proof_start(
+            slurm_account = input$slurmAccount,
+            token = rv$token,
+            regulated_data = input$useRegulatedData
+          ),
           error = function(e) e
         )
 
         if (rlang::is_error(try_start)) {
-          showModal(cromwellStartModal(failed = TRUE, error = try_start$message))
+          showModal(cromwellStartModal(
+            failed = TRUE,
+            error = try_start$message
+          ))
         } else {
           cromwell_config(verbose = FALSE)
           rv$url <- proof_wait_for_up(rv$token)
