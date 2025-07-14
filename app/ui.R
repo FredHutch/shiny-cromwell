@@ -49,7 +49,9 @@ ui <- cookies::add_cookie_handlers(
       shinyjs::useShinyjs(),
       rclipboard::rclipboardSetup(),
       tags$head(
-        tags$script(src = "https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js")
+        tags$script(
+          src = "https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"
+        )
       ),
       enter_to_click,
       tooltip_style,
