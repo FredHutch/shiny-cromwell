@@ -8,7 +8,7 @@ run:
 
 run_docker:
 	docker build --platform linux/amd64 -t shiny-cromwell:app .
-	docker run --rm -it -p 3838:3838 shiny-cromwell:app
+	docker run -e PROOF_API_BASE_URL=https://proof-api-dev.fredhutch.org --rm -it -p 3838:3838 shiny-cromwell:app
 
 # use: `make branch=inputs-viewer run_branch`
 run_branch:
