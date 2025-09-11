@@ -1,5 +1,5 @@
 FROM fredhutch/r-shiny-server-base:4.3.2
-
+RUN echo break cache
 RUN apt-get update -y && apt-get install -y libssh-dev python3-pip git libmariadb-dev
 
 RUN R -q -e 'install.packages(c("ellipsis"), repos="https://cran.rstudio.com/")'
