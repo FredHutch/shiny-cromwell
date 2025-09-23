@@ -6,7 +6,7 @@ RUN R -q -e 'install.packages(c("ellipsis"), repos="https://cran.rstudio.com/")'
 RUN R -q -e 'install.packages(c("shiny"), repos="https://cran.rstudio.com/")'
 RUN R -q -e 'install.packages(c("waldo", "shinyFeedback", "shinyWidgets", "shinydashboard", "shinydashboardPlus", "ssh", "remotes", "markdown", "lubridate", "jsonlite", "dplyr", "DT", "glue", "httr", "purrr", "RColorBrewer", "rlang", "shinyBS", "shinyjs", "tidyverse", "uuid", "memoise", "rclipboard", "shinyvalidate", "shinylogs", "testhat", "bsicons", "listviewer", "cookies", "RMariaDB", "DBI"), repos="https://cran.r-project.org")'
 
-RUN R -q -e "remotes::install_github('getwilds/proofr@dev')"
+RUN R -q -e "remotes::install_github('getwilds/proofr@main')"
 
 RUN R -q -e "remotes::install_github('getwilds/rcromwell@v3.3.0')"
 
