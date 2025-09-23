@@ -34,6 +34,7 @@ ui <- cookies::add_cookie_handlers(
         span(class = "logo-lg", h4(HTML("Fred Hutch<br> PROOF Dashboard"))),
         img(src = "fred-hutch.svg")
       ),
+      regulated_data_callout,
       dropdown_user_name,
       dropdown_own_cromwell,
       dropdown_loginout,
@@ -49,7 +50,9 @@ ui <- cookies::add_cookie_handlers(
       shinyjs::useShinyjs(),
       rclipboard::rclipboardSetup(),
       tags$head(
-        tags$script(src = "https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js")
+        tags$script(
+          src = "https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"
+        )
       ),
       enter_to_click,
       tooltip_style,

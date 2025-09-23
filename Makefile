@@ -3,12 +3,12 @@ FILE_TARGET := "${FILE}"
 DEPS := $(shell ${RSCRIPT} -e 'invisible(lapply(c("glue", "cli"), require, character.only = TRUE, quiet = TRUE))' -e 'deps = renv::dependencies(quiet = TRUE)' -e 'uniq_pkgs = sort(unique(deps$$Package))' -e 'uniq_pkgs = uniq_pkgs[!grepl("^proofr$$|^rcromwell$$", uniq_pkgs)]' -e 'cat(c("getwilds/proofr@v0.3.0", "getwilds/rcromwell@v3.3.0", uniq_pkgs), file="deps.txt", sep="\n")')
 
 run:
-	${RSCRIPT} -e "options(shiny.autoreload = TRUE)" \
+	${RSCRIPT}  \
 		-e "shiny::runApp(\"app\", launch.browser = TRUE)"
 
 run_docker:
 	docker build --platform linux/amd64 -t shiny-cromwell:app .
-	docker run --rm -it -p 3838:3838 shiny-cromwell:app
+	docker run -e PROOF_API_BASE_URL=https://proof-api-dev.fredhutch.org --rm -it -p 3838:3838 shiny-cromwell:app
 
 # use: `make branch=inputs-viewer run_branch`
 run_branch:

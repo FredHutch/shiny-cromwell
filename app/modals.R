@@ -1,10 +1,14 @@
 loginModal <- function(failed = FALSE, error = "Invalid username or password") {
   modalDialog(
-    textInput("username", "Username",
+    textInput(
+      "username",
+      "Username",
       placeholder = "HutchNet username ('jane' of jane@fredhutch.org)",
       width = "60%"
     ),
-    passwordInput("password", "Password",
+    passwordInput(
+      "password",
+      "Password",
       placeholder = "HutchNet password",
       width = "60%"
     ),
@@ -21,11 +25,16 @@ loginModal <- function(failed = FALSE, error = "Invalid username or password") {
 
 myCromwellModal <- function(failed = FALSE, error = "Invalid host/port") {
   modalDialog(
-    textInput("ownCromwellURL", "URL",
+    textInput(
+      "ownCromwellURL",
+      "URL",
       placeholder = "http://gizmot32:8000",
       width = "60%"
     ),
-    p("Do not use your PROOF based Cromwell server here", style = "color: #B5ABAB;"),
+    p(
+      "Do not use your PROOF based Cromwell server here",
+      style = "color: #B5ABAB;"
+    ),
     if (failed) {
       div(tags$b(error, style = "color: red;"))
     },
@@ -46,6 +55,11 @@ cromwellStartModal <- function(failed = FALSE, error = "An error occurred") {
       label = div(HTML("Specify a non-default Slurm account (optional)")),
       value = NULL
     ),
+    checkboxInput(
+      inputId = "useRegulatedData",
+      label = div(HTML("Use regulated data? (optional)")),
+      value = FALSE
+    ),
     if (failed) {
       div(tags$b(error, style = "color: red;"))
     },
@@ -61,7 +75,10 @@ cromwellStartModal <- function(failed = FALSE, error = "An error occurred") {
   )
 }
 
-verifyCromwellDeleteModal <- function(failed = FALSE, error = "Woops, an error! Contact DaSL at wilds@fredhutch.org.") {
+verifyCromwellDeleteModal <- function(
+  failed = FALSE,
+  error = "Woops, an error! Contact DaSL at wilds@fredhutch.org."
+) {
   modalDialog(
     title = "Stop your PROOF server",
     "Stop your PROOF server. Although you can't undo this action, you can start up another one anytime!",
@@ -69,7 +86,9 @@ verifyCromwellDeleteModal <- function(failed = FALSE, error = "Woops, an error! 
     br(),
     textInput(
       inputId = "stopCromwell",
-      label = div(HTML("To stop your server, confirm by typing<br> <em>delete me</em> into the field."))
+      label = div(HTML(
+        "To stop your server, confirm by typing<br> <em>delete me</em> into the field."
+      ))
     ),
     if (failed) {
       div(tags$b(error, style = "color: red;"))
