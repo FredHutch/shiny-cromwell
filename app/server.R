@@ -830,10 +830,16 @@ server <- function(input, output, session) {
   )
 
   output$workflowDuration <- renderPlot({
-    if ("workflow_name" %in% colnames(workflowUpdate())) {
-      print("inside workflowDuration ...")
+    print("inside workflowDuration ...")
+    df <- workflowUpdate()
+    if (NROW(df) == 1 && NCOL(df) == 1) {
+      print("inside workflowDuration (returning blank plot) ...")
+      ggplot() +
+        geom_blank()
+    } else if ("workflow_name" %in% colnames(df)) {
+      print("inside workflowDuration (using workflow_name) ...")
       ggplot(
-        workflowUpdate(),
+        df,
         aes(x = as.factor(workflow_name), y = as.numeric(workflowDuration))
       ) +
         geom_point(aes(color = status), width = 0.05, size = 4) +
@@ -844,8 +850,18 @@ server <- function(input, output, session) {
         ylab("Workflow Duration (mins)") +
         xlab("Workflow Name")
     } else {
-      ggplot() +
-        geom_blank()
+      print("inside workflowDuration (using workflow_id) ...")
+      ggplot(
+        df,
+        aes(x = as.factor(workflow_id), y = as.numeric(workflowDuration))
+      ) +
+        geom_point(aes(color = status), width = 0.05, size = 4) +
+        coord_flip() +
+        theme_minimal() +
+        theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+        scale_color_manual(values = myCols) +
+        ylab("Workflow Duration (mins)") +
+        xlab("Workflow ID")
     }
   })
 
